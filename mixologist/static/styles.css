@@ -10,3 +10,32 @@ body {
     overflow: hidden;
 }
 /* ... rest of the CSS code ... */
+/* Styles from create_drinks.html */
+.bg-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-image: url('https://cdn.discordapp.com/attachments/1083991162366476351/1128851902961037394/catpuking_A_collage_of_different_ingredients_used_by_a_bartende_0bd6be3e-b43b-4b42-a9b9-f5bc6f8afbe0.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    z-index: -1;
+    opacity: 0.2;
+}
+/* ... rest of the CSS code from create_drinks.html ... */
+/* Styles from home.html */
+.container {
+    text-align: center;
+    z-index: 1;
+    max-width: 800px; /* Set a max width for the container */
+    width: 100%; /* Set the width to 100% */
+    margin: auto; /* Center the container */
+}
+/* ... rest of the CSS code from home.html ... */
+/* Styles from error.html */
+.container {
+    text-align: center;
+    z-index: 1;
+}
+/* ... rest of the CSS code from error.html ... */
