@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from mixologist.app import app
 
 if __name__ == "__main__":
