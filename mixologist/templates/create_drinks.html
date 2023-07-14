@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Drink Recipe</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f6dcbfcc;
+            color: #2a2424;
+            font-family: 'Times New Roman', Times, serif;
+            height: auto;
+            position: relative;
+            overflow: auto;
+        }
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background-image: url('https://cdn.discordapp.com/attachments/1083991162366476351/1128851902961037394/catpuking_A_collage_of_different_ingredients_used_by_a_bartende_0bd6be3e-b43b-4b42-a9b9-f5bc6f8afbe0.png');
+            background-repeat: no-repeat;
+            background-size: cover;
+            z-index: -1;
+            opacity: 0.2;
+        }
+        .header-image {
+            height: 16.67vw;
+            width: 100%;
+            background-image: url('https://cdn.discordapp.com/attachments/1083991162366476351/1129079429700788284/catpuking_a_cocktail_being_made_at_a_modern_bar._the_bartenders_a9729ec8-eb23-4c1e-b499-274ec9c840d8.png');
+            background-repeat: no-repeat;
+            background-size: cover;
+            z-index: 0;
+        }
+        .container {
+            color: #2a2424;
+            max-width: 1200px;
+            z-index: 1;
+            margin-top: 20px;  
+        }
+        .hero {
+            background-color: #bfd9f6;
+            border-color: #f4f6bf;
+            padding: 20px 40px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .hero .drink-name {
+            color: #f6c1bf;
+            font-size: 3em;
+            margin-bottom: 0.5em;
+        }
+        .hero .serving-glass {
+            color: #2a2424;
+            font-size: 2em;
+            margin-bottom: 1em;
+        }
+        .card {
+            background-color: #f6dcbf;
+            border: none;
+            margin-bottom: 20px;
+        }
+        .card .card-title {
+            color: #2a2424;
+            font-size: 1.5em;
+            margin-bottom: 0.5em;
+            border-bottom: 1px solid #dc9775;
+        }
+        .card .card-text {
+            color: #2a2424;
+            font-size: 1.2em;
+        }
+        .card .img-fluid {
+            height: auto;
+            max-width: 100%;
+        }
+        .row > div {
+            margin-bottom: 20px;
+        }
+        .return-home {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+    <div class="header-image"></div>
+    <div class="container py-5">
+        <a href="/" class="btn btn-primary return-home">Return Home</a>
+        <div class="row">
+            <div class="col-md-6">
+                <img id="drinkImage" class="img-fluid mb-3" src="{{url_for('static', filename='img/wine-virtual.gif')}}" alt="Loading...">
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{drink_name}}</h5>
+                        <h5 class="card-text">Alcohol Content: {{alcohol_content * 100}}%</h5>
+                        <h5 class="card-text">Vessel: {{serving_glass}}</h5>
+                        <p class="card-text">Rim: {{rim}}</p>
+                        <h5 class="card-title">Ingredients:</h5>
+                        <ul>
+                        {% for ingredient in ingredients %}
+                            <li>{{ ingredient['name'] }}: {{ ingredient['quantity'] }}</li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Steps:</h5>
+                        <ol>
+                        {% for step in steps %}
+                            <li>{{ step }}</li>
+                        {% endfor %}
+                        </ol>
+                        <h5 class="card-title">Garnish:</h5>
+                        <ul>
+                        {% for garn in garnish %}
+                            <li>{{ garn }}</li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                    <div class="card">
+                        <div class="card-body">
+                        <h5 class="card-title">Drink History:</h5>
+                        <p class="card-text">{{drink_history}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Use AJAX to generate the image after the page has loaded
+            $.post('/generate_image', {image_description: '{{drink_image_description}}', drink_query: '{{drink_name}}'}, function(data) {
+                // Update the source of the image element with the new filename
+                $('#drinkImage').attr('src', '/static/img/' + data.filename);
+            });
+        });
+    </script>
+</body>
+</html>
