@@ -23,8 +23,9 @@ body {
     background-image: url('https://cdn.discordapp.com/attachments/1083991162366476351/1129079429700788284/catpuking_a_cocktail_being_made_at_a_modern_bar._the_bartenders_a9729ec8-eb23-4c1e-b499-274ec9c840d8.png');
     background-repeat: no-repeat;
     background-size: cover;
-    background-position: center; /* Add this line to center the background image */
+    background-position: center; /* Center the background image */
     z-index: 0;
+    position: relative; /* Add this line to position the image relative to its parent */
 }
 .container {
     color: #2a2424;
