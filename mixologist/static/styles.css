@@ -1,0 +1,12 @@
+body {
+    background-color: #f6dcbfcc;
+    color: #2a2424;
+    font-family: 'Times New Roman', Times, serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+/* ... rest of the CSS code ... */
