@@ -6,7 +6,7 @@ from ..models import GetRecipeParams
 import re 
 import requests 
 
-openai.api_key = "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"
+openai.api_key = ""
 Recipe = namedtuple("Recipe", ["ingredients", "alcohol_content", "steps", "rim", "garnish", "serving_glass", "drink_image_description", "drink_history", "drink_name"])
 
 # Set up logging
