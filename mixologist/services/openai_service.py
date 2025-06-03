@@ -1,27 +1,28 @@
 import openai
 import json
 import logging
+import os
 from collections import namedtuple
 from ..models import GetRecipeParams
-import re 
-import requests 
+import re
+import requests
 
-openai.api_key = ""
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 Recipe = namedtuple("Recipe", ["ingredients", "alcohol_content", "steps", "rim", "garnish", "serving_glass", "drink_image_description", "drink_history", "drink_name"])
 
 # Set up logging
 logging.basicConfig(filename='app.log', level=logging.INFO)
 
 def generate_image(prompt, user_message):
-    # Create an image using the DALL-E API
-    response = openai.Image.create(
+    """Generate a drink image using DALL-E."""
+    response = client.images.generate(
         prompt=prompt,
         n=1,
         size="1024x1024",
     )
 
     # Get the image URL from the response
-    image_url = response["data"][0]["url"]
+    image_url = response.data[0].url
 
     # Download the image
     img_data = requests.get(image_url).content
@@ -56,13 +57,13 @@ def parse_recipe_arguments(arguments):
 
     return Recipe(ingredients, alcohol_content, steps, rim, garnish, serving_glass, drink_image_description, drink_history, drink_name)
 
-def get_completion_from_messages(messages, 
-                                 model="gpt-3.5-turbo-0613", 
+def get_completion_from_messages(messages,
+                                 model="gpt-3.5-turbo-0613",
                                  temperature=0.7):
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model=model,
         messages=messages,
-        temperature=temperature, 
+        temperature=temperature,
         max_tokens=1000,
         functions=[
         {
@@ -73,8 +74,8 @@ def get_completion_from_messages(messages,
     ],
         function_call="auto",
     )
-    function_call = response.choices[0].message["function_call"]
-    arguments = function_call["arguments"]  # No JSON decoding
+    function_call = response.choices[0].message.function_call
+    arguments = function_call.arguments  # No JSON decoding
 
     # Pass the arguments dictionary to the new function
     return parse_recipe_arguments(arguments)
