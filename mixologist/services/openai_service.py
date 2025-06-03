@@ -1,4 +1,5 @@
 import openai
+import os
 import json
 import logging
 import os
@@ -6,8 +7,11 @@ from collections import namedtuple
 from ..models import GetRecipeParams
 import re
 import requests
+from dotenv import load_dotenv
 
 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+load_dotenv()
 Recipe = namedtuple("Recipe", ["ingredients", "alcohol_content", "steps", "rim", "garnish", "serving_glass", "drink_image_description", "drink_history", "drink_name"])
 
 # Set up logging
