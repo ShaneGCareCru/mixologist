@@ -61,7 +61,13 @@
     <script>
         $(document).ready(function() {
             // Use AJAX to generate the image after the page has loaded
-            $.post('/generate_image', {image_description: '{{drink_image_description}}', drink_query: '{{drink_name}}'}, function(data) {
+            const payload = {
+                image_description: '{{drink_image_description}}',
+                drink_query: '{{drink_name}}',
+                serving_glass: '{{serving_glass}}',
+                ingredients: {{ ingredients | tojson }}
+            };
+            $.post('/generate_image', payload, function(data) {
                 // Update the source of the image element with the new filename
                 $('#drinkImage').attr('src', '/static/img/' + data.filename);
             });
