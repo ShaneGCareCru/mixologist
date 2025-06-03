@@ -55,7 +55,7 @@ def generate_image_route():
     return jsonify({"filename": filename})
 
 
-@bp.errorhandler(openai.error.InvalidRequestError)
+@bp.errorhandler(openai.BadRequestError)
 def handle_invalid_request_error(e):
     return render_template('error.html', message="Something Went Wrong, it was either you or me, I'm thinking you used a naughty word"), 500
 
