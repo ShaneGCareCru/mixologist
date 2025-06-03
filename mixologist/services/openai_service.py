@@ -1,4 +1,5 @@
 import openai
+import os
 import json
 import logging
 from collections import namedtuple
@@ -6,7 +7,14 @@ from ..models import GetRecipeParams
 import re 
 import requests 
 
-openai.api_key = ""
+# Load an API key from the environment if available.  Leaving
+# ``openai.api_key`` empty overrides the library's built in behaviour of
+# reading ``OPENAI_API_KEY`` from the environment, so we explicitly pull
+# the value here instead.
+from dotenv import load_dotenv
+
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY", "")
 Recipe = namedtuple("Recipe", ["ingredients", "alcohol_content", "steps", "rim", "garnish", "serving_glass", "drink_image_description", "drink_history", "drink_name"])
 
 # Set up logging

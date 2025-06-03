@@ -38,7 +38,8 @@ def create_drink():
 
 @bp.route('/images')
 def images():
-    img_dir = 'bartender_app/static/'
+    """List available images in the application's static folder."""
+    img_dir = os.path.join('mixologist', 'static', 'img')
     return jsonify(os.listdir(img_dir))
 
 @bp.route('/generate_image', methods=['POST'])
