@@ -2,27 +2,52 @@ import openai
 import os
 import json
 import logging
-import os
 from collections import namedtuple
-from ..models import GetRecipeParams
+from typing import List, Optional, Dict
 import re
 import requests
 from dotenv import load_dotenv
 
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+from ..models import GetRecipeParams
 
 load_dotenv()
+
+# Use a synchronous client for chat completions and an asynchronous client for
+# image generation so that existing code remains compatible.
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+async_client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 Recipe = namedtuple("Recipe", ["ingredients", "alcohol_content", "steps", "rim", "garnish", "serving_glass", "drink_image_description", "drink_history", "drink_name"])
 
 # Set up logging
 logging.basicConfig(filename='app.log', level=logging.INFO)
 
-def generate_image(prompt, user_message):
-    """Generate a drink image using DALL-E."""
-    response = client.images.generate(
-        prompt=prompt,
+async def generate_image(
+    prompt: str,
+    drink_name: str,
+    ingredients: Optional[List[Dict[str, str]]] = None,
+    serving_glass: Optional[str] = None,
+) -> str:
+    """Generate a drink image using GPT Image asynchronously."""
+
+    ingredient_list = ""
+    if ingredients:
+        readable = [f"{i['quantity']} {i['name']}" for i in ingredients]
+        ingredient_list = " Ingredients: " + ", ".join(readable) + "."
+
+    glass_part = f" Served in a {serving_glass}." if serving_glass else ""
+
+    final_prompt = (
+        f"{prompt}.{ingredient_list}{glass_part}"
+        f" Show the {drink_name} cocktail in a professional, high-resolution "
+        "food photograph with natural lighting and a clean background."
+    )
+
+    response = await async_client.images.generate(
+        prompt=final_prompt,
+        model="gpt-image-1",
         n=1,
         size="1024x1024",
+        quality="high",
     )
 
     # Get the image URL from the response
@@ -34,7 +59,7 @@ def generate_image(prompt, user_message):
     # Sanitize the user message to create a valid filename
     # Remove any characters that are not alphanumeric, spaces, hyphens, or underscores
     # Then limit the length to 64 characters
-    filename = re.sub(r'[^\w\s-]', '', user_message)[:64] + '.jpg'
+    filename = re.sub(r'[^\w\s-]', '', drink_name)[:64] + '.jpg'
 
     # Save it to the 'static/img' folder in your Flask app
     with open(f'mixologist/static/img/{filename}', 'wb') as handler:

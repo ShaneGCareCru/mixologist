@@ -43,15 +43,22 @@ def images():
     return jsonify(os.listdir(img_dir))
 
 @bp.route('/generate_image', methods=['POST'])
-def generate_image_route():
-    # Extract the image description and drink query from the request
+async def generate_image_route():
+    """Generate an image for the drink asynchronously."""
     image_description = request.form.get('image_description')
     drink_query = request.form.get('drink_query')
+    ingredients_json = request.form.get('ingredients')
+    serving_glass = request.form.get('serving_glass')
 
-    # Generate the image and get the filename
-    filename = generate_image(image_description, drink_query)
+    ingredients = json.loads(ingredients_json) if ingredients_json else None
 
-    # Return the filename in the response
+    filename = await generate_image(
+        image_description,
+        drink_query,
+        ingredients=ingredients,
+        serving_glass=serving_glass,
+    )
+
     return jsonify({"filename": filename})
 
 
