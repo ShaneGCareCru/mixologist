@@ -36,7 +36,7 @@ def generate_image(prompt, user_message):
     # Then limit the length to 64 characters
     filename = re.sub(r'[^\w\s-]', '', user_message)[:64] + '.jpg'
 
-    # Save it to the 'static' folder in your Flask app
+    # Save it to the 'static/img' folder in your Flask app
     with open(f'mixologist/static/img/{filename}', 'wb') as handler:
         handler.write(img_data)
 
