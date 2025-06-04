@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "226125512359",
+    "project_id": "mixologist-76592",
+    "storage_bucket": "mixologist-76592.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226125512359:android:4d26a000df4a4276cea582",
+        "android_client_info": {
+          "package_name": "com.example.mixologist_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-LvoxyQT0mf_2VevBGkzUHCncQ2b4E30"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
