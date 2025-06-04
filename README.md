@@ -12,3 +12,9 @@
 | ![#5A684A](https://via.placeholder.com/15/5A684A/000000?text=+) | Green accent (optional) | Olive Leaf | `#5A684A` | A muted green ideal for adding depth and a hint of organic sophistication. |
 
 This palette aims to combine an intimate ambience with modern industrial touches, keeping the overall feel luxurious yet understated.
+
+## Flutter Front End
+
+A basic Flutter client is located in `flutter_app/`. It targets desktop, tablet and mobile platforms from a single code base. The login flow is intended to use Firebase Authentication, while requests to the OpenAI API are proxied through a secure cloud function so the API key remains server‑side.
+
+See `flutter_app/README.md` for setup instructions.
