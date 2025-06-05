@@ -31,6 +31,7 @@ def create_drink():
     """
     recipe = get_completion_from_messages([{"role": "user", "content": user_query}])
     recipe_data = {
+        # Original fields
         "drink_name": recipe.drink_name,
         "alcohol_content": recipe.alcohol_content,
         "serving_glass": recipe.serving_glass,
@@ -39,7 +40,22 @@ def create_drink():
         "steps": recipe.steps,
         "garnish": recipe.garnish,
         "drink_image_description": recipe.drink_image_description,
-        "drink_history": recipe.drink_history
+        "drink_history": recipe.drink_history,
+        # Enhanced fields
+        "brand_recommendations": recipe.brand_recommendations,
+        "ingredient_substitutions": recipe.ingredient_substitutions,
+        "related_cocktails": recipe.related_cocktails,
+        "difficulty_rating": recipe.difficulty_rating,
+        "preparation_time_minutes": recipe.preparation_time_minutes,
+        "equipment_needed": recipe.equipment_needed,
+        "flavor_profile": recipe.flavor_profile,
+        "serving_size_base": recipe.serving_size_base,
+        "phonetic_pronunciations": recipe.phonetic_pronunciations,
+        "enhanced_steps": recipe.enhanced_steps,
+        "suggested_variations": recipe.suggested_variations,
+        "food_pairings": recipe.food_pairings,
+        "optimal_serving_temperature": recipe.optimal_serving_temperature,
+        "skill_level_recommendation": recipe.skill_level_recommendation
     }
     return jsonify(recipe_data)
 
@@ -52,7 +68,7 @@ def images():
     return jsonify(os.listdir(img_dir))
 
 @bp.route('/generate_image', methods=['POST']) # This will now be our streaming endpoint
-async def generate_image_route():
+def generate_image_route():
     print("--- generate_image_route (streaming) called ---")
     
     image_description = request.form.get('image_description')
@@ -66,35 +82,49 @@ async def generate_image_route():
         print("!!! ERROR decoding ingredients JSON in generate_image_route !!!")
         return jsonify({"error": "Invalid ingredients JSON format"}), 400
 
-    async def event_stream():
+    def event_stream():
+        import asyncio
+        
+        async def async_event_stream():
+            try:
+                print(f"--- Starting OpenAI image stream for: {drink_query} ---")
+                async for b64_image_chunk in generate_image_stream(
+                    image_description,
+                    drink_query,
+                    ingredients=ingredients,
+                    serving_glass=serving_glass,
+                ):
+                    sse_event = {"type": "partial_image", "b64_data": b64_image_chunk}
+                    yield f"data: {json.dumps(sse_event)}\n\n"
+                
+                # After the stream from OpenAI is finished, send a completion event
+                print(f"--- Finished streaming partial images for: {drink_query} ---")
+                yield f"data: {json.dumps({'type': 'stream_complete'})}\n\n"
+
+            except Exception as e:
+                print(f"!!! EXCEPTION in event_stream for generate_image_route: {type(e).__name__} - {str(e)} !!!")
+                import traceback
+                traceback.print_exc()
+                # Send an error event over SSE
+                error_event = {"type": "error", "message": str(e)}
+                yield f"data: {json.dumps(error_event)}\n\n"
+        
+        # Run the async generator in a synchronous context
         try:
-            print(f"--- Starting OpenAI image stream for: {drink_query} ---")
-            async for b64_image_chunk in generate_image_stream(
-                image_description,
-                drink_query,
-                ingredients=ingredients,
-                serving_glass=serving_glass,
-            ):
-                sse_event = {"type": "partial_image", "b64_data": b64_image_chunk}
-                yield f"data: {json.dumps(sse_event)}\n\n"
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            async_gen = async_event_stream()
             
-            # After the stream from OpenAI is finished, send a completion event
-            # The original generate_image_stream doesn't explicitly save or return a final filename anymore.
-            # If a final "saved" confirmation is needed, that logic would need to be added back,
-            # perhaps after the loop or by the client confirming receipt of all parts.
-            # For now, we just stream the partials.
-            print(f"--- Finished streaming partial images for: {drink_query} ---")
-            yield f"data: {json.dumps({'type': 'stream_complete'})}\n\n"
+            while True:
+                try:
+                    result = loop.run_until_complete(async_gen.__anext__())
+                    yield result
+                except StopAsyncIteration:
+                    break
+        finally:
+            loop.close()
 
-        except Exception as e:
-            print(f"!!! EXCEPTION in event_stream for generate_image_route: {type(e).__name__} - {str(e)} !!!")
-            import traceback
-            traceback.print_exc()
-            # Send an error event over SSE
-            error_event = {"type": "error", "message": str(e)}
-            yield f"data: {json.dumps(error_event)}\n\n"
-
-    return Response(event_stream(), mimetype='text/event-stream') # Removed stream_with_context
+    return Response(stream_with_context(event_stream()), mimetype='text/event-stream')
 
 import asyncio # Add for asyncio.sleep
 

@@ -13,9 +13,31 @@ from ..models import GetRecipeParams
 
 load_dotenv()
 
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-async_client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-Recipe = namedtuple("Recipe", ["ingredients", "alcohol_content", "steps", "rim", "garnish", "serving_glass", "drink_image_description", "drink_history", "drink_name"])
+# Initialize OpenAI clients with error handling
+try:
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        print("Warning: OPENAI_API_KEY not set. OpenAI functionality will be limited.")
+        client = None
+        async_client = None
+    else:
+        client = openai.OpenAI(api_key=api_key)
+        async_client = openai.AsyncOpenAI(api_key=api_key)
+except Exception as e:
+    print(f"Warning: Could not initialize OpenAI client: {e}")
+    client = None
+    async_client = None
+Recipe = namedtuple("Recipe", [
+    # Original fields
+    "ingredients", "alcohol_content", "steps", "rim", "garnish", "serving_glass", 
+    "drink_image_description", "drink_history", "drink_name",
+    # Enhanced fields
+    "brand_recommendations", "ingredient_substitutions", "related_cocktails",
+    "difficulty_rating", "preparation_time_minutes", "equipment_needed",
+    "flavor_profile", "serving_size_base", "phonetic_pronunciations",
+    "enhanced_steps", "suggested_variations", "food_pairings",
+    "optimal_serving_temperature", "skill_level_recommendation"
+])
 
 logging.basicConfig(filename='app.log', level=logging.INFO)
 
@@ -26,6 +48,9 @@ async def generate_image_stream( # Renamed to indicate streaming and generator
     serving_glass: Optional[str] = None,
 ) -> AsyncGenerator[str, None]: # Changed return type to AsyncGenerator yielding strings (b64_json)
     """Generate a drink image using the Responses API and stream partial image base64 data."""
+
+    if async_client is None:
+        raise Exception("OpenAI async client not initialized. Please set OPENAI_API_KEY environment variable.")
 
     ingredient_list = ""
     if ingredients:
@@ -86,6 +111,8 @@ async def generate_image_stream( # Renamed to indicate streaming and generator
 def parse_recipe_arguments(arguments):
     if isinstance(arguments, str):
         arguments = json.loads(arguments)
+    
+    # Original fields
     ingredients = arguments.get("ingredients", [])
     alcohol_content = arguments.get("alcohol_content", 0)
     steps = arguments.get("steps", [])
@@ -96,23 +123,70 @@ def parse_recipe_arguments(arguments):
     logging.info(f'Drink image description: {drink_image_description}')
     drink_history = arguments.get("drink_history", "")
     drink_name = arguments.get("drink_name", "")
-    return Recipe(ingredients, alcohol_content, steps, rim, garnish, serving_glass, drink_image_description, drink_history, drink_name)
+    
+    # Enhanced fields - extract from AI response
+    brand_recommendations = arguments.get("brand_recommendations", [])
+    ingredient_substitutions = arguments.get("ingredient_substitutions", [])
+    related_cocktails = arguments.get("related_cocktails", [])
+    difficulty_rating = arguments.get("difficulty_rating", 3)
+    preparation_time_minutes = arguments.get("preparation_time_minutes", 5)
+    equipment_needed = arguments.get("equipment_needed", [])
+    flavor_profile = arguments.get("flavor_profile")
+    serving_size_base = arguments.get("serving_size_base")
+    phonetic_pronunciations = arguments.get("phonetic_pronunciations", {})
+    enhanced_steps = arguments.get("enhanced_steps", [])
+    suggested_variations = arguments.get("suggested_variations", [])
+    food_pairings = arguments.get("food_pairings", [])
+    optimal_serving_temperature = arguments.get("optimal_serving_temperature", "")
+    skill_level_recommendation = arguments.get("skill_level_recommendation", "")
+    
+    return Recipe(
+        # Original fields
+        ingredients, alcohol_content, steps, rim, garnish, serving_glass, 
+        drink_image_description, drink_history, drink_name,
+        # Enhanced fields
+        brand_recommendations, ingredient_substitutions, related_cocktails,
+        difficulty_rating, preparation_time_minutes, equipment_needed,
+        flavor_profile, serving_size_base, phonetic_pronunciations,
+        enhanced_steps, suggested_variations, food_pairings,
+        optimal_serving_temperature, skill_level_recommendation
+    )
 
 def get_completion_from_messages(messages,
                                  model="gpt-4.1-mini-2025-04-14",
                                  temperature=0.7):
+    if client is None:
+        raise Exception("OpenAI client not initialized. Please set OPENAI_API_KEY environment variable.")
+    
     response = client.chat.completions.create(
         model=model,
         messages=messages,
         temperature=temperature,
-        max_tokens=1000,
+        max_tokens=2000,  # Increased for complex responses
         functions=[{
           "name": "get_recipe",
           "description": "Get drink recipe.",
-          "parameters": GetRecipeParams.schema()
+          "parameters": GetRecipeParams.model_json_schema()
         }],
         function_call="auto",
     )
-    function_call = response.choices[0].message.function_call
-    arguments = function_call.arguments 
-    return parse_recipe_arguments(arguments)
+    
+    # Better error handling for function calls
+    message = response.choices[0].message
+    if not message.function_call:
+        raise Exception("OpenAI did not return a function call")
+    
+    function_call = message.function_call
+    if not function_call.arguments:
+        raise Exception("OpenAI function call has no arguments")
+    
+    # Log the raw arguments for debugging
+    logging.info(f"Raw OpenAI arguments: {function_call.arguments[:500]}...")
+    
+    try:
+        arguments = function_call.arguments
+        return parse_recipe_arguments(arguments)
+    except json.JSONDecodeError as e:
+        logging.error(f"JSON decode error: {e}")
+        logging.error(f"Raw arguments: {function_call.arguments}")
+        raise Exception(f"Invalid JSON response from OpenAI: {e}")
