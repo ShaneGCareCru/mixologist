@@ -9,6 +9,8 @@ dependencies:
     sdk: flutter
   firebase_auth: ^5.0.0
   cloud_firestore: ^5.0.0
+  http: ^1.2.0 
+    # flutter_client_sse removed
 
 flutter:
   uses-material-design: true

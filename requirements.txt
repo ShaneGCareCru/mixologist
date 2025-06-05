@@ -1,5 +1,7 @@
-flask
+Flask[async]
 pydantic
 python-dotenv
 requests
 openai==1.84.0
+Flask-CORS==6.0.0
+hypercorn
