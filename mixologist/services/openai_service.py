@@ -29,9 +29,11 @@ print(f"Image cache directory: {IMAGE_CACHE_DIR}")
 # Style constants for consistent image generation
 STYLE_CONSTANTS = {
     "cocktail": "professional cocktail photography, bar setting, moody lighting, high-resolution, clean background",
-    "ingredients": "clean ingredient photography, isolated on pure white background, professional lighting, product-ready presentation",
+    # Ingredients now use a richer food photography setting
+    "ingredients": "high-end food photography, subtle kitchen background, professional lighting, product-ready presentation",
     "glassware": "elegant barware photography, single empty glass, subtle reflections, light gray gradient background, centered composition, no liquids",
-    "equipment": "professional bar tools photography, single tool isolated on pure white background, minimalist style, clean product shot",
+    # Equipment shots blend with a bar environment for realism
+    "equipment": "professional bar tools photography, subtle bar background, soft shadows, clean product shot",
     "garnish": "fresh garnish macro photography, isolated on white background, natural lighting, single garnish element",
     "technique": "cocktail technique demonstration, hands visible, professional bartending, motion blur effect"
 }
@@ -350,9 +352,9 @@ async def generate_specialized_image_stream(
     if async_client is None:
         raise Exception("OpenAI async client not initialized. Please set OPENAI_API_KEY environment variable.")
 
-    # Build styled prompt - use special ingredient prompts for better results
-    if category == "ingredients":
-        styled_prompt = build_ingredient_prompt(subject)
+    # Build prompt - ingredients and equipment get an extra LLM refinement
+    if category in ["ingredients", "equipment"]:
+        styled_prompt = await _build_food_photography_prompt(subject, category)
     else:
         styled_prompt = build_styled_prompt(subject, category, additional_context)
     
@@ -419,6 +421,39 @@ async def generate_specialized_image_stream(
         raise 
 
     print(f"--- {category.title()} image generation stream finished for {subject} ---")
+
+async def _build_food_photography_prompt(subject: str, category: str) -> str:
+    """Use GPT-4.1 to craft an ideal food photography prompt for an item."""
+    if async_client is None:
+        raise Exception("OpenAI async client not initialized. Please set OPENAI_API_KEY environment variable.")
+
+    base_description = build_ingredient_prompt(subject) if category == "ingredients" else subject
+
+    background_style = "kitchen background" if category == "ingredients" else "bar background"
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a culinary photography prompt expert. "
+                "Rewrite the provided description into a concise prompt for a professional food photo. "
+                f"Include a subtle {background_style} and keep focus on the item."
+            ),
+        },
+        {
+            "role": "user",
+            "content": f"Description: {base_description}\nReturn the improved prompt.",
+        },
+    ]
+
+    response = await async_client.chat.completions.create(
+        model="gpt-4.1-mini-2025-04-14",
+        messages=messages,
+        temperature=0.5,
+        max_tokens=60,
+    )
+
+    return response.choices[0].message.content.strip()
 
 async def _build_method_prompt(
     step_text: str,
