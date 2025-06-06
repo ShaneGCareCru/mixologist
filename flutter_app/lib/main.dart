@@ -454,12 +454,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
       if (_expandedSection == id) {
         _expandedSection = null;
         if (kIsWeb) {
-          web.window.history.replaceState(null, '', '#');
+          html.window.history.replaceState(null, '', '#');
         }
       } else {
         _expandedSection = id;
         if (kIsWeb) {
-          web.window.history.replaceState(null, '', '#$id');
+          html.window.history.replaceState(null, '', '#$id');
         }
         
         // Auto-generate ingredient images when ingredients section is expanded
@@ -732,13 +732,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
       
       // Save ingredient checklist
       for (String ingredient in _ingredientChecklist.keys) {
-        web.window.localStorage['${recipeKey}_ingredient_$ingredient'] = 
+        html.window.localStorage['${recipeKey}_ingredient_$ingredient'] = 
             _ingredientChecklist[ingredient].toString();
       }
       
       // Save step completion
       for (int step in _stepCompletion.keys) {
-        web.window.localStorage['${recipeKey}_step_$step'] = 
+        html.window.localStorage['${recipeKey}_step_$step'] = 
             _stepCompletion[step].toString();
       }
     } catch (e) {
@@ -755,7 +755,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       // Load ingredient checklist
       final ingredientKeys = _ingredientChecklist.keys.toList();
       for (String ingredient in ingredientKeys) {
-        final saved = web.window.localStorage['${recipeKey}_ingredient_$ingredient'];
+        final saved = html.window.localStorage['${recipeKey}_ingredient_$ingredient'];
         if (saved != null) {
           _ingredientChecklist[ingredient] = saved.toLowerCase() == 'true';
         }
@@ -764,7 +764,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       // Load step completion
       final stepKeys = _stepCompletion.keys.toList();
       for (int step in stepKeys) {
-        final saved = web.window.localStorage['${recipeKey}_step_$step'];
+        final saved = html.window.localStorage['${recipeKey}_step_$step'];
         if (saved != null) {
           _stepCompletion[step] = saved.toLowerCase() == 'true';
         }
