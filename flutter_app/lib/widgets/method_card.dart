@@ -298,7 +298,8 @@ class _MethodCardState extends State<MethodCard>
                 color: Colors.grey[500],
               ),
               textAlign: TextAlign.center,
-                  ),
+            ),
+          ],
         ),
       ),
     );
@@ -436,7 +437,11 @@ class _MethodCardState extends State<MethodCard>
                     alignment: Alignment.centerRight,
                     child: Checkbox(
                       value: widget.data.isCompleted,
-                      onChanged: widget.onCheckboxChanged,
+                      onChanged: (value) {
+                        if (widget.onCheckboxChanged != null) {
+                          widget.onCheckboxChanged!(value ?? false);
+                        }
+                      },
                       activeColor: theme.colorScheme.secondary,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
