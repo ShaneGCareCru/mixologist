@@ -7,6 +7,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http; // HTTP package
 // No longer importing flutter_client_sse
 import 'firebase_options.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'widgets/section_preview.dart';
+import 'widgets/connection_line.dart';
+import 'widgets/lazy_load_section.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,12 +27,15 @@ class MixologistApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mixologist',
-      theme: _buildLightTheme(),
-      darkTheme: _buildDarkTheme(),
-      themeMode: ThemeMode.system,
-      home: const LoginScreen(),
+    return ScrollConfiguration(
+      behavior: _SmoothScrollBehavior(),
+      child: MaterialApp(
+        title: 'Mixologist',
+        theme: _buildLightTheme(),
+        darkTheme: _buildDarkTheme(),
+        themeMode: ThemeMode.system,
+        home: const LoginScreen(),
+      ),
     );
   }
 
@@ -124,6 +133,13 @@ class MixologistApp extends StatelessWidget {
       ),
       visualDensity: VisualDensity.adaptivePlatformDensity,
     );
+  }
+}
+
+class _SmoothScrollBehavior extends ScrollBehavior {
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics();
   }
 }
 
@@ -300,6 +316,14 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Map<String, Uint8List?> _specializedImages = {};
   Map<String, bool> _imageGenerationProgress = {};
   String _selectedSection = 'overview'; // Navigation state
+  String? _expandedSection;
+  final Map<String, double> _sectionHeights = {};
+  final Map<int, List<String>> _stepIngredientMap = {};
+  final Map<int, List<String>> _stepEquipmentMap = {};
+  final Map<String, GlobalKey> _ingredientIconKeys = {};
+  final Map<String, GlobalKey> _equipmentIconKeys = {};
+  final List<GlobalKey> _stepCardKeys = [];
+  int? _hoveredStep;
   bool _isGeneratingVisuals = false;
   bool _isLoadingRelatedCocktail = false;
 
@@ -309,7 +333,45 @@ class _RecipeScreenState extends State<RecipeScreen> {
     _connectToImageStream();
     _initializeIngredientChecklist();
     _initializeSpecializedImages();
+    _initializeStepConnections();
     _loadCachedImages(); // Check for existing cached images
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreExpandedFromHash());
+  }
+
+  void _restoreExpandedFromHash() {
+    final fragment = Uri.base.fragment;
+    const sections = ['ingredients', 'method', 'equipment', 'variations'];
+    if (sections.contains(fragment)) {
+      setState(() {
+        _expandedSection = fragment;
+      });
+    }
+  }
+
+  void _toggleExpandedSection(String id) {
+    setState(() {
+      if (_expandedSection == id) {
+        _expandedSection = null;
+        if (kIsWeb) {
+          html.window.history.replaceState(null, '', '#');
+        }
+      } else {
+        _expandedSection = id;
+        if (kIsWeb) {
+          html.window.history.replaceState(null, '', '#$id');
+        }
+      }
+    });
+  }
+
+  bool _ingredientActive(String name) {
+    if (_hoveredStep == null) return false;
+    return _stepIngredientMap[_hoveredStep!]?.contains(name.toLowerCase()) ?? false;
+  }
+
+  bool _equipmentActive(String name) {
+    if (_hoveredStep == null) return false;
+    return _stepEquipmentMap[_hoveredStep!]?.contains(name.toLowerCase()) ?? false;
   }
   
   void _initializeSpecializedImages() {
@@ -455,6 +517,31 @@ class _RecipeScreenState extends State<RecipeScreen> {
       for (int i = 0; i < widget.recipeData['steps'].length; i++) {
         _stepCompletion[i] = false;
       }
+    }
+  }
+
+  void _initializeStepConnections() {
+    final ingredients = (widget.recipeData['ingredients'] as List?)
+            ?.map((e) => e['name'].toString().toLowerCase())
+            .toList() ??
+        [];
+    final equipment = (widget.recipeData['equipment_needed'] as List?)
+            ?.map((e) => (e['item'] ?? e).toString().toLowerCase())
+            .toList() ??
+        [];
+    final steps = (widget.recipeData['steps'] as List?)?.map((e) => e.toString()) ?? [];
+    int idx = 0;
+    for (final step in steps) {
+      final stepLower = step.toLowerCase();
+      _stepIngredientMap[idx] = [
+        for (final ing in ingredients)
+          if (stepLower.contains(ing)) ing
+      ];
+      _stepEquipmentMap[idx] = [
+        for (final eq in equipment)
+          if (stepLower.contains(eq)) eq
+      ];
+      idx++;
     }
   }
   
@@ -1009,7 +1096,255 @@ class _RecipeScreenState extends State<RecipeScreen> {
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        _buildSectionPreviews(),
       ],
+    );
+  }
+
+  Widget _buildSectionPreviews() {
+    return Stack(
+      children: [
+        Column(
+          children: [
+            SectionPreview(
+              title: 'Ingredients',
+              icon: Icons.local_grocery_store,
+              previewContent: _buildIngredientsPreviewWidget(),
+              expandedContent: _buildIngredientsSection(),
+              totalItems: (widget.recipeData['ingredients'] as List?)?.length ?? 0,
+              completedItems: _ingredientChecklist.values.where((e) => e).length,
+              expanded: _expandedSection == 'ingredients',
+              onOpen: () => _toggleExpandedSection('ingredients'),
+              onClose: () => _toggleExpandedSection('ingredients'),
+            ),
+            const SizedBox(height: 12),
+            SectionPreview(
+              title: 'Method',
+              icon: Icons.format_list_numbered,
+              previewContent: _buildMethodPreviewWidget(),
+              expandedContent: _buildMethodSection(),
+              totalItems: (widget.recipeData['steps'] as List?)?.length ?? 0,
+              completedItems: _stepCompletion.values.where((e) => e).length,
+              expanded: _expandedSection == 'method',
+              onOpen: () => _toggleExpandedSection('method'),
+              onClose: () => _toggleExpandedSection('method'),
+            ),
+            const SizedBox(height: 12),
+            SectionPreview(
+              title: 'Equipment',
+              icon: Icons.build,
+              previewContent: _buildEquipmentPreviewWidget(),
+              expandedContent: _buildEquipmentSection(),
+              totalItems: (widget.recipeData['equipment_needed'] as List?)?.length ?? 0,
+              expanded: _expandedSection == 'equipment',
+              onOpen: () => _toggleExpandedSection('equipment'),
+              onClose: () => _toggleExpandedSection('equipment'),
+            ),
+            const SizedBox(height: 12),
+            SectionPreview(
+              title: 'Variations',
+              icon: Icons.auto_awesome,
+              previewContent: _buildVariationsPreviewWidget(),
+              expandedContent: _buildVariationsSection(),
+              totalItems: (widget.recipeData['suggested_variations'] as List?)?.length ?? 0,
+              expanded: _expandedSection == 'variations',
+              onOpen: () => _toggleExpandedSection('variations'),
+              onClose: () => _toggleExpandedSection('variations'),
+            ),
+          ],
+        ),
+        if (_expandedSection != null)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => _toggleExpandedSection(_expandedSection!),
+              behavior: HitTestBehavior.translucent,
+              child: Container(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildIngredientsPreviewWidget() {
+    final ingredients =
+        (widget.recipeData['ingredients'] as List?)?.take(4).toList() ?? [];
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: ingredients.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+      ),
+      itemBuilder: (context, index) {
+        final ingredient = ingredients[index];
+        final name = ingredient['name'] ?? ingredient.toString();
+        final imageKey = 'ingredient_\$name';
+        if (_specializedImages[imageKey] != null) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.memory(
+              _specializedImages[imageKey]!,
+              fit: BoxFit.cover,
+            ),
+          );
+        }
+        return Container(
+          color: Colors.grey[200],
+          alignment: Alignment.center,
+          child: Text(
+            name,
+            style: Theme.of(context).textTheme.labelSmall,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMethodPreviewWidget() {
+    final steps = (widget.recipeData['steps'] as List?) ?? [];
+    if (steps.isEmpty) return const SizedBox.shrink();
+    return Text(
+      steps.first.toString(),
+      style: Theme.of(context).textTheme.bodyMedium,
+      maxLines: 3,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  Widget _buildEquipmentPreviewWidget() {
+    final equipment =
+        (widget.recipeData['equipment_needed'] as List?)?.take(3).toList() ?? [];
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: equipment.map((e) {
+        final name = e['item'] ?? e.toString();
+        final imageKey = 'equipment_\$name';
+        Widget child;
+        if (_specializedImages[imageKey] != null) {
+          child = ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.memory(
+              _specializedImages[imageKey]!,
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
+            ),
+          );
+        } else {
+          child = Container(
+            width: 40,
+            height: 40,
+            color: Colors.grey[200],
+            child: Icon(
+              Icons.build,
+              size: 20,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+          );
+        }
+        return Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: child);
+      }).toList(),
+    );
+  }
+
+  Widget _buildVariationsPreviewWidget() {
+    final variations =
+        (widget.recipeData['suggested_variations'] as List?)?.take(3).toList() ?? [];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: variations.map((v) {
+        final name = v['name'] ?? '';
+        return Row(
+          children: [
+            Icon(
+              Icons.arrow_right,
+              size: 14,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                name,
+                style: Theme.of(context).textTheme.bodySmall,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildIngredientIcons() {
+    final ingredients = (widget.recipeData['ingredients'] as List?) ?? [];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: ingredients.map((ingredient) {
+          final name = ingredient['name'];
+          final key = _ingredientIconKeys.putIfAbsent(name, () => GlobalKey());
+          final active = _ingredientActive(name);
+          return Container(
+            key: key,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              border: Border.all(
+                  color: active
+                      ? Theme.of(context).colorScheme.secondary
+                      : Colors.transparent,
+                  width: 2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(name,
+                style: Theme.of(context).textTheme.labelSmall),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildEquipmentIcons() {
+    final equipment = (widget.recipeData['equipment_needed'] as List?) ?? [];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: equipment.map((e) {
+          final name = e['item'] ?? e.toString();
+          final key = _equipmentIconKeys.putIfAbsent(name, () => GlobalKey());
+          final active = _equipmentActive(name);
+          return Container(
+            key: key,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              boxShadow: active
+                  ? [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .secondary
+                            .withOpacity(0.6),
+                        blurRadius: 6,
+                      )
+                    ]
+                  : [],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.build,
+                size: 16,
+                color: active
+                    ? Theme.of(context).colorScheme.secondary
+                    : Theme.of(context).colorScheme.primary),
+          );
+        }).toList(),
+      ),
     );
   }
   
@@ -1180,8 +1515,17 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
   
   Widget _buildMethodSection() {
-    return Column(
+    return Stack(
       children: [
+        Column(
+          children: [
+            if (widget.recipeData['ingredients'] is List)
+              _buildIngredientIcons(),
+            if (widget.recipeData['ingredients'] is List)
+              const SizedBox(height: 8),
+            if (widget.recipeData['equipment_needed'] is List)
+              _buildEquipmentIcons(),
+            const SizedBox(height: 16),
         // Progress indicator
         if (widget.recipeData['steps'] is List)
           Card(
@@ -1213,17 +1557,23 @@ class _RecipeScreenState extends State<RecipeScreen> {
         const SizedBox(height: 16),
         // Step Cards
         if (widget.recipeData['steps'] is List)
-          for (var i = 0; i < widget.recipeData['steps'].length; i++)
-            Container(
+          ...List.generate(widget.recipeData['steps'].length, (i) {
+            final key = _stepCardKeys.length > i ? _stepCardKeys[i] : GlobalKey();
+            if (_stepCardKeys.length <= i) _stepCardKeys.add(key);
+            return Container(
+              key: key,
               margin: const EdgeInsets.only(bottom: 12),
-              child: Card(
-                elevation: _stepCompletion[i] == true ? 2 : 4,
-                color: _stepCompletion[i] == true 
-                    ? Theme.of(context).colorScheme.secondaryContainer
-                    : Theme.of(context).colorScheme.surface,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
+              child: MouseRegion(
+                onEnter: (_) => setState(() => _hoveredStep = i),
+                onExit: (_) => setState(() => _hoveredStep = null),
+                child: Card(
+                  elevation: _stepCompletion[i] == true ? 2 : 4,
+                  color: _stepCompletion[i] == true
+                      ? Theme.of(context).colorScheme.secondaryContainer
+                      : Theme.of(context).colorScheme.surface,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
@@ -1290,6 +1640,25 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 ),
               ),
             ),
+          );
+          }),
+      ],
+    ),
+        if (_hoveredStep != null)
+          ConnectionLine(
+            from: _stepCardKeys[_hoveredStep!],
+            to: [
+              ...?_stepIngredientMap[_hoveredStep!]
+                  ?.map((n) => _ingredientIconKeys[n])
+                  .whereType<GlobalKey>()
+                  .toList(),
+              ...?_stepEquipmentMap[_hoveredStep!]
+                  ?.map((n) => _equipmentIconKeys[n])
+                  .whereType<GlobalKey>()
+                  .toList(),
+            ],
+            active: true,
+          ),
       ],
     );
   }
@@ -1576,13 +1945,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget _getCurrentSectionContent() {
     switch (_selectedSection) {
       case 'ingredients':
-        return _buildIngredientsSection();
+        return LazyLoadSection(builder: (_) => _buildIngredientsSection());
       case 'method':
-        return _buildMethodSection();
+        return LazyLoadSection(builder: (_) => _buildMethodSection());
       case 'equipment':
-        return _buildEquipmentSection();
+        return LazyLoadSection(builder: (_) => _buildEquipmentSection());
       case 'variations':
-        return _buildVariationsSection();
+        return LazyLoadSection(builder: (_) => _buildVariationsSection());
       case 'overview':
       default:
         return _buildOverviewSection();
