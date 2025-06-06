@@ -298,8 +298,7 @@ class _MethodCardState extends State<MethodCard>
                 color: Colors.grey[500],
               ),
               textAlign: TextAlign.center,
-            ),
-          ],
+                  ),
         ),
       ),
     );
@@ -368,7 +367,6 @@ class _MethodCardState extends State<MethodCard>
                       ),
                   ],
                 ),
-                ],
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
