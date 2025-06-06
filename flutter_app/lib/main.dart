@@ -2126,8 +2126,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                           _toggleStepCompleted(i, value ?? false),
                     ),
                   ),
-                ),
-              );
+                );
             },
           ),
       ],
