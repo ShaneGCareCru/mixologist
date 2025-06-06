@@ -1,6 +1,31 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:vibration/vibration.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+enum HapticFeedbackType {
+  light,
+  medium,
+  heavy,
+  selection,
+  success,
+  error,
+}
+
+enum TipCategory {
+  technique(Icons.touch_app, 'Technique'),
+  timing(Icons.timer, 'Timing'),
+  ingredient(Icons.local_grocery_store, 'Ingredient'),
+  equipment(Icons.kitchen, 'Equipment'),
+  presentation(Icons.palette, 'Presentation'),
+  safety(Icons.warning, 'Safety');
+
+  const TipCategory(this.icon, this.label);
+  final IconData icon;
+  final String label;
+}
 
 class MethodCardData {
   final int stepNumber;
@@ -12,6 +37,7 @@ class MethodCardData {
   final String duration;
   final String difficulty;
   final String? proTip;
+  final TipCategory? tipCategory;
 
   const MethodCardData({
     required this.stepNumber,
@@ -23,6 +49,7 @@ class MethodCardData {
     required this.duration,
     required this.difficulty,
     this.proTip,
+    this.tipCategory,
   });
 }
 
@@ -36,6 +63,8 @@ class MethodCard extends StatefulWidget {
   final VoidCallback? onPrevious;
   final bool enableSwipeGestures;
   final bool enableKeyboardNavigation;
+  final bool enableAutoAdvance;
+  final Duration autoAdvanceDuration;
 
   const MethodCard({
     super.key,
@@ -46,6 +75,8 @@ class MethodCard extends StatefulWidget {
     this.onPrevious,
     this.enableSwipeGestures = true,
     this.enableKeyboardNavigation = true,
+    this.enableAutoAdvance = false,
+    this.autoAdvanceDuration = const Duration(seconds: 30),
   });
 
   @override
@@ -59,6 +90,8 @@ class _MethodCardState extends State<MethodCard>
   late AnimationController _swipeAnimationController;
   late Animation<Offset> _swipeAnimation;
   bool _isSwipeInProgress = false;
+  Timer? _autoAdvanceTimer;
+  double _timerProgress = 0.0;
 
   @override
   void initState() {
@@ -75,16 +108,20 @@ class _MethodCardState extends State<MethodCard>
       parent: _swipeAnimationController,
       curve: Curves.easeInOut,
     ));
+    
+    _startAutoAdvanceTimer();
   }
 
   @override
   void dispose() {
+    _autoAdvanceTimer?.cancel();
     _focusNode.dispose();
     _swipeAnimationController.dispose();
     super.dispose();
   }
 
   void _toggleExpanded() {
+    _triggerHapticFeedback(HapticFeedbackType.selection);
     setState(() {
       _expanded = !_expanded;
     });
@@ -92,14 +129,15 @@ class _MethodCardState extends State<MethodCard>
 
   void _handleSwipeRight() {
     if (widget.onCompleted != null && !_isSwipeInProgress) {
-      _triggerHapticFeedback();
+      _stopAutoAdvanceTimer();
+      _triggerHapticFeedback(HapticFeedbackType.success);
       _animateSwipeComplete();
     }
   }
 
   void _handleSwipeLeft() {
     if (widget.onPrevious != null && !_isSwipeInProgress) {
-      _triggerHapticFeedback();
+      _triggerHapticFeedback(HapticFeedbackType.medium);
       widget.onPrevious!();
     }
   }
@@ -121,11 +159,72 @@ class _MethodCardState extends State<MethodCard>
     });
   }
 
-  void _triggerHapticFeedback() {
-    if (!kIsWeb) {
-      HapticFeedback.lightImpact();
+  void _triggerHapticFeedback([HapticFeedbackType type = HapticFeedbackType.light]) async {
+    if (kIsWeb) return;
+    
+    switch (type) {
+      case HapticFeedbackType.light:
+        HapticFeedback.lightImpact();
+        break;
+      case HapticFeedbackType.medium:
+        HapticFeedback.mediumImpact();
+        break;
+      case HapticFeedbackType.heavy:
+        HapticFeedback.heavyImpact();
+        break;
+      case HapticFeedbackType.selection:
+        HapticFeedback.selectionClick();
+        break;
+      case HapticFeedbackType.success:
+        if (await Vibration.hasVibrator() ?? false) {
+          Vibration.vibrate(pattern: [0, 100, 50, 100], intensities: [0, 128, 0, 255]);
+        } else {
+          HapticFeedback.heavyImpact();
+        }
+        break;
+      case HapticFeedbackType.error:
+        if (await Vibration.hasVibrator() ?? false) {
+          Vibration.vibrate(pattern: [0, 200, 100, 200, 100, 200], intensities: [0, 255, 0, 255, 0, 255]);
+        } else {
+          HapticFeedback.heavyImpact();
+        }
+        break;
     }
   }
+
+  void _startAutoAdvanceTimer() {
+    if (!widget.enableAutoAdvance || 
+        widget.state == MethodCardState.completed ||
+        widget.onCompleted == null) {
+      return;
+    }
+    
+    _autoAdvanceTimer?.cancel();
+    _timerProgress = 0.0;
+    
+    const tickDuration = Duration(milliseconds: 100);
+    final totalTicks = widget.autoAdvanceDuration.inMilliseconds / tickDuration.inMilliseconds;
+    
+    _autoAdvanceTimer = Timer.periodic(tickDuration, (timer) {
+      setState(() {
+        _timerProgress += 1.0 / totalTicks;
+      });
+      
+      if (_timerProgress >= 1.0) {
+        timer.cancel();
+        _triggerHapticFeedback(HapticFeedbackType.medium);
+        widget.onCompleted?.call();
+      }
+    });
+  }
+
+  void _stopAutoAdvanceTimer() {
+    _autoAdvanceTimer?.cancel();
+    setState(() {
+      _timerProgress = 0.0;
+    });
+  }
+
 
   void _handleKeyPress(KeyEvent event) {
     if (!widget.enableKeyboardNavigation) return;
@@ -133,11 +232,12 @@ class _MethodCardState extends State<MethodCard>
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.space ||
           event.logicalKey == LogicalKeyboardKey.enter) {
-        _triggerHapticFeedback();
+        _stopAutoAdvanceTimer();
+        _triggerHapticFeedback(HapticFeedbackType.success);
         widget.onCompleted?.call();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
                  event.logicalKey == LogicalKeyboardKey.backspace) {
-        _triggerHapticFeedback();
+        _triggerHapticFeedback(HapticFeedbackType.selection);
         widget.onPrevious?.call();
       } else if (event.logicalKey == LogicalKeyboardKey.escape) {
         _focusNode.unfocus();
@@ -174,12 +274,38 @@ class _MethodCardState extends State<MethodCard>
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: Image.network(
-              widget.data.imageUrl,
+            child: CachedNetworkImage(
+              imageUrl: widget.data.imageUrl,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Center(
-                child: Text(widget.data.imageAlt),
+              placeholder: (context, url) => Container(
+                color: Colors.grey[200],
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
               ),
+              errorWidget: (context, url, error) => Container(
+                color: Colors.grey[100],
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.image_not_supported, 
+                           size: 32, 
+                           color: Colors.grey[400]),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.data.imageAlt,
+                        style: TextStyle(color: Colors.grey[600]),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              memCacheWidth: 400,
+              memCacheHeight: 225,
+              maxWidthDiskCache: 800,
+              maxHeightDiskCache: 450,
             ),
           ),
           Padding(
@@ -218,6 +344,27 @@ class _MethodCardState extends State<MethodCard>
                       ),
                   ],
                 ),
+                if (widget.enableAutoAdvance && _timerProgress > 0.0) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.hourglass_bottom, size: 16, color: theme.hintColor),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: LinearProgressIndicator(
+                          value: _timerProgress,
+                          backgroundColor: theme.colorScheme.surface,
+                          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${((1.0 - _timerProgress) * widget.autoAdvanceDuration.inSeconds).round()}s',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ],
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -228,9 +375,44 @@ class _MethodCardState extends State<MethodCard>
                     child: widget.data.proTip != null
                         ? Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              'Pro Tip: ${widget.data.proTip!}',
-                              style: theme.textTheme.bodySmall,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (widget.data.tipCategory != null) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          widget.data.tipCategory!.icon,
+                                          size: 16,
+                                          color: theme.colorScheme.onPrimaryContainer,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          widget.data.tipCategory!.label,
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.onPrimaryContainer,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Expanded(
+                                  child: Text(
+                                    widget.data.proTip!,
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ),
+                              ],
                             ),
                           )
                         : const SizedBox.shrink(),
@@ -282,10 +464,7 @@ class _MethodCardState extends State<MethodCard>
       interactiveCard = KeyboardListener(
         focusNode: _focusNode,
         onKeyEvent: _handleKeyPress,
-        child: Focus(
-          focusNode: _focusNode,
-          child: interactiveCard,
-        ),
+        child: interactiveCard,
       );
     }
 

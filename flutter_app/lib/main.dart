@@ -12,9 +12,10 @@ import 'dart:html' as html;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'widgets/section_preview.dart';
 import 'widgets/connection_line.dart';
-import 'widgets/lazy_load_section.dart';
 import 'widgets/drink_progress_glass.dart';
 import 'widgets/method_card.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -359,6 +360,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     setState(() {
       _stepCompletion[stepIndex] = true;
     });
+    _saveProgress(); // Save progress when step is completed
   }
 
   void _goToPreviousStep(int currentStepIndex) {
@@ -366,6 +368,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       setState(() {
         _stepCompletion[currentStepIndex - 1] = false;
       });
+      _saveProgress(); // Save progress when step is unchecked
     }
   }
 
@@ -386,6 +389,50 @@ class _RecipeScreenState extends State<RecipeScreen> {
     }
     
     return null; // No pro tip for this step
+  }
+
+  TipCategory? _getTipCategoryForStep(String stepText) {
+    final stepLower = stepText.toLowerCase();
+    
+    if (stepLower.contains('shake') || stepLower.contains('shaking') ||
+        stepLower.contains('stir') || stepLower.contains('stirring') ||
+        stepLower.contains('muddle')) {
+      return TipCategory.technique;
+    } else if (stepLower.contains('strain')) {
+      return TipCategory.equipment;
+    } else if (stepLower.contains('garnish') || stepLower.contains('serve')) {
+      return TipCategory.presentation;
+    } else if (stepLower.contains('chill') || stepLower.contains('temperature')) {
+      return TipCategory.timing;
+    } else if (stepLower.contains('fresh') || stepLower.contains('quality')) {
+      return TipCategory.ingredient;
+    }
+    
+    return null;
+  }
+
+  IconData _getIngredientIcon(String ingredientName) {
+    final nameLower = ingredientName.toLowerCase();
+    
+    if (nameLower.contains('whiskey') || nameLower.contains('bourbon') || nameLower.contains('scotch')) {
+      return Icons.local_bar;
+    } else if (nameLower.contains('vodka') || nameLower.contains('gin') || nameLower.contains('rum')) {
+      return Icons.local_bar;
+    } else if (nameLower.contains('lemon') || nameLower.contains('lime') || nameLower.contains('orange')) {
+      return Icons.circle;
+    } else if (nameLower.contains('syrup') || nameLower.contains('honey') || nameLower.contains('sugar')) {
+      return Icons.water_drop;
+    } else if (nameLower.contains('bitters') || nameLower.contains('vermouth')) {
+      return Icons.opacity;
+    } else if (nameLower.contains('ice') || nameLower.contains('water')) {
+      return Icons.ac_unit;
+    } else if (nameLower.contains('mint') || nameLower.contains('herb') || nameLower.contains('basil')) {
+      return Icons.eco;
+    } else if (nameLower.contains('cherry') || nameLower.contains('olive') || nameLower.contains('garnish')) {
+      return Icons.circle_outlined;
+    } else {
+      return Icons.local_grocery_store;
+    }
   }
 
   @override
@@ -421,8 +468,28 @@ class _RecipeScreenState extends State<RecipeScreen> {
         if (kIsWeb) {
           html.window.history.replaceState(null, '', '#$id');
         }
+        
+        // Auto-generate ingredient images when ingredients section is expanded
+        if (id == 'ingredients') {
+          _autoGenerateIngredientImages();
+        }
       }
     });
+  }
+
+  void _autoGenerateIngredientImages() {
+    if (widget.recipeData['ingredients'] is List) {
+      for (var ingredient in widget.recipeData['ingredients']) {
+        final ingredientName = ingredient['name'];
+        final imageKey = 'ingredient_$ingredientName';
+        
+        // Only generate if we don't already have the image and aren't currently generating
+        if (_specializedImages[imageKey] == null && 
+            _imageGenerationProgress[imageKey] != true) {
+          _generateSpecializedImage(imageKey, ingredientName, context: 'ingredient');
+        }
+      }
+    }
   }
 
   bool _ingredientActive(String name) {
@@ -578,6 +645,141 @@ class _RecipeScreenState extends State<RecipeScreen> {
       for (int i = 0; i < widget.recipeData['steps'].length; i++) {
         _stepCompletion[i] = false;
       }
+    }
+    
+    // Load saved progress
+    _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    try {
+      if (kIsWeb) {
+        await _loadProgressWeb();
+        return;
+      }
+      
+      final prefs = await SharedPreferences.getInstance();
+      final recipeKey = _getRecipeKey();
+      
+      // Load ingredient checklist
+      final ingredientKeys = _ingredientChecklist.keys.toList();
+      for (String ingredient in ingredientKeys) {
+        final saved = prefs.getBool('${recipeKey}_ingredient_$ingredient');
+        if (saved != null) {
+          _ingredientChecklist[ingredient] = saved;
+        }
+      }
+      
+      // Load step completion
+      final stepKeys = _stepCompletion.keys.toList();
+      for (int step in stepKeys) {
+        final saved = prefs.getBool('${recipeKey}_step_$step');
+        if (saved != null) {
+          _stepCompletion[step] = saved;
+        }
+      }
+      
+      // Update UI if any progress was loaded
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      print('Error loading progress: $e');
+      // Fallback to web storage if SharedPreferences fails
+      if (kIsWeb) {
+        await _loadProgressWeb();
+      }
+    }
+  }
+
+  Future<void> _saveProgress() async {
+    try {
+      if (kIsWeb) {
+        await _saveProgressWeb();
+        return;
+      }
+      
+      final prefs = await SharedPreferences.getInstance();
+      final recipeKey = _getRecipeKey();
+      
+      // Save ingredient checklist
+      for (String ingredient in _ingredientChecklist.keys) {
+        await prefs.setBool('${recipeKey}_ingredient_$ingredient', _ingredientChecklist[ingredient]!);
+      }
+      
+      // Save step completion
+      for (int step in _stepCompletion.keys) {
+        await prefs.setBool('${recipeKey}_step_$step', _stepCompletion[step]!);
+      }
+    } catch (e) {
+      print('Error saving progress: $e');
+      // Fallback to web storage if SharedPreferences fails
+      if (kIsWeb) {
+        await _saveProgressWeb();
+      }
+    }
+  }
+
+  String _getRecipeKey() {
+    // Generate a unique key for this recipe based on its content
+    final recipeName = widget.recipeData['name'] ?? 'unknown';
+    final ingredientCount = (widget.recipeData['ingredients'] as List?)?.length ?? 0;
+    final stepCount = (widget.recipeData['steps'] as List?)?.length ?? 0;
+    return '${recipeName}_${ingredientCount}_$stepCount';
+  }
+
+  Future<void> _saveProgressWeb() async {
+    if (!kIsWeb) return;
+    
+    try {
+      final recipeKey = _getRecipeKey();
+      
+      // Save ingredient checklist
+      for (String ingredient in _ingredientChecklist.keys) {
+        html.window.localStorage['${recipeKey}_ingredient_$ingredient'] = 
+            _ingredientChecklist[ingredient].toString();
+      }
+      
+      // Save step completion
+      for (int step in _stepCompletion.keys) {
+        html.window.localStorage['${recipeKey}_step_$step'] = 
+            _stepCompletion[step].toString();
+      }
+    } catch (e) {
+      print('Error saving progress to localStorage: $e');
+    }
+  }
+
+  Future<void> _loadProgressWeb() async {
+    if (!kIsWeb) return;
+    
+    try {
+      final recipeKey = _getRecipeKey();
+      
+      // Load ingredient checklist
+      final ingredientKeys = _ingredientChecklist.keys.toList();
+      for (String ingredient in ingredientKeys) {
+        final saved = html.window.localStorage['${recipeKey}_ingredient_$ingredient'];
+        if (saved != null) {
+          _ingredientChecklist[ingredient] = saved.toLowerCase() == 'true';
+        }
+      }
+      
+      // Load step completion
+      final stepKeys = _stepCompletion.keys.toList();
+      for (int step in stepKeys) {
+        final saved = html.window.localStorage['${recipeKey}_step_$step'];
+        if (saved != null) {
+          _stepCompletion[step] = saved.toLowerCase() == 'true';
+        }
+      }
+      
+      // Update UI if any progress was loaded
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      print('Error loading progress from localStorage: $e');
     }
   }
 
@@ -1215,14 +1417,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
             ),
           ],
         ),
-        if (_expandedSection != null)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => _toggleExpandedSection(_expandedSection!),
-              behavior: HitTestBehavior.translucent,
-              child: Container(),
-            ),
-          ),
       ],
     );
   }
@@ -1391,7 +1585,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                         color: Theme.of(context)
                             .colorScheme
                             .secondary
-                            .withOpacity(0.6),
+                            .withValues(alpha: 0.6),
                         blurRadius: 6,
                       )
                     ]
@@ -1517,16 +1711,39 @@ class _RecipeScreenState extends State<RecipeScreen> {
                                         ],
                                       ),
                                     )
-                                  : Center(
+                                  : Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.grey[300]!, width: 1),
+                                      ),
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Icon(Icons.local_bar, 
-                                               color: Theme.of(context).colorScheme.secondary),
+                                          Icon(
+                                            _getIngredientIcon(ingredientName),
+                                            size: 32,
+                                            color: Theme.of(context).colorScheme.primary,
+                                          ),
                                           const SizedBox(height: 4),
-                                          Text('Use Generate Visuals', 
-                                               style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-                                               textAlign: TextAlign.center),
+                                          Text(
+                                            ingredientName,
+                                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Tap "Generate Visuals"',
+                                            style: TextStyle(
+                                              fontSize: 8,
+                                              color: Colors.grey[600],
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -1558,6 +1775,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                                 setState(() {
                                   _ingredientChecklist[ingredientName] = value ?? false;
                                 });
+                                _saveProgress(); // Save progress when ingredient is checked/unchecked
                               },
                               activeColor: Theme.of(context).colorScheme.secondary,
                               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1667,6 +1885,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                     duration: '30 sec',
                     difficulty: 'Easy',
                     proTip: _getProTipForStep(step),
+                    tipCategory: _getTipCategoryForStep(step),
                   ),
                   state: _stepCompletion[i] == true 
                       ? MethodCardState.completed 
@@ -1677,6 +1896,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   onPrevious: () => _goToPreviousStep(i),
                   enableSwipeGestures: true,
                   enableKeyboardNavigation: true,
+                  enableAutoAdvance: true,
+                  autoAdvanceDuration: const Duration(seconds: 15),
               ),
             ),
           );
@@ -1689,12 +1910,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
             to: [
               ...?_stepIngredientMap[_hoveredStep!]
                   ?.map((n) => _ingredientIconKeys[n])
-                  .whereType<GlobalKey>()
-                  .toList(),
+                  .whereType<GlobalKey>(),
               ...?_stepEquipmentMap[_hoveredStep!]
                   ?.map((n) => _equipmentIconKeys[n])
-                  .whereType<GlobalKey>()
-                  .toList(),
+                  .whereType<GlobalKey>(),
             ],
             active: true,
           ),
@@ -1984,13 +2203,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget _getCurrentSectionContent() {
     switch (_selectedSection) {
       case 'ingredients':
-        return LazyLoadSection(builder: (_) => _buildIngredientsSection());
+        return _buildIngredientsSection();
       case 'method':
-        return LazyLoadSection(builder: (_) => _buildMethodSection());
+        return _buildMethodSection();
       case 'equipment':
-        return LazyLoadSection(builder: (_) => _buildEquipmentSection());
+        return _buildEquipmentSection();
       case 'variations':
-        return LazyLoadSection(builder: (_) => _buildVariationsSection());
+        return _buildVariationsSection();
       case 'overview':
       default:
         return _buildOverviewSection();
