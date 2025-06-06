@@ -295,12 +295,152 @@ class _RecipeScreenState extends State<RecipeScreen> {
   
   // Epic 3: Visual Recipe Steps
   Map<int, bool> _stepCompletion = {};
+  
+  // Dynamic Visual Generation System
+  Map<String, Uint8List?> _specializedImages = {};
+  Map<String, bool> _imageGenerationProgress = {};
+  String _selectedSection = 'overview'; // Navigation state
+  bool _isGeneratingVisuals = false;
+  bool _isLoadingRelatedCocktail = false;
 
   @override
   void initState() {
     super.initState();
     _connectToImageStream();
     _initializeIngredientChecklist();
+    _initializeSpecializedImages();
+    _loadCachedImages(); // Check for existing cached images
+  }
+  
+  void _initializeSpecializedImages() {
+    _specializedImages = {
+      'glassware': null,
+      'garnish': null,
+    };
+    _imageGenerationProgress = {
+      'glassware': false,
+      'garnish': false,
+    };
+    
+    // Initialize ingredient images
+    if (widget.recipeData['ingredients'] is List) {
+      for (var ingredient in widget.recipeData['ingredients']) {
+        final ingredientName = ingredient['name'];
+        _specializedImages['ingredient_$ingredientName'] = null;
+        _imageGenerationProgress['ingredient_$ingredientName'] = false;
+      }
+    }
+    
+    // Initialize equipment images
+    if (widget.recipeData['equipment_needed'] is List) {
+      for (var equipment in widget.recipeData['equipment_needed']) {
+        final equipmentName = equipment['item'] ?? equipment;
+        _specializedImages['equipment_$equipmentName'] = null;
+        _imageGenerationProgress['equipment_$equipmentName'] = false;
+      }
+    }
+  }
+  
+  // Load cached images by checking endpoints without generating new ones
+  Future<void> _loadCachedImages() async {
+    // Try to load glassware
+    final glassType = widget.recipeData['serving_glass'];
+    if (glassType != null && glassType.isNotEmpty) {
+      await _checkCachedImage('glassware', glassType);
+    }
+    
+    // Try to load garnish
+    final garnishes = widget.recipeData['garnish'];
+    if (garnishes is List && garnishes.isNotEmpty) {
+      await _checkCachedImage('garnish', garnishes.first);
+    }
+    
+    // Try to load ALL ingredient images
+    if (widget.recipeData['ingredients'] is List) {
+      final ingredients = widget.recipeData['ingredients'] as List;
+      for (var ingredient in ingredients) {
+        final ingredientName = ingredient['name'];
+        await _checkCachedImage('ingredient_$ingredientName', ingredientName);
+        // Small delay to not overwhelm the server
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    }
+    
+    // Try to load equipment images
+    if (widget.recipeData['equipment_needed'] is List) {
+      final equipment = widget.recipeData['equipment_needed'] as List;
+      for (var item in equipment) {
+        final equipmentName = item['item'] ?? item;
+        await _checkCachedImage('equipment_$equipmentName', equipmentName);
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    }
+  }
+  
+  // Check if an image is cached on the server and load it if available
+  Future<void> _checkCachedImage(String imageType, String subject) async {
+    try {
+      String endpoint;
+      Map<String, String> bodyFields;
+      
+      // Determine endpoint based on image type
+      if (imageType == 'glassware') {
+        endpoint = 'generate_glassware_image';
+        bodyFields = {'glass_type': subject};
+      } else if (imageType == 'garnish') {
+        endpoint = 'generate_garnish_image';
+        bodyFields = {'garnish_description': subject};
+      } else if (imageType.startsWith('ingredient_')) {
+        endpoint = 'generate_ingredient_image';
+        bodyFields = {'ingredient_name': subject};
+      } else if (imageType.startsWith('equipment_')) {
+        endpoint = 'generate_equipment_image';
+        bodyFields = {'equipment_name': subject};
+      } else {
+        return;
+      }
+      
+      final request = http.Request('POST', Uri.parse('http://127.0.0.1:8081/$endpoint'));
+      request.headers.addAll({"Accept": "text/event-stream", "Cache-Control": "no-cache"});
+      request.bodyFields = bodyFields;
+      
+      final http.StreamedResponse response = await _httpClient.send(request);
+      if (response.statusCode == 200) {
+        bool foundCachedImage = false;
+        
+        response.stream
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .listen(
+          (line) {
+            if (line.startsWith('data: ')) {
+              final eventDataString = line.substring('data: '.length);
+              try {
+                final jsonData = jsonDecode(eventDataString);
+                if (jsonData['type'] == 'partial_image' && jsonData['b64_data'] != null) {
+                  if (mounted) {
+                    setState(() {
+                      _specializedImages[imageType] = base64Decode(jsonData['b64_data']);
+                      foundCachedImage = true;
+                    });
+                  }
+                }
+              } catch (e) {
+                // Ignore parsing errors for cache check
+              }
+            }
+          },
+          onDone: () {
+            // If we didn't find a cached image, we don't set any error state
+            // The user can still manually generate or use "Generate Visuals"
+          },
+          cancelOnError: true,
+        );
+      }
+    } catch (e) {
+      // Silently fail for cache checks - images can be generated later
+      print('Cache check failed for $imageType: $e');
+    }
   }
 
   void _initializeIngredientChecklist() {
@@ -314,6 +454,51 @@ class _RecipeScreenState extends State<RecipeScreen> {
     if (widget.recipeData['steps'] is List) {
       for (int i = 0; i < widget.recipeData['steps'].length; i++) {
         _stepCompletion[i] = false;
+      }
+    }
+  }
+  
+  // Navigate to a new cocktail recipe
+  Future<void> _loadRelatedCocktail(String cocktailName) async {
+    setState(() {
+      _isLoadingRelatedCocktail = true;
+    });
+    
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8081/create'),
+        body: {'drink_query': cocktailName},
+      );
+      
+      if (response.statusCode == 200) {
+        final newRecipeData = jsonDecode(response.body);
+        if (mounted) {
+          // Navigate to the new recipe page
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RecipeScreen(recipeData: newRecipeData),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error loading $cocktailName: ${response.statusCode}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load $cocktailName: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingRelatedCocktail = false;
+        });
       }
     }
   }
@@ -343,6 +528,162 @@ class _RecipeScreenState extends State<RecipeScreen> {
     
     return originalAmount; // Return original if no number found
   }
+  
+  // Specialized Image Generation Functions
+  Future<void> _generateSpecializedImage(String imageType, String subject, {String context = ""}) async {
+    if (_imageGenerationProgress[imageType] == true) return;
+    
+    setState(() {
+      _imageGenerationProgress[imageType] = true;
+    });
+    
+    String endpoint;
+    Map<String, String> bodyFields;
+    
+    // Determine endpoint and parameters based on image type
+    if (imageType == 'glassware') {
+      endpoint = 'generate_glassware_image';
+      bodyFields = {
+        'glass_type': subject,
+        'drink_context': widget.recipeData['drink_name'] ?? '',
+      };
+    } else if (imageType == 'garnish') {
+      endpoint = 'generate_garnish_image';
+      bodyFields = {
+        'garnish_description': subject,
+        'preparation_method': '',
+      };
+    } else if (imageType.startsWith('ingredient_')) {
+      endpoint = 'generate_ingredient_image';
+      bodyFields = {
+        'ingredient_name': subject,
+        'drink_context': widget.recipeData['drink_name'] ?? '',
+      };
+    } else {
+      return; // Unknown image type
+    }
+    
+    final request = http.Request('POST', Uri.parse('http://127.0.0.1:8081/$endpoint'));
+    request.headers.addAll({"Accept": "text/event-stream", "Cache-Control": "no-cache"});
+    request.bodyFields = bodyFields;
+    
+    try {
+      final http.StreamedResponse response = await _httpClient.send(request);
+      
+      if (response.statusCode == 200) {
+        response.stream
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .listen(
+          (line) {
+            if (line.startsWith('data: ')) {
+              final eventDataString = line.substring('data: '.length);
+              try {
+                final jsonData = jsonDecode(eventDataString);
+                if (jsonData['type'] == 'partial_image' && jsonData['b64_data'] != null) {
+                  if (mounted) {
+                    setState(() {
+                      _specializedImages[imageType] = base64Decode(jsonData['b64_data']);
+                    });
+                  }
+                } else if (jsonData['type'] == 'stream_complete') {
+                  if (mounted) {
+                    setState(() {
+                      _imageGenerationProgress[imageType] = false;
+                    });
+                  }
+                } else if (jsonData['type'] == 'error') {
+                  if (mounted) {
+                    setState(() {
+                      _imageGenerationProgress[imageType] = false;
+                    });
+                  }
+                }
+              } catch (e) {
+                print("Error parsing specialized image SSE data: $e");
+              }
+            }
+          },
+          onError: (error) {
+            print('Specialized image stream error: $error');
+            if (mounted) {
+              setState(() {
+                _imageGenerationProgress[imageType] = false;
+              });
+            }
+          },
+          onDone: () {
+            if (mounted) {
+              setState(() {
+                _imageGenerationProgress[imageType] = false;
+              });
+            }
+          },
+        );
+      }
+    } catch (e) {
+      print('Error generating specialized image: $e');
+      if (mounted) {
+        setState(() {
+          _imageGenerationProgress[imageType] = false;
+        });
+      }
+    }
+  }
+  
+  // Generate all visual assets for the recipe
+  Future<void> _generateRecipeVisuals() async {
+    setState(() {
+      _isGeneratingVisuals = true;
+    });
+    
+    // Generate glassware image (if not already cached)
+    final glassType = widget.recipeData['serving_glass'];
+    if (glassType != null && glassType.isNotEmpty && _specializedImages['glassware'] == null) {
+      await _generateSpecializedImage('glassware', glassType);
+    }
+    
+    // Generate garnish image (if not already cached)
+    final garnishes = widget.recipeData['garnish'];
+    if (garnishes is List && garnishes.isNotEmpty && _specializedImages['garnish'] == null) {
+      await _generateSpecializedImage('garnish', garnishes.first);
+    }
+    
+    // Generate ALL ingredient images (not just first 3)
+    if (widget.recipeData['ingredients'] is List) {
+      final ingredients = widget.recipeData['ingredients'] as List;
+      for (var ingredient in ingredients) {
+        final ingredientName = ingredient['name'];
+        final imageKey = 'ingredient_$ingredientName';
+        
+        // Only generate if not already cached or being generated
+        if (_specializedImages[imageKey] == null && _imageGenerationProgress[imageKey] != true) {
+          await _generateSpecializedImage(imageKey, ingredientName);
+          // Add delay between requests to prevent overload
+          await Future.delayed(const Duration(milliseconds: 300));
+        }
+      }
+    }
+    
+    // Generate equipment images
+    if (widget.recipeData['equipment_needed'] is List) {
+      final equipment = widget.recipeData['equipment_needed'] as List;
+      for (var item in equipment) {
+        final equipmentName = item['item'] ?? item;
+        final imageKey = 'equipment_$equipmentName';
+        
+        // Only generate if not already cached or being generated
+        if (_specializedImages[imageKey] == null && _imageGenerationProgress[imageKey] != true) {
+          await _generateSpecializedImage(imageKey, equipmentName);
+          await Future.delayed(const Duration(milliseconds: 300));
+        }
+      }
+    }
+    
+    setState(() {
+      _isGeneratingVisuals = false;
+    });
+  }
 
   void _connectToImageStream() async {
     setState(() {
@@ -365,6 +706,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
         'drink_query': drinkName,
         'serving_glass': servingGlass,
         'ingredients': jsonEncode(ingredients),
+        'steps': jsonEncode(widget.recipeData['steps'] ?? []),
+        'garnish': jsonEncode(widget.recipeData['garnish'] ?? []),
+        'equipment_needed': jsonEncode(widget.recipeData['equipment_needed'] ?? []),
     };
 
     try {
@@ -378,9 +722,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
           (line) {
             if (line.startsWith('data: ')) {
               final eventDataString = line.substring('data: '.length);
-              print("SSE Data: $eventDataString");
               try {
                 final jsonData = jsonDecode(eventDataString);
+                // Only log event type for cleaner logs
+                if (jsonData['type'] != null) {
+                  print("SSE Event: ${jsonData['type']}");
+                }
                 if (jsonData['type'] == 'partial_image' && jsonData['b64_data'] != null) {
                   if (mounted) {
                     setState(() {
@@ -405,7 +752,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   _imageStreamSubscription?.cancel();
                 }
               } catch (e) {
-                print("Error parsing SSE JSON data: $e. Data: $eventDataString");
+                print("Error parsing SSE JSON data: $e. Data: ${eventDataString.length > 50 ? '${eventDataString.substring(0, 50)}...' : eventDataString}");
                 if (mounted) { setState(() { _imageStreamError = "Error parsing stream data."; });}
               }
             }
@@ -438,741 +785,841 @@ class _RecipeScreenState extends State<RecipeScreen> {
     _httpClient.close(); // Close the client when the widget is disposed
     super.dispose();
   }
+  
+  // Visual Navigation System
+  Widget _buildNavigationBar() {
+    final sections = [
+      {'id': 'overview', 'icon': Icons.home, 'label': 'Overview'},
+      {'id': 'ingredients', 'icon': Icons.local_grocery_store, 'label': 'Ingredients'},
+      {'id': 'method', 'icon': Icons.format_list_numbered, 'label': 'Method'},
+      {'id': 'equipment', 'icon': Icons.build, 'label': 'Equipment'},
+      {'id': 'variations', 'icon': Icons.auto_awesome, 'label': 'Variations'},
+    ];
+    
+    return Container(
+      height: 80,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: sections.length,
+        itemBuilder: (context, index) {
+          final section = sections[index];
+          final isSelected = _selectedSection == section['id'];
+          
+          return Container(
+            width: 80,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedSection = section['id'] as String;
+                  });
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected 
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        section['icon'] as IconData,
+                        color: isSelected 
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        section['label'] as String,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: isSelected 
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+  
+  // Section Content Builders
+  Widget _buildOverviewSection() {
+    return Column(
+      children: [
+        // Hero Image with Generate Visuals Button
+        Card(
+          elevation: 8,
+          margin: const EdgeInsets.only(bottom: 16),
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            constraints: const BoxConstraints(
+              minHeight: 400,
+              maxHeight: 700,
+            ),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.grey[100]!,
+                  Colors.grey[200]!,
+                ],
+              ),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (_currentImageBytes != null)
+                  Image.memory(
+                    _currentImageBytes!,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
+                if (_currentImageBytes == null && _imageStreamError == null)
+                  const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Creating your cocktail image...'),
+                    ],
+                  ),
+                // Time Overlay - Top Right
+                if (_currentImageBytes != null)
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${widget.recipeData['preparation_time_minutes'] ?? 5} min',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                // Alcohol Overlay - Bottom Right  
+                if (_currentImageBytes != null)
+                  Positioned(
+                    bottom: 80, // Above the generate button
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${(widget.recipeData['alcohol_content'] * 100).toStringAsFixed(1)}% ABV',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                // Generate Visuals Button
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton.extended(
+                    onPressed: _isGeneratingVisuals ? null : _generateRecipeVisuals,
+                    icon: _isGeneratingVisuals 
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome),
+                    label: Text(_isGeneratingVisuals ? 'Generating All Images...' : 'Generate All Visuals'),
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Quick Stats Cards
+        Row(
+          children: [
+            Expanded(
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      Icon(Icons.local_bar, color: Theme.of(context).colorScheme.secondary),
+                      const SizedBox(height: 4),
+                      Text('${(widget.recipeData['alcohol_content'] * 100).toStringAsFixed(1)}% ABV'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      Icon(Icons.timer, color: Theme.of(context).colorScheme.secondary),
+                      const SizedBox(height: 4),
+                      Text('${widget.recipeData['preparation_time_minutes'] ?? 5} min'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildIngredientsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Serving Size Controls
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Serving Size', style: Theme.of(context).textTheme.titleMedium),
+                    Row(
+                      children: [
+                        Text('oz', style: Theme.of(context).textTheme.bodySmall),
+                        Switch(
+                          value: _isMetric,
+                          onChanged: (value) => setState(() => _isMetric = value),
+                          activeColor: Theme.of(context).colorScheme.secondary,
+                        ),
+                        Text('ml', style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: _servingSize > 1 ? () => setState(() => _servingSize--) : null,
+                      icon: const Icon(Icons.remove_circle_outline),
+                      iconSize: 32,
+                    ),
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 40),
+                      child: Text(
+                        '$_servingSize',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _servingSize < 12 ? () => setState(() => _servingSize++) : null,
+                      icon: const Icon(Icons.add_circle_outline),
+                      iconSize: 32,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Visual Ingredients Grid
+        if (widget.recipeData['ingredients'] is List)
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.8,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: (widget.recipeData['ingredients'] as List).length,
+            itemBuilder: (context, index) {
+              final ingredient = widget.recipeData['ingredients'][index];
+              final ingredientName = ingredient['name'];
+              final imageKey = 'ingredient_$ingredientName';
+              final hasImage = _specializedImages[imageKey] != null;
+              final isGenerating = _imageGenerationProgress[imageKey] == true;
+              
+              return Card(
+                elevation: 4,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      // Ingredient Image or Placeholder
+                      Expanded(
+                        flex: 3,
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: hasImage
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.memory(
+                                    _specializedImages[imageKey]!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : isGenerating
+                                  ? const Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          CircularProgressIndicator(strokeWidth: 2),
+                                          SizedBox(height: 8),
+                                          Text('Generating...', style: TextStyle(fontSize: 10)),
+                                        ],
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.local_bar, 
+                                               color: Theme.of(context).colorScheme.secondary),
+                                          const SizedBox(height: 4),
+                                          Text('Use Generate Visuals', 
+                                               style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                               textAlign: TextAlign.center),
+                                        ],
+                                      ),
+                                    ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Ingredient Details
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          children: [
+                            Text(
+                              ingredientName,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _scaleIngredientAmount(ingredient['quantity'], _servingSize),
+                              style: Theme.of(context).textTheme.bodySmall,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Checkbox(
+                              value: _ingredientChecklist[ingredientName] ?? false,
+                              onChanged: (value) {
+                                setState(() {
+                                  _ingredientChecklist[ingredientName] = value ?? false;
+                                });
+                              },
+                              activeColor: Theme.of(context).colorScheme.secondary,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+  
+  Widget _buildMethodSection() {
+    return Column(
+      children: [
+        // Progress indicator
+        if (widget.recipeData['steps'] is List)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Progress', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        '${_stepCompletion.values.where((completed) => completed).length}/${widget.recipeData['steps'].length}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                    value: _stepCompletion.values.where((completed) => completed).length / 
+                           widget.recipeData['steps'].length,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.secondary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+        // Step Cards
+        if (widget.recipeData['steps'] is List)
+          for (var i = 0; i < widget.recipeData['steps'].length; i++)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Card(
+                elevation: _stepCompletion[i] == true ? 2 : 4,
+                color: _stepCompletion[i] == true 
+                    ? Theme.of(context).colorScheme.secondaryContainer
+                    : Theme.of(context).colorScheme.surface,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: _stepCompletion[i] == true 
+                              ? Theme.of(context).colorScheme.secondary
+                              : Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: _stepCompletion[i] == true
+                              ? Icon(
+                                  Icons.check,
+                                  color: Theme.of(context).colorScheme.onSecondary,
+                                  size: 18,
+                                )
+                              : Text(
+                                  '${i + 1}',
+                                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.recipeData['steps'][i],
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                decoration: _stepCompletion[i] == true 
+                                    ? TextDecoration.lineThrough 
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _stepCompletion[i] ?? false,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      _stepCompletion[i] = value ?? false;
+                                    });
+                                  },
+                                  activeColor: Theme.of(context).colorScheme.secondary,
+                                ),
+                                Text(
+                                  'Complete',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+  
+  Widget _buildEquipmentSection() {
+    if (widget.recipeData['equipment_needed'] is! List || 
+        (widget.recipeData['equipment_needed'] as List).isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Text('No specific equipment required'),
+        ),
+      );
+    }
+    
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemCount: (widget.recipeData['equipment_needed'] as List).length,
+      itemBuilder: (context, index) {
+        final equipment = widget.recipeData['equipment_needed'][index];
+        final equipmentName = equipment['item'] ?? equipment;
+        final imageKey = 'equipment_$equipmentName';
+        final hasImage = _specializedImages[imageKey] != null;
+        final isGenerating = _imageGenerationProgress[imageKey] == true;
+        
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: [
+                // Equipment Image or Placeholder
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: hasImage
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.memory(
+                              _specializedImages[imageKey]!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : isGenerating
+                            ? const Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircularProgressIndicator(strokeWidth: 2),
+                                    SizedBox(height: 8),
+                                    Text('Generating...', style: TextStyle(fontSize: 10)),
+                                  ],
+                                ),
+                              )
+                            : Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.build, 
+                                         color: Theme.of(context).colorScheme.secondary),
+                                    const SizedBox(height: 4),
+                                    Text('Use Generate Visuals', 
+                                         style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                         textAlign: TextAlign.center),
+                                  ],
+                                ),
+                              ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Equipment Details
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    children: [
+                      Text(
+                        equipmentName,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (equipment is Map && equipment['essential'] == true)
+                        Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Essential',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSecondary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildVariationsSection() {
+    return Column(
+      children: [
+        // Related Cocktails
+        if (widget.recipeData['related_cocktails'] is List && 
+            (widget.recipeData['related_cocktails'] as List).isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Related Cocktails', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 140,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: widget.recipeData['related_cocktails'].length,
+                  itemBuilder: (context, index) {
+                    final cocktail = widget.recipeData['related_cocktails'][index];
+                    return Container(
+                      width: 160,
+                      margin: const EdgeInsets.only(right: 12),
+                      child: Card(
+                        elevation: 4,
+                        child: InkWell(
+                          onTap: _isLoadingRelatedCocktail 
+                              ? null 
+                              : () => _loadRelatedCocktail(cocktail),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _isLoadingRelatedCocktail
+                                    ? const SizedBox(
+                                        width: 32,
+                                        height: 32,
+                                        child: CircularProgressIndicator(strokeWidth: 3),
+                                      )
+                                    : Icon(
+                                        Icons.local_bar,
+                                        size: 32,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  cocktail,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: _isLoadingRelatedCocktail 
+                                        ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)
+                                        : null,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (!_isLoadingRelatedCocktail)
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'Tap to try',
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        color: Theme.of(context).colorScheme.secondary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        // Suggested Variations
+        if (widget.recipeData['suggested_variations'] is List && 
+            (widget.recipeData['suggested_variations'] as List).isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Variations', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              for (var variation in widget.recipeData['suggested_variations'])
+                Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          variation['name'] ?? 'Variation',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          variation['description'] ?? '',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        if (variation['changes'] is List)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Wrap(
+                              spacing: 8,
+                              children: (variation['changes'] as List)
+                                  .map((change) => Chip(
+                                        label: Text(change),
+                                        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        // Food Pairings
+        if (widget.recipeData['food_pairings'] is List && 
+            (widget.recipeData['food_pairings'] as List).isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              Text('Food Pairings', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: (widget.recipeData['food_pairings'] as List)
+                    .map((pairing) => Card(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.restaurant, 
+                                     size: 16, 
+                                     color: Theme.of(context).colorScheme.secondary),
+                                const SizedBox(width: 4),
+                                Text(pairing),
+                              ],
+                            ),
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+  
+  Widget _getCurrentSectionContent() {
+    switch (_selectedSection) {
+      case 'ingredients':
+        return _buildIngredientsSection();
+      case 'method':
+        return _buildMethodSection();
+      case 'equipment':
+        return _buildEquipmentSection();
+      case 'variations':
+        return _buildVariationsSection();
+      case 'overview':
+      default:
+        return _buildOverviewSection();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.recipeData['drink_name'] ?? 'Recipe'),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Card(
-              elevation: 8,
-              margin: const EdgeInsets.only(bottom: 8),
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                constraints: const BoxConstraints(
-                  minHeight: 300,
-                  maxHeight: 400,
-                ),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.grey[100]!,
-                      Colors.grey[200]!,
-                    ],
-                  ),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (_currentImageBytes != null)
-                      AnimatedOpacity(
-                        duration: const Duration(milliseconds: 500),
-                        opacity: 1.0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Image.memory(
-                            _currentImageBytes!,
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
-                          ),
-                        ),
-                      ),
-                    if (_imageStreamError != null)
-                      Container(
-                        margin: const EdgeInsets.all(20),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.red[200]!),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: Colors.red[600],
-                              size: 32,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Image Generation Failed',
-                              style: TextStyle(
-                                color: Colors.red[800],
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _imageStreamError!,
-                              style: TextStyle(color: Colors.red[600]),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (_currentImageBytes == null && _imageStreamError == null)
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 3,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              'Creating your cocktail image...',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[700],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (_currentImageBytes != null && !_isImageStreamComplete)
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.deepPurple.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Enhancing...',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    if (_isImageStreamComplete && _currentImageBytes != null)
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.check_circle,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'Complete',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
+      body: Column(
+        children: [
+          // Visual Navigation Bar
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  width: 1,
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              '${widget.recipeData['drink_name']}',
-              style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                letterSpacing: -0.5,
-              ),
+            child: _buildNavigationBar(),
+          ),
+          // Section Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: _getCurrentSectionContent(),
             ),
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.local_bar, color: Theme.of(context).colorScheme.secondary, size: 20),
-                        const SizedBox(width: 8),
-                        Text('${(widget.recipeData['alcohol_content'] * 100).toStringAsFixed(1)}% ABV', 
-                             style: Theme.of(context).textTheme.bodyLarge),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(Icons.wine_bar, color: Theme.of(context).colorScheme.secondary, size: 20),
-                        const SizedBox(width: 8),
-                        Text('${widget.recipeData['serving_glass']}', 
-                             style: Theme.of(context).textTheme.bodyLarge),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(Icons.grain, color: Theme.of(context).colorScheme.secondary, size: 20),
-                        const SizedBox(width: 8),
-                        Text('${widget.recipeData['rim']}', 
-                             style: Theme.of(context).textTheme.bodyLarge),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Epic 2: Task 2.1 - Serving Size Calculator Component
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Ingredients', style: Theme.of(context).textTheme.titleLarge),
-                        Row(
-                          children: [
-                            // Epic 2: Task 2.2 - Unit Conversion Toggle
-                            Text('oz', style: Theme.of(context).textTheme.bodySmall),
-                            Switch(
-                              value: _isMetric,
-                              onChanged: (value) {
-                                setState(() {
-                                  _isMetric = value;
-                                });
-                              },
-                              activeColor: Theme.of(context).colorScheme.secondary,
-                            ),
-                            Text('ml', style: Theme.of(context).textTheme.bodySmall),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // Serving Size Calculator
-                    Row(
-                      children: [
-                        Text('Servings:', style: Theme.of(context).textTheme.bodyLarge),
-                        const SizedBox(width: 16),
-                        IconButton(
-                          onPressed: _servingSize > 1 ? () {
-                            setState(() {
-                              _servingSize--;
-                            });
-                          } : null,
-                          icon: const Icon(Icons.remove_circle_outline),
-                          iconSize: 32,
-                        ),
-                        Container(
-                          constraints: const BoxConstraints(minWidth: 40),
-                          child: Text(
-                            '$_servingSize',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: _servingSize < 12 ? () {
-                            setState(() {
-                              _servingSize++;
-                            });
-                          } : null,
-                          icon: const Icon(Icons.add_circle_outline),
-                          iconSize: 32,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Epic 2: Task 2.3 - Ingredient Checklist
-                    if (widget.recipeData['ingredients'] is List) ...[
-                      Text(
-                        'Progress: ${_ingredientChecklist.values.where((checked) => checked).length}/${_ingredientChecklist.length} ingredients ready',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      for (var ingredient in widget.recipeData['ingredients'])
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            children: [
-                              Checkbox(
-                                value: _ingredientChecklist[ingredient['name']] ?? false,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _ingredientChecklist[ingredient['name']] = value ?? false;
-                                  });
-                                },
-                                activeColor: Theme.of(context).colorScheme.secondary,
-                              ),
-                              Expanded(
-                                child: Text(
-                                  '${ingredient['name']}: ${_scaleIngredientAmount(ingredient['quantity'], _servingSize)}',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    decoration: _ingredientChecklist[ingredient['name']] == true 
-                                        ? TextDecoration.lineThrough 
-                                        : null,
-                                    color: _ingredientChecklist[ingredient['name']] == true 
-                                        ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: 12),
-                      if (_ingredientChecklist.values.any((checked) => checked))
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _ingredientChecklist.updateAll((key, value) => false);
-                            });
-                          },
-                          child: const Text('Reset Checklist'),
-                        ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Epic 3: Visual Recipe Steps with Progress Tracking
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Instructions', style: Theme.of(context).textTheme.titleLarge),
-                        if (widget.recipeData['steps'] is List)
-                          Text(
-                            '${_stepCompletion.values.where((completed) => completed).length}/${widget.recipeData['steps'].length} completed',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Epic 3: Task 3.3 - Progress Bar
-                    if (widget.recipeData['steps'] is List)
-                      LinearProgressIndicator(
-                        value: _stepCompletion.values.where((completed) => completed).length / 
-                               widget.recipeData['steps'].length,
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.secondary),
-                      ),
-                    const SizedBox(height: 16),
-                    // Epic 3: Task 3.1 - Step Card Components
-                    if (widget.recipeData['steps'] is List)
-                      for (var i = 0; i < widget.recipeData['steps'].length; i++)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            elevation: _stepCompletion[i] == true ? 2 : 4,
-                            color: _stepCompletion[i] == true 
-                                ? Theme.of(context).colorScheme.secondaryContainer
-                                : Theme.of(context).colorScheme.surface,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Step number badge
-                                  Container(
-                                    width: 32,
-                                    height: 32,
-                                    decoration: BoxDecoration(
-                                      color: _stepCompletion[i] == true 
-                                          ? Theme.of(context).colorScheme.secondary
-                                          : Theme.of(context).colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: _stepCompletion[i] == true
-                                          ? Icon(
-                                              Icons.check,
-                                              color: Theme.of(context).colorScheme.onSecondary,
-                                              size: 18,
-                                            )
-                                          : Text(
-                                              '${i + 1}',
-                                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                color: Theme.of(context).colorScheme.onPrimary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  // Step content
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          widget.recipeData['steps'][i],
-                                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                            decoration: _stepCompletion[i] == true 
-                                                ? TextDecoration.lineThrough 
-                                                : null,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        // Complete checkbox
-                                        Row(
-                                          children: [
-                                            Checkbox(
-                                              value: _stepCompletion[i] ?? false,
-                                              onChanged: (bool? value) {
-                                                setState(() {
-                                                  _stepCompletion[i] = value ?? false;
-                                                });
-                                              },
-                                              activeColor: Theme.of(context).colorScheme.secondary,
-                                            ),
-                                            Text(
-                                              'Complete',
-                                              style: Theme.of(context).textTheme.bodyMedium,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                  ],
-                ),
-              ),
-            ),
-            // Enhanced sections with better styling
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.local_florist, color: Theme.of(context).colorScheme.secondary),
-                        const SizedBox(width: 8),
-                        Text('Garnish', style: Theme.of(context).textTheme.titleLarge),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    if (widget.recipeData['garnish'] is List && (widget.recipeData['garnish'] as List).isNotEmpty)
-                      for (var garn in widget.recipeData['garnish']) 
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.fiber_manual_record, size: 8, color: Theme.of(context).colorScheme.secondary),
-                              const SizedBox(width: 8),
-                              Text(garn, style: Theme.of(context).textTheme.bodyLarge),
-                            ],
-                          ),
-                        )
-                    else
-                      Text("None specified", style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontStyle: FontStyle.italic,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                      )),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.history_edu, color: Theme.of(context).colorScheme.secondary),
-                        const SizedBox(width: 8),
-                        Text('History', style: Theme.of(context).textTheme.titleLarge),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.recipeData['drink_history'] ?? 'No history available',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            // Epic 4: Task 4.2 - Related Cocktails Carousel
-            const SizedBox(height: 16),
-            if (widget.recipeData['related_cocktails'] is List && 
-                (widget.recipeData['related_cocktails'] as List).isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.local_bar_outlined, color: Theme.of(context).colorScheme.secondary),
-                          const SizedBox(width: 8),
-                          Text('Related Cocktails', style: Theme.of(context).textTheme.titleLarge),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 120,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: widget.recipeData['related_cocktails'].length,
-                          itemBuilder: (context, index) {
-                            final cocktail = widget.recipeData['related_cocktails'][index];
-                            return Container(
-                              width: 160,
-                              margin: const EdgeInsets.only(right: 12),
-                              child: Card(
-                                elevation: 4,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.local_bar,
-                                        size: 32,
-                                        color: Theme.of(context).colorScheme.primary,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        cocktail,
-                                        style: Theme.of(context).textTheme.bodyMedium,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            
-            // Enhanced recipe metadata from backend
-            const SizedBox(height: 16),
-            if (widget.recipeData['difficulty_rating'] != null || 
-                widget.recipeData['preparation_time_minutes'] != null)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.info_outline, color: Theme.of(context).colorScheme.secondary),
-                          const SizedBox(width: 8),
-                          Text('Recipe Details', style: Theme.of(context).textTheme.titleLarge),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (widget.recipeData['difficulty_rating'] != null)
-                        Row(
-                          children: [
-                            Text('Difficulty: ', style: Theme.of(context).textTheme.bodyMedium),
-                            ...List.generate(5, (index) => Icon(
-                              index < (widget.recipeData['difficulty_rating'] ?? 0)
-                                  ? Icons.star
-                                  : Icons.star_border,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.secondary,
-                            )),
-                            const SizedBox(width: 8),
-                            Text('${widget.recipeData['difficulty_rating']}/5', 
-                                 style: Theme.of(context).textTheme.bodyMedium),
-                          ],
-                        ),
-                      if (widget.recipeData['preparation_time_minutes'] != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.timer, size: 16, color: Theme.of(context).colorScheme.secondary),
-                              const SizedBox(width: 8),
-                              Text('Prep time: ${widget.recipeData['preparation_time_minutes']} minutes',
-                                   style: Theme.of(context).textTheme.bodyMedium),
-                            ],
-                          ),
-                        ),
-                      if (widget.recipeData['skill_level_recommendation'] != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.school, size: 16, color: Theme.of(context).colorScheme.secondary),
-                              const SizedBox(width: 8),
-                              Text('Skill level: ${widget.recipeData['skill_level_recommendation']}',
-                                   style: Theme.of(context).textTheme.bodyMedium),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            
-            // Equipment section
-            const SizedBox(height: 16),
-            if (widget.recipeData['equipment_needed'] is List && 
-                (widget.recipeData['equipment_needed'] as List).isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.build, color: Theme.of(context).colorScheme.secondary),
-                          const SizedBox(width: 8),
-                          Text('Equipment Needed', style: Theme.of(context).textTheme.titleLarge),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      for (var equipment in widget.recipeData['equipment_needed'])
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.fiber_manual_record, size: 8, color: Theme.of(context).colorScheme.secondary),
-                              const SizedBox(width: 8),
-                              Text(equipment['item'] ?? equipment, style: Theme.of(context).textTheme.bodyLarge),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            
-            // Food pairings section
-            const SizedBox(height: 16),
-            if (widget.recipeData['food_pairings'] is List && 
-                (widget.recipeData['food_pairings'] as List).isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.restaurant, color: Theme.of(context).colorScheme.secondary),
-                          const SizedBox(width: 8),
-                          Text('Food Pairings', style: Theme.of(context).textTheme.titleLarge),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      for (var pairing in widget.recipeData['food_pairings'])
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.fiber_manual_record, size: 8, color: Theme.of(context).colorScheme.secondary),
-                              const SizedBox(width: 8),
-                              Text(pairing, style: Theme.of(context).textTheme.bodyLarge),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

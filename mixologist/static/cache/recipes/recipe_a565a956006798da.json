@@ -1,0 +1,203 @@
+{
+  "drink_name": "Margarita",
+  "alcohol_content": 0.3,
+  "serving_glass": "Margarita glass",
+  "rim": "Salted",
+  "ingredients": [
+    {
+      "name": "Tequila",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Triple sec",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Fresh lime juice",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Simple syrup",
+      "quantity": "0.5 oz"
+    }
+  ],
+  "steps": [
+    "Rim a chilled margarita glass with salt.",
+    "In a shaker, combine tequila, triple sec, fresh lime juice, and simple syrup with ice.",
+    "Shake vigorously until well chilled.",
+    "Strain the mixture into the prepared glass over fresh ice.",
+    "Garnish with a lime wheel."
+  ],
+  "garnish": [
+    "Lime wheel"
+  ],
+  "drink_image_description": "A vibrant Margarita served in a classic margarita glass with a salted rim. The drink is a bright greenish-yellow color, garnished with a fresh lime wheel on the rim. The photo is taken with a macro lens from a slightly top-down angle, with natural lighting highlighting the condensation on the glass. The background is bright and airy, enhancing the fresh and zesty appeal of the cocktail.",
+  "drink_history": "The Margarita is a classic cocktail that originated in Mexico, believed to have been created in the 1930s or 1940s. It combines the bold flavors of tequila with the sweetness of triple sec and the tartness of fresh lime juice, creating a balanced and refreshing drink that has become a staple in bars worldwide.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Tequila",
+      "brands": [
+        "Patr\u00f3n",
+        "Don Julio",
+        "Jose Cuervo"
+      ]
+    },
+    {
+      "ingredient": "Triple sec",
+      "brands": [
+        "Cointreau",
+        "Grand Marnier",
+        "Combier"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Triple sec",
+      "alternatives": [
+        "Cointreau",
+        "Grand Marnier",
+        "Combier"
+      ]
+    },
+    {
+      "original": "Simple syrup",
+      "alternatives": [
+        "Agave syrup",
+        "Honey syrup"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Tommy's Margarita",
+    "Frozen Margarita",
+    "Cadillac Margarita",
+    "Spicy Margarita",
+    "Blue Margarita",
+    "Strawberry Margarita"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Cocktail shaker",
+      "essential": true
+    },
+    {
+      "item": "Jigger",
+      "essential": true
+    },
+    {
+      "item": "Margarita glass",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Citrus",
+      "Tequila",
+      "Sweet"
+    ],
+    "secondary_notes": [
+      "Herbal",
+      "Slightly salty"
+    ],
+    "mouthfeel": "Smooth and slightly thick due to the syrup",
+    "finish": "Clean and refreshing with a slight tartness",
+    "balance": "Well-balanced between sweet, sour, and strong tequila notes"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Rim the glass with salt.",
+      "technique_detail": "Rub a lime wedge around the rim of the glass, then dip it into a plate of coarse salt to coat evenly.",
+      "visual_cue": "Salt should stick uniformly around the rim without clumps.",
+      "common_mistakes": [
+        "Not wetting the rim enough",
+        "Using fine salt instead of coarse salt"
+      ],
+      "timing_guidance": "Do this just before pouring the drink to keep the salt fresh."
+    },
+    {
+      "step_number": 2,
+      "action": "Combine ingredients in a shaker with ice.",
+      "technique_detail": "Pour tequila, triple sec, fresh lime juice, and simple syrup into a cocktail shaker filled with ice.",
+      "visual_cue": "Ice should fill about two-thirds of the shaker.",
+      "common_mistakes": [
+        "Using too little ice",
+        "Not measuring ingredients accurately"
+      ],
+      "timing_guidance": "Add ingredients swiftly to maintain chill."
+    },
+    {
+      "step_number": 3,
+      "action": "Shake vigorously until well chilled.",
+      "technique_detail": "Hold the shaker firmly with both hands and shake vigorously for about 15 seconds.",
+      "visual_cue": "Condensation will form on the outside of the shaker.",
+      "common_mistakes": [
+        "Shaking too gently",
+        "Over-shaking causing dilution"
+      ],
+      "timing_guidance": "Aim for a good chill without watering down the cocktail."
+    },
+    {
+      "step_number": 4,
+      "action": "Strain into the prepared glass over fresh ice.",
+      "technique_detail": "Use a fine strainer to pour the cocktail into the margarita glass filled with fresh ice to keep the drink crisp.",
+      "visual_cue": "Clear, vibrant liquid with no ice shards in the glass.",
+      "common_mistakes": [
+        "Pouring too quickly causing spillage",
+        "Not using a strainer leading to ice chips"
+      ],
+      "timing_guidance": "Pour slowly and steadily."
+    },
+    {
+      "step_number": 5,
+      "action": "Garnish with a lime wheel.",
+      "technique_detail": "Cut a fresh lime wheel and make a small slit to place it on the rim of the glass.",
+      "visual_cue": "Lime wheel sits neatly on the rim without falling.",
+      "common_mistakes": [
+        "Using dried out lime",
+        "Cutting uneven slices"
+      ],
+      "timing_guidance": "Garnish just before serving to keep it fresh."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Spicy Margarita",
+      "changes": [
+        "Add jalape\u00f1o slices or a dash of hot sauce"
+      ],
+      "description": "Adds a spicy kick to the classic margarita for those who enjoy heat."
+    },
+    {
+      "name": "Frozen Margarita",
+      "changes": [
+        "Blend the ingredients with ice to create a slushy texture"
+      ],
+      "description": "A refreshing frozen version perfect for hot days."
+    },
+    {
+      "name": "Cadillac Margarita",
+      "changes": [
+        "Use premium aged tequila and Grand Marnier instead of triple sec"
+      ],
+      "description": "A luxurious twist with richer flavors and smoother finish."
+    }
+  ],
+  "food_pairings": [
+    "Tacos",
+    "Guacamole",
+    "Ceviche",
+    "Grilled shrimp"
+  ],
+  "optimal_serving_temperature": "Cold",
+  "skill_level_recommendation": "Beginner to intermediate bartenders"
+}

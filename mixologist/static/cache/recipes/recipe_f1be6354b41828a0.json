@@ -1,0 +1,208 @@
+{
+  "drink_name": "Margarita",
+  "alcohol_content": 0.3,
+  "serving_glass": "Margarita glass",
+  "rim": "Salted",
+  "ingredients": [
+    {
+      "name": "Tequila",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Triple Sec",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Fresh Lime Juice",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Simple Syrup",
+      "quantity": "0.5 oz"
+    }
+  ],
+  "steps": [
+    "Rim the glass with salt by rubbing a lime wedge around the rim and dipping it into coarse salt.",
+    "Fill a shaker with ice.",
+    "Add tequila, triple sec, fresh lime juice, and simple syrup to the shaker.",
+    "Shake well until the mixture is chilled.",
+    "Strain into a chilled margarita glass with the salted rim.",
+    "Garnish with a lime wheel."
+  ],
+  "garnish": [
+    "Lime wheel"
+  ],
+  "drink_image_description": "A beautifully photographed Margarita cocktail featuring a salted rim margarita glass filled with a pale greenish-yellow liquid. The drink is garnished with a vibrant lime wheel on the rim. The lighting is bright and natural, highlighting the condensation on the glass, with a clean and bright background that enhances the fresh and zesty appearance of the drink. The camera angle is slightly above and to the side, capturing the inviting texture and colors of the cocktail.",
+  "drink_history": "The Margarita is a classic cocktail with origins tracing back to mid-20th century Mexico. It has become one of the most popular cocktails worldwide, known for its perfect balance of sweet, sour, salty, and bitter flavors.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Tequila",
+      "brands": [
+        "Patr\u00f3n",
+        "Don Julio",
+        "Jose Cuervo"
+      ]
+    },
+    {
+      "ingredient": "Triple Sec",
+      "brands": [
+        "Cointreau",
+        "Grand Marnier",
+        "Combier"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Simple Syrup",
+      "alternatives": [
+        "Agave Syrup",
+        "Honey Syrup"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Daiquiri",
+    "Caipirinha",
+    "Paloma",
+    "Tommy's Margarita",
+    "Sidecar",
+    "Cosmopolitan"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Cocktail Shaker",
+      "essential": true
+    },
+    {
+      "item": "Jigger",
+      "essential": true
+    },
+    {
+      "item": "Muddler",
+      "essential": false,
+      "alternative": "Spoon"
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Citrus",
+      "Agave",
+      "Sweetness"
+    ],
+    "secondary_notes": [
+      "Saltiness",
+      "Bitterness"
+    ],
+    "mouthfeel": "Smooth and slightly thick due to the syrup.",
+    "finish": "Clean and refreshing with a slight tartness.",
+    "balance": "Well balanced between sweet, sour, salty, and bitter elements."
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "When making in batches, keep the ingredients proportional and chill well before serving."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Rim the glass with salt.",
+      "technique_detail": "Rub a lime wedge around the rim of a chilled margarita glass to moisten it, then dip the rim into a plate of coarse salt to coat evenly.",
+      "visual_cue": "The rim should have an even layer of salt without clumps.",
+      "common_mistakes": [
+        "Not moistening the rim enough, causing uneven salt coating.",
+        "Using fine salt instead of coarse salt."
+      ],
+      "timing_guidance": "Do this right before serving to keep the salt dry and crunchy."
+    },
+    {
+      "step_number": 2,
+      "action": "Fill the cocktail shaker with ice.",
+      "technique_detail": "Use plenty of fresh ice to ensure the drink chills properly without diluting too quickly.",
+      "visual_cue": "The shaker should be about two-thirds full of ice.",
+      "common_mistakes": [
+        "Using melted or old ice.",
+        "Not using enough ice, resulting in weak chilling."
+      ],
+      "timing_guidance": "Add ice immediately before shaking."
+    },
+    {
+      "step_number": 3,
+      "action": "Add tequila, triple sec, lime juice, and simple syrup to the shaker.",
+      "technique_detail": "Measure accurately using a jigger to maintain the perfect flavor balance.",
+      "visual_cue": "Liquid levels should match the measured quantities.",
+      "common_mistakes": [
+        "Overpouring or underpouring ingredients.",
+        "Skipping the syrup which balances the tartness."
+      ],
+      "timing_guidance": "Add ingredients promptly after adding ice."
+    },
+    {
+      "step_number": 4,
+      "action": "Shake well until chilled.",
+      "technique_detail": "Shake vigorously for about 15 seconds to combine and chill the ingredients thoroughly.",
+      "visual_cue": "Shaker will frost up on the outside indicating proper chilling.",
+      "common_mistakes": [
+        "Shaking too briefly, resulting in a warm drink.",
+        "Opening the shaker too soon, losing coldness."
+      ],
+      "timing_guidance": "Shake immediately after adding ingredients for best temperature."
+    },
+    {
+      "step_number": 5,
+      "action": "Strain into the glass.",
+      "technique_detail": "Use a fine strainer to pour the cocktail into the prepared glass, leaving ice behind in the shaker.",
+      "visual_cue": "The liquid should be clear and free of ice shards.",
+      "common_mistakes": [
+        "Pouring ice into the glass.",
+        "Not straining properly leading to dilution."
+      ],
+      "timing_guidance": "Strain immediately after shaking."
+    },
+    {
+      "step_number": 6,
+      "action": "Garnish with a lime wheel.",
+      "technique_detail": "Slice a fresh lime wheel and place it on the rim or float it on the drink.",
+      "visual_cue": "Garnish is fresh and vibrant, enhancing the drink's visual appeal.",
+      "common_mistakes": [
+        "Using dried or old lime slices.",
+        "Overcrowding the glass with garnish."
+      ],
+      "timing_guidance": "Add garnish just before serving."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Frozen Margarita",
+      "changes": [
+        "Blend the ingredients with ice instead of shaking.",
+        "Serve in a frosted glass without a salt rim."
+      ],
+      "description": "A refreshing twist where the cocktail is blended into a slushy consistency, perfect for hot weather."
+    },
+    {
+      "name": "Spicy Margarita",
+      "changes": [
+        "Add jalape\u00f1o slices to the shaker.",
+        "Garnish with a slice of jalape\u00f1o alongside the lime wheel."
+      ],
+      "description": "Adds a spicy kick to the classic Margarita for those who enjoy heat."
+    }
+  ],
+  "food_pairings": [
+    "Tacos",
+    "Ceviche",
+    "Guacamole",
+    "Grilled Shrimp"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Beginner to Intermediate"
+}

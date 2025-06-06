@@ -1,0 +1,224 @@
+{
+  "drink_name": "Tom Collins",
+  "alcohol_content": 0.25,
+  "serving_glass": "Collins glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "London dry gin",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Fresh lemon juice",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Simple syrup",
+      "quantity": "0.5 oz"
+    },
+    {
+      "name": "Club soda",
+      "quantity": "3 oz"
+    }
+  ],
+  "steps": [
+    "Fill a Collins glass with ice cubes.",
+    "Add the gin, fresh lemon juice, and simple syrup to a shaker with ice.",
+    "Shake well until chilled.",
+    "Strain the mixture into the prepared Collins glass.",
+    "Top with club soda and gently stir to combine.",
+    "Garnish with a lemon wheel and a maraschino cherry."
+  ],
+  "garnish": [
+    "Lemon wheel",
+    "Maraschino cherry"
+  ],
+  "drink_image_description": "A classic Tom Collins served in a tall Collins glass filled with ice. The drink is a light, translucent yellow, garnished with a bright yellow lemon wheel and a vibrant red maraschino cherry on top. The setting is bright with natural lighting, emphasizing the refreshing and crisp nature of the cocktail. The camera angle is slightly above the glass, capturing the effervescent bubbles of the club soda and the condensation on the glass.",
+  "drink_history": "The Tom Collins is a classic cocktail dating back to the mid-19th century. Named after a popular hoax and urban legend from New York in the 1870s, it became famous as a refreshing gin-based drink served in soda fountains and bars. Its simple combination of gin, lemon juice, sugar, and soda water made it a beloved summer cooler and a staple in cocktail culture.",
+  "brand_recommendations": [
+    {
+      "ingredient": "London dry gin",
+      "brands": [
+        "Beefeater",
+        "Tanqueray",
+        "Bombay Sapphire"
+      ]
+    },
+    {
+      "ingredient": "Simple syrup",
+      "brands": [
+        "Homemade",
+        "Monin",
+        "Torani"
+      ]
+    },
+    {
+      "ingredient": "Club soda",
+      "brands": [
+        "Schweppes",
+        "Perrier",
+        "Topo Chico"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "London dry gin",
+      "alternatives": [
+        "Old Tom gin",
+        "Plymouth gin"
+      ]
+    },
+    {
+      "original": "Simple syrup",
+      "alternatives": [
+        "Honey syrup",
+        "Agave syrup"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "John Collins",
+    "Gin Fizz",
+    "Vodka Collins",
+    "Ramos Gin Fizz",
+    "French 75",
+    "Southside",
+    "Aviation",
+    "Bee's Knees"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Cocktail shaker",
+      "essential": true
+    },
+    {
+      "item": "Jigger",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    },
+    {
+      "item": "Collins glass",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Citrus",
+      "Juniper",
+      "Sweetness"
+    ],
+    "secondary_notes": [
+      "Herbal",
+      "Refreshing",
+      "Light effervescence"
+    ],
+    "mouthfeel": "Light and bubbly with a smooth finish",
+    "finish": "Clean and crisp citrus finish",
+    "balance": "Well-balanced between tart lemon and sweet syrup with the botanical notes of gin"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Fill a Collins glass with ice cubes.",
+      "technique_detail": "Use fresh, clear ice cubes to keep the drink cold without diluting it too quickly.",
+      "visual_cue": "Glass should be frosty with condensation forming on the outside.",
+      "common_mistakes": [
+        "Using crushed ice which dilutes the drink too fast."
+      ],
+      "timing_guidance": "Fill the glass just before serving to maintain temperature."
+    },
+    {
+      "step_number": 2,
+      "action": "Add the gin, fresh lemon juice, and simple syrup to a shaker with ice.",
+      "technique_detail": "Measure ingredients accurately with a jigger for balance.",
+      "visual_cue": "Ingredients should be well combined and chilled after shaking.",
+      "common_mistakes": [
+        "Not shaking long enough to chill the mixture."
+      ],
+      "timing_guidance": "Shake for about 10-15 seconds until the shaker feels cold."
+    },
+    {
+      "step_number": 3,
+      "action": "Shake well until chilled.",
+      "technique_detail": "Use a firm, consistent shaking motion to chill and dilute the drink properly.",
+      "visual_cue": "Shaker will frost up, indicating proper chilling.",
+      "common_mistakes": [
+        "Over-shaking which can overly dilute the drink."
+      ],
+      "timing_guidance": "Shake just enough to chill, about 10-15 seconds."
+    },
+    {
+      "step_number": 4,
+      "action": "Strain the mixture into the prepared Collins glass.",
+      "technique_detail": "Use a fine strainer to ensure no ice shards or pulp get into the glass.",
+      "visual_cue": "The drink should be clear and free of debris.",
+      "common_mistakes": [
+        "Pouring too quickly causing ice shards to enter the glass."
+      ],
+      "timing_guidance": "Strain steadily and smoothly."
+    },
+    {
+      "step_number": 5,
+      "action": "Top with club soda and gently stir to combine.",
+      "technique_detail": "Pour the soda slowly over the back of a spoon to maintain carbonation.",
+      "visual_cue": "Bubbles should be visible rising through the drink.",
+      "common_mistakes": [
+        "Stirring too vigorously which can flatten the soda."
+      ],
+      "timing_guidance": "Stir gently just to mix."
+    },
+    {
+      "step_number": 6,
+      "action": "Garnish with a lemon wheel and a maraschino cherry.",
+      "technique_detail": "Place the lemon wheel on the rim and the cherry on a cocktail pick.",
+      "visual_cue": "Garnish should look fresh and vibrant.",
+      "common_mistakes": [
+        "Using wilted or dry garnishes."
+      ],
+      "timing_guidance": "Garnish immediately before serving for best presentation."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "John Collins",
+      "changes": [
+        "Use bourbon instead of gin"
+      ],
+      "description": "A whiskey-based variation of the Tom Collins with a richer, deeper flavor."
+    },
+    {
+      "name": "Vodka Collins",
+      "changes": [
+        "Substitute vodka for gin"
+      ],
+      "description": "A lighter, less botanical version using vodka as the base spirit."
+    },
+    {
+      "name": "Ramos Gin Fizz",
+      "changes": [
+        "Add egg white and cream",
+        "Use orange flower water"
+      ],
+      "description": "A creamy, frothy version with added floral notes."
+    }
+  ],
+  "food_pairings": [
+    "Light seafood dishes",
+    "Fresh salads",
+    "Grilled chicken"
+  ],
+  "optimal_serving_temperature": "Cold",
+  "skill_level_recommendation": "Beginner to intermediate"
+}

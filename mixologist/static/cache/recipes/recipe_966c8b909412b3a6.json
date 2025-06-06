@@ -1,0 +1,197 @@
+{
+  "drink_name": "Old Fashioned",
+  "alcohol_content": 0.35,
+  "serving_glass": "Old Fashioned glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Bourbon or Rye Whiskey",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Sugar Cube",
+      "quantity": "1"
+    },
+    {
+      "name": "Angostura Bitters",
+      "quantity": "2 dashes"
+    },
+    {
+      "name": "Water",
+      "quantity": "1 tsp"
+    },
+    {
+      "name": "Orange Peel",
+      "quantity": "1 twist"
+    },
+    {
+      "name": "Maraschino Cherry",
+      "quantity": "1"
+    }
+  ],
+  "steps": [
+    "Place the sugar cube in an Old Fashioned glass.",
+    "Add the bitters and a splash of water to the sugar cube.",
+    "Muddle the sugar cube until it is dissolved.",
+    "Fill the glass with a large ice cube.",
+    "Pour the bourbon or rye whiskey over the ice.",
+    "Stir gently to combine and chill the drink.",
+    "Express the orange peel over the glass to release the oils, then rub the rim with the peel and drop it into the glass.",
+    "Garnish with a maraschino cherry."
+  ],
+  "garnish": [
+    "Orange Peel",
+    "Maraschino Cherry"
+  ],
+  "drink_image_description": "A classic Old Fashioned cocktail in an Old Fashioned glass, featuring a large clear ice cube. The drink is amber in color with a slight sheen from the oils of the orange peel garnish resting on the rim. A maraschino cherry sits at the bottom of the glass. The scene is shot from a close-up angle with warm, soft lighting highlighting the rich amber hues, and a bright background emphasizing the clarity of the ice and the vibrant colors of the garnish.",
+  "drink_history": "The Old Fashioned is one of the oldest known cocktails, dating back to the early 19th century. It originated in Louisville, Kentucky, and was popularized as a way to enjoy whiskey with a touch of sweetness and bitters. The drink has remained a staple in cocktail culture, revered for its simplicity and balance.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Bourbon or Rye Whiskey",
+      "brands": [
+        "Maker's Mark",
+        "Woodford Reserve",
+        "Bulleit Rye"
+      ]
+    },
+    {
+      "ingredient": "Angostura Bitters",
+      "brands": [
+        "Angostura"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Sugar Cube",
+      "alternatives": [
+        "Simple Syrup",
+        "Honey",
+        "Maple Syrup"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Whiskey Sour",
+    "Manhattan",
+    "Sazerac",
+    "Mint Julep",
+    "Boulevardier",
+    "Rob Roy"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Old Fashioned glass",
+      "essential": true
+    },
+    {
+      "item": "Muddler",
+      "essential": true
+    },
+    {
+      "item": "Bar spoon",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Whiskey",
+      "Sweetness",
+      "Bitters"
+    ],
+    "secondary_notes": [
+      "Citrus",
+      "Spice"
+    ],
+    "mouthfeel": "Smooth and slightly oily",
+    "finish": "Warm and lingering with a hint of spice",
+    "balance": "Well-balanced between sweetness, bitterness, and the bold flavor of whiskey"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "When making a batch, multiply ingredients accordingly and stir gently to combine."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Place the sugar cube in an Old Fashioned glass.",
+      "technique_detail": "Use a large sugar cube for proper dissolution.",
+      "visual_cue": "Sugar cube sits at the bottom of the glass.",
+      "common_mistakes": [
+        "Using too much sugar",
+        "Not muddling enough"
+      ],
+      "timing_guidance": "Muddle until the sugar is fully dissolved."
+    },
+    {
+      "step_number": 2,
+      "action": "Add the bitters and a splash of water to the sugar cube.",
+      "technique_detail": "Bitters help to balance the sweetness and add complexity.",
+      "visual_cue": "Bitters evenly coat the sugar cube."
+    },
+    {
+      "step_number": 3,
+      "action": "Muddle the sugar cube until it is dissolved.",
+      "technique_detail": "Muddling releases the sugar and bitters into the water to create a syrup base.",
+      "visual_cue": "The sugar cube is no longer visible, and the mixture looks syrupy."
+    },
+    {
+      "step_number": 4,
+      "action": "Fill the glass with a large ice cube.",
+      "technique_detail": "A single large ice cube melts slower, preventing dilution.",
+      "visual_cue": "Large clear ice cube fills the glass."
+    },
+    {
+      "step_number": 5,
+      "action": "Pour the bourbon or rye whiskey over the ice.",
+      "technique_detail": "Pour slowly to chill the whiskey evenly.",
+      "visual_cue": "Whiskey coats the ice cube and fills the glass."
+    },
+    {
+      "step_number": 6,
+      "action": "Stir gently to combine and chill the drink.",
+      "technique_detail": "Use a bar spoon to stir gently for about 20 seconds.",
+      "visual_cue": "The liquid becomes well mixed and slightly frosted on the glass."
+    },
+    {
+      "step_number": 7,
+      "action": "Express the orange peel over the glass to release the oils, then rub the rim with the peel and drop it into the glass.",
+      "technique_detail": "Expressing the peel releases essential oils that add aroma and flavor.",
+      "visual_cue": "Orange peel twists and oils spray over the glass rim."
+    },
+    {
+      "step_number": 8,
+      "action": "Garnish with a maraschino cherry.",
+      "technique_detail": "Adds a touch of sweetness and color contrast.",
+      "visual_cue": "Cherry rests at the bottom of the glass."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Smoky Old Fashioned",
+      "changes": [
+        "Use a smoky bourbon or add a small amount of smoked bitters"
+      ],
+      "description": "Adds a rich smoky depth to the classic Old Fashioned."
+    },
+    {
+      "name": "Maple Old Fashioned",
+      "changes": [
+        "Replace sugar cube with maple syrup"
+      ],
+      "description": "Adds a smooth maple sweetness for a seasonal twist."
+    }
+  ],
+  "food_pairings": [
+    "Grilled steak",
+    "Charcuterie",
+    "Dark chocolate desserts"
+  ],
+  "optimal_serving_temperature": "Slightly chilled",
+  "skill_level_recommendation": "Suitable for beginner to intermediate bartenders."
+}

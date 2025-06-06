@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 import logging
 from typing import Optional, List, Dict
-from .services.openai_service import get_completion_from_messages, generate_image_stream
+from .services.openai_service import get_completion_from_messages, generate_image_stream, generate_specialized_image_stream, generate_recipe_cache_key, get_cached_recipe, save_recipe_to_cache, parse_ingredient_name, normalize_glass_name
 
 app = FastAPI(title="Mixologist API")
 
@@ -23,8 +23,20 @@ async def home():
 
 @app.post("/create")
 async def create_drink(drink_query: str = Form(...)):
-    """Create a drink recipe based on the drink query with enhanced AI features."""
+    """Create a drink recipe based on the drink query with enhanced AI features and caching."""
     try:
+        # Generate cache key for this drink query
+        cache_key = generate_recipe_cache_key(drink_query)
+        print(f"--- Generated recipe cache key: {cache_key} for query: {drink_query} ---")
+        
+        # Check for cached recipe first
+        cached_recipe = await get_cached_recipe(cache_key)
+        if cached_recipe:
+            print(f"--- Found cached recipe for {drink_query}, returning cached data ---")
+            return cached_recipe
+        
+        print(f"--- No cached recipe found for {drink_query}, generating new recipe ---")
+        
         ingredients = ""  # This seems unused or hardcoded empty, might need review later
         ingredients_part = f"The ingredients I have are: {ingredients}\n" if ingredients else ""
         
@@ -69,6 +81,10 @@ async def create_drink(drink_query: str = Form(...)):
             "optimal_serving_temperature": recipe.optimal_serving_temperature,
             "skill_level_recommendation": recipe.skill_level_recommendation
         }
+        
+        # Save the new recipe to cache
+        await save_recipe_to_cache(cache_key, recipe_data)
+        
         return recipe_data
     except Exception as e:
         logging.error(f"Error creating drink recipe: {e}")
@@ -79,33 +95,42 @@ async def generate_image_route(
     image_description: str = Form(...),
     drink_query: str = Form(...),
     ingredients: str = Form(...),
-    serving_glass: str = Form(...)
+    serving_glass: str = Form(...),
+    steps: str = Form(default=""),
+    garnish: str = Form(default=""),
+    equipment_needed: str = Form(default="")
 ):
-    """Generate a drink image with streaming partial updates."""
-    print("--- generate_image_route (streaming) called ---")
+    """Generate a drink infographic image with streaming partial updates."""
+    print("--- generate_image_route (infographic streaming) called ---")
     
     try:
-        # Parse ingredients JSON
+        # Parse JSON data
         try:
-            ingredients_list = json.loads(ingredients) if ingredients else None
-        except json.JSONDecodeError:
-            print("!!! ERROR decoding ingredients JSON in generate_image_route !!!")
-            raise HTTPException(status_code=400, detail="Invalid ingredients JSON format")
+            ingredients_list = json.loads(ingredients) if ingredients else []
+            steps_list = json.loads(steps) if steps else []
+            garnish_list = json.loads(garnish) if garnish else []
+            equipment_list = json.loads(equipment_needed) if equipment_needed else []
+        except json.JSONDecodeError as e:
+            print(f"!!! ERROR decoding JSON in generate_image_route: {e} !!!")
+            raise HTTPException(status_code=400, detail=f"Invalid JSON format: {str(e)}")
 
         async def event_stream():
             try:
-                print(f"--- Starting OpenAI image stream for: {drink_query} ---")
+                print(f"--- Starting OpenAI infographic image stream for: {drink_query} ---")
                 async for b64_image_chunk in generate_image_stream(
                     image_description,
                     drink_query,
                     ingredients=ingredients_list,
                     serving_glass=serving_glass,
+                    steps=steps_list,
+                    garnish=garnish_list,
+                    equipment_needed=equipment_list,
                 ):
                     sse_event = {"type": "partial_image", "b64_data": b64_image_chunk}
                     yield f"data: {json.dumps(sse_event)}\n\n"
                 
                 # After the stream from OpenAI is finished, send a completion event
-                print(f"--- Finished streaming partial images for: {drink_query} ---")
+                print(f"--- Finished streaming partial infographic images for: {drink_query} ---")
                 yield f"data: {json.dumps({'type': 'stream_complete'})}\n\n"
 
             except Exception as e:
@@ -264,3 +289,327 @@ async def submit_recipe_variation(
     except Exception as e:
         logging.error(f"Error submitting recipe variation: {e}")
         raise HTTPException(status_code=500, detail=f"Error submitting variation: {str(e)}")
+
+@app.post("/generate_ingredient_image")
+async def generate_ingredient_image(
+    ingredient_name: str = Form(...),
+    drink_context: str = Form(default="")
+):
+    """Generate a standalone ingredient image for reuse across recipes."""
+    print(f"--- generate_ingredient_image called for: {ingredient_name} ---")
+    
+    try:
+        # Clean the ingredient name - remove qualifiers and containers
+        clean_name = ingredient_name.replace("Fresh ", "").replace("Dry ", "").replace("Simple ", "").strip()
+        
+        # Remove bottle/container references for pure ingredient images
+        clean_name = clean_name.replace(" bottle", "").replace(" can", "").replace(" jar", "")
+
+        async def event_stream():
+            try:
+                print(f"--- Starting ingredient image stream for: {clean_name} ---")
+                async for b64_image_chunk in generate_specialized_image_stream(
+                    subject=clean_name,
+                    category="ingredients",
+                    additional_context="",  # No additional context for reusable images
+                    cache_prefix="ingredient"
+                ):
+                    sse_event = {"type": "partial_image", "b64_data": b64_image_chunk}
+                    yield f"data: {json.dumps(sse_event)}\n\n"
+                
+                print(f"--- Finished streaming ingredient image for: {clean_name} ---")
+                yield f"data: {json.dumps({'type': 'stream_complete'})}\n\n"
+
+            except Exception as e:
+                print(f"!!! EXCEPTION in ingredient image stream: {type(e).__name__} - {str(e)} !!!")
+                import traceback
+                traceback.print_exc()
+                error_event = {"type": "error", "message": str(e)}
+                yield f"data: {json.dumps(error_event)}\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
+    
+    except Exception as e:
+        print(f"!!! EXCEPTION in generate_ingredient_image: {type(e).__name__} - {str(e)} !!!")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating ingredient image: {str(e)}")
+
+@app.post("/generate_glassware_image")
+async def generate_glassware_image(
+    glass_type: str = Form(...),
+    drink_context: str = Form(default="")
+):
+    """Generate a standalone glassware image for reuse across recipes."""
+    print(f"--- generate_glassware_image called for: {glass_type} ---")
+    
+    try:
+        # Normalize glass name
+        normalized_glass = normalize_glass_name(glass_type)
+
+        async def event_stream():
+            try:
+                print(f"--- Starting glassware image stream for: {normalized_glass} ---")
+                async for b64_image_chunk in generate_specialized_image_stream(
+                    subject=normalized_glass,
+                    category="glassware",
+                    additional_context="",  # No additional context for reusable images
+                    cache_prefix="glassware"
+                ):
+                    sse_event = {"type": "partial_image", "b64_data": b64_image_chunk}
+                    yield f"data: {json.dumps(sse_event)}\n\n"
+                
+                print(f"--- Finished streaming glassware image for: {normalized_glass} ---")
+                yield f"data: {json.dumps({'type': 'stream_complete'})}\n\n"
+
+            except Exception as e:
+                print(f"!!! EXCEPTION in glassware image stream: {type(e).__name__} - {str(e)} !!!")
+                import traceback
+                traceback.print_exc()
+                error_event = {"type": "error", "message": str(e)}
+                yield f"data: {json.dumps(error_event)}\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
+    
+    except Exception as e:
+        print(f"!!! EXCEPTION in generate_glassware_image: {type(e).__name__} - {str(e)} !!!")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating glassware image: {str(e)}")
+
+@app.post("/generate_garnish_image")
+async def generate_garnish_image(
+    garnish_description: str = Form(...),
+    preparation_method: str = Form(default="")
+):
+    """Generate a standalone garnish image for reuse across recipes."""
+    print(f"--- generate_garnish_image called for: {garnish_description} ---")
+    
+    try:
+        # Parse garnish info - keep preparation method as it's part of the garnish identity
+        garnish_text = garnish_description.strip()
+        if preparation_method:
+            garnish_text += f" {preparation_method}"
+
+        async def event_stream():
+            try:
+                print(f"--- Starting garnish image stream for: {garnish_text} ---")
+                async for b64_image_chunk in generate_specialized_image_stream(
+                    subject=garnish_text,
+                    category="garnish",
+                    additional_context="",  # No additional context for reusable images
+                    cache_prefix="garnish"
+                ):
+                    sse_event = {"type": "partial_image", "b64_data": b64_image_chunk}
+                    yield f"data: {json.dumps(sse_event)}\n\n"
+                
+                print(f"--- Finished streaming garnish image for: {garnish_text} ---")
+                yield f"data: {json.dumps({'type': 'stream_complete'})}\n\n"
+
+            except Exception as e:
+                print(f"!!! EXCEPTION in garnish image stream: {type(e).__name__} - {str(e)} !!!")
+                import traceback
+                traceback.print_exc()
+                error_event = {"type": "error", "message": str(e)}
+                yield f"data: {json.dumps(error_event)}\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
+    
+    except Exception as e:
+        print(f"!!! EXCEPTION in generate_garnish_image: {type(e).__name__} - {str(e)} !!!")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating garnish image: {str(e)}")
+
+@app.post("/generate_equipment_image")
+async def generate_equipment_image(
+    equipment_name: str = Form(...),
+    equipment_type: str = Form(default="")
+):
+    """Generate a standalone equipment image for reuse across recipes."""
+    print(f"--- generate_equipment_image called for: {equipment_name} ---")
+    
+    try:
+        # Clean equipment name
+        clean_name = equipment_name.strip()
+
+        async def event_stream():
+            try:
+                print(f"--- Starting equipment image stream for: {clean_name} ---")
+                async for b64_image_chunk in generate_specialized_image_stream(
+                    subject=clean_name,
+                    category="equipment",
+                    additional_context="",  # No additional context for reusable images
+                    cache_prefix="equipment"
+                ):
+                    sse_event = {"type": "partial_image", "b64_data": b64_image_chunk}
+                    yield f"data: {json.dumps(sse_event)}\n\n"
+                
+                print(f"--- Finished streaming equipment image for: {clean_name} ---")
+                yield f"data: {json.dumps({'type': 'stream_complete'})}\n\n"
+
+            except Exception as e:
+                print(f"!!! EXCEPTION in equipment image stream: {type(e).__name__} - {str(e)} !!!")
+                import traceback
+                traceback.print_exc()
+                error_event = {"type": "error", "message": str(e)}
+                yield f"data: {json.dumps(error_event)}\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
+    
+    except Exception as e:
+        print(f"!!! EXCEPTION in generate_equipment_image: {type(e).__name__} - {str(e)} !!!")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating equipment image: {str(e)}")
+
+@app.post("/generate_recipe_visuals")
+async def generate_recipe_visuals(
+    recipe_data: str = Form(...),
+    image_types: str = Form(default="cocktail,ingredients,glassware")
+):
+    """Generate multiple images for a complete recipe visual package."""
+    print(f"--- generate_recipe_visuals called with types: {image_types} ---")
+    
+    try:
+        # Parse recipe data
+        try:
+            recipe = json.loads(recipe_data)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid recipe JSON format")
+        
+        # Parse requested image types
+        requested_types = [t.strip() for t in image_types.split(",")]
+        
+        async def event_stream():
+            try:
+                # Generate main cocktail image first (highest priority)
+                if "cocktail" in requested_types:
+                    print(f"--- Generating cocktail image for: {recipe.get('drink_name', 'Unknown')} ---")
+                    async for b64_chunk in generate_image_stream(
+                        prompt=recipe.get('drink_image_description', ''),
+                        drink_name=recipe.get('drink_name', ''),
+                        ingredients=recipe.get('ingredients', []),
+                        serving_glass=recipe.get('serving_glass', '')
+                    ):
+                        sse_event = {"type": "cocktail_image", "image_type": "cocktail", "b64_data": b64_chunk}
+                        yield f"data: {json.dumps(sse_event)}\n\n"
+                
+                # Generate ingredient images
+                if "ingredients" in requested_types:
+                    ingredients = recipe.get('ingredients', [])[:3]  # Limit to first 3 ingredients
+                    for i, ingredient in enumerate(ingredients):
+                        ingredient_name = parse_ingredient_name(ingredient)
+                        print(f"--- Generating ingredient image {i+1}/{len(ingredients)} for: {ingredient_name} ---")
+                        
+                        async for b64_chunk in generate_specialized_image_stream(
+                            subject=f"{ingredient_name} bottle",
+                            category="ingredients",
+                            additional_context=f"for {recipe.get('drink_name', '')} cocktail",
+                            cache_prefix="ingredient"
+                        ):
+                            sse_event = {
+                                "type": "ingredient_image", 
+                                "image_type": "ingredient",
+                                "ingredient_name": ingredient_name,
+                                "ingredient_index": i,
+                                "b64_data": b64_chunk
+                            }
+                            yield f"data: {json.dumps(sse_event)}\n\n"
+                
+                # Generate glassware image
+                if "glassware" in requested_types:
+                    glass_type = recipe.get('serving_glass', '')
+                    if glass_type:
+                        normalized_glass = normalize_glass_name(glass_type)
+                        print(f"--- Generating glassware image for: {normalized_glass} ---")
+                        
+                        async for b64_chunk in generate_specialized_image_stream(
+                            subject=normalized_glass,
+                            category="glassware",
+                            additional_context=f"perfect for {recipe.get('drink_name', '')}",
+                            cache_prefix="glassware"
+                        ):
+                            sse_event = {
+                                "type": "glassware_image",
+                                "image_type": "glassware", 
+                                "glass_type": normalized_glass,
+                                "b64_data": b64_chunk
+                            }
+                            yield f"data: {json.dumps(sse_event)}\n\n"
+                
+                # Generate garnish image
+                if "garnish" in requested_types:
+                    garnishes = recipe.get('garnish', [])
+                    if garnishes and len(garnishes) > 0:
+                        garnish = garnishes[0] if isinstance(garnishes, list) else str(garnishes)
+                        print(f"--- Generating garnish image for: {garnish} ---")
+                        
+                        async for b64_chunk in generate_specialized_image_stream(
+                            subject=garnish,
+                            category="garnish",
+                            additional_context="cocktail garnish, fresh and vibrant",
+                            cache_prefix="garnish"
+                        ):
+                            sse_event = {
+                                "type": "garnish_image",
+                                "image_type": "garnish",
+                                "garnish_description": garnish,
+                                "b64_data": b64_chunk
+                            }
+                            yield f"data: {json.dumps(sse_event)}\n\n"
+                
+                print(f"--- Finished generating recipe visuals package ---")
+                yield f"data: {json.dumps({'type': 'all_complete'})}\n\n"
+
+            except Exception as e:
+                print(f"!!! EXCEPTION in recipe visuals generation: {type(e).__name__} - {str(e)} !!!")
+                import traceback
+                traceback.print_exc()
+                error_event = {"type": "error", "message": str(e)}
+                yield f"data: {json.dumps(error_event)}\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"!!! EXCEPTION in generate_recipe_visuals: {type(e).__name__} - {str(e)} !!!")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating recipe visuals: {str(e)}")
