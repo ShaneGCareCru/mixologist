@@ -1371,9 +1371,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 flex: 3,
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       // Quick Stats Cards
                       Row(
                         children: [
@@ -1463,8 +1464,72 @@ class _RecipeScreenState extends State<RecipeScreen> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 16),
                       ],
-                    ],
+                      
+                      // Debug: Print trivia data
+                      Builder(
+                        builder: (context) {
+                          print('=== TRIVIA DEBUG ===');
+                          print('Recipe data keys: ${widget.recipeData.keys.toList()}');
+                          print('drink_trivia exists: ${widget.recipeData.containsKey('drink_trivia')}');
+                          print('drink_trivia value: ${widget.recipeData['drink_trivia']}');
+                          print('drink_trivia type: ${widget.recipeData['drink_trivia'].runtimeType}');
+                          if (widget.recipeData['drink_trivia'] is List) {
+                            print('drink_trivia length: ${(widget.recipeData['drink_trivia'] as List).length}');
+                          }
+                          print('===================');
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      
+                      // Trivia Section
+                      if (widget.recipeData['drink_trivia'] is List && 
+                          (widget.recipeData['drink_trivia'] as List).isNotEmpty) ...[
+                        Text('Trivia', style: Theme.of(context).textTheme.titleMedium),
+                        const SizedBox(height: 8),
+                        ...((widget.recipeData['drink_trivia'] as List).take(3).map((trivia) {
+                          final fact = trivia['fact'] ?? trivia.toString();
+                          final category = trivia['category'] ?? '';
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (category.isNotEmpty)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        margin: const EdgeInsets.only(bottom: 6),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.primaryContainer,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          category.toUpperCase(),
+                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    Text(
+                                      fact,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        })),
+                      ],
+                      ],
+                    ),
                   ),
                 ),
               ),

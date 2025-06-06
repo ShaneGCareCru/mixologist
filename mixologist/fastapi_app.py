@@ -89,7 +89,8 @@ async def create_drink(drink_query: str = Form(...)):
             "suggested_variations": recipe.suggested_variations,
             "food_pairings": recipe.food_pairings,
             "optimal_serving_temperature": recipe.optimal_serving_temperature,
-            "skill_level_recommendation": recipe.skill_level_recommendation
+            "skill_level_recommendation": recipe.skill_level_recommendation,
+            "drink_trivia": recipe.drink_trivia
         }
         
         # Save the new recipe to cache

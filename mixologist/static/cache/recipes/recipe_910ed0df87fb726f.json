@@ -1,0 +1,213 @@
+{
+  "drink_name": "BlueBerry Martini",
+  "alcohol_content": 0.25,
+  "serving_glass": "Martini Glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Vodka",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Blueberry Liqueur",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Fresh Blueberries",
+      "quantity": "a handful"
+    },
+    {
+      "name": "Lemon Juice",
+      "quantity": "0.5 oz"
+    },
+    {
+      "name": "Simple Syrup",
+      "quantity": "0.5 oz"
+    }
+  ],
+  "steps": [
+    "Muddle the fresh blueberries gently in a cocktail shaker to release their juice.",
+    "Add vodka, blueberry liqueur, lemon juice, and simple syrup to the shaker.",
+    "Fill the shaker with ice, then shake vigorously until well chilled.",
+    "Strain the mixture into a chilled martini glass.",
+    "Garnish with a skewer of fresh blueberries."
+  ],
+  "garnish": [
+    "Fresh Blueberries Skewer"
+  ],
+  "drink_image_description": "A vibrant BlueBerry Martini in a classic martini glass, showcasing a deep blue-purple hue from fresh muddled blueberries and blueberry liqueur. The glass is clear and pristine, garnished with a skewer of fresh blueberries. The lighting is bright and natural, highlighting the drink's luscious color and smooth texture, with a bright background to enhance the vividness of the blue tones. The camera angle is slightly above the glass, focusing on the garnish and the rich color of the cocktail.",
+  "drink_history": "The BlueBerry Martini is a modern twist on the classic martini, inspired by the rise of fruit-infused cocktails. It combines the tart sweetness of fresh blueberries with the clean, crisp character of vodka, making it a popular choice for those seeking a refreshing and visually striking drink.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Vodka",
+      "brands": [
+        "Tito's Handmade Vodka",
+        "Grey Goose",
+        "Belvedere"
+      ]
+    },
+    {
+      "ingredient": "Blueberry Liqueur",
+      "brands": [
+        "Crater Lake Wild Blueberry Liqueur",
+        "Stirrings Blueberry Liqueur"
+      ]
+    },
+    {
+      "ingredient": "Simple Syrup",
+      "brands": [
+        "Monin",
+        "Torani"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Blueberry Liqueur",
+      "alternatives": [
+        "Blueberry Syrup",
+        "Blueberry Juice"
+      ]
+    },
+    {
+      "original": "Simple Syrup",
+      "alternatives": [
+        "Honey Syrup",
+        "Agave Nectar"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Classic Martini",
+    "Blue Lagoon",
+    "Blue Hawaiian",
+    "Berry Mojito",
+    "Lemon Drop Martini",
+    "Cosmopolitan"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 7,
+  "equipment_needed": [
+    {
+      "item": "Cocktail Shaker",
+      "essential": true
+    },
+    {
+      "item": "Muddler",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Blueberry",
+      "Citrus",
+      "Sweet"
+    ],
+    "secondary_notes": [
+      "Tartness",
+      "Freshness",
+      "Light floral hints"
+    ],
+    "mouthfeel": "Smooth and slightly syrupy",
+    "finish": "Clean with a fruity aftertaste",
+    "balance": "Well-balanced between sweet and tart"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 6,
+    "batch_preparation_notes": "Multiply ingredients proportionally for larger batches and shake well with ice before serving."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Muddle the fresh blueberries gently in a cocktail shaker to release their juice.",
+      "technique_detail": "Use a muddler to press down on the blueberries just enough to release their juice without pulverizing them into a paste.",
+      "visual_cue": "Look for a vibrant purple juice starting to form at the bottom of the shaker.",
+      "common_mistakes": [
+        "Over-muddling can make the drink bitter."
+      ],
+      "timing_guidance": "About 10 seconds."
+    },
+    {
+      "step_number": 2,
+      "action": "Add vodka, blueberry liqueur, lemon juice, and simple syrup to the shaker.",
+      "technique_detail": "Measure each ingredient precisely to maintain balance.",
+      "common_mistakes": [
+        "Adding too much syrup can overpower the tartness."
+      ],
+      "timing_guidance": "30 seconds."
+    },
+    {
+      "step_number": 3,
+      "action": "Fill the shaker with ice, then shake vigorously until well chilled.",
+      "technique_detail": "Shake for about 15 seconds to chill and dilute slightly, integrating flavors.",
+      "visual_cue": "Shaker becomes frosty on the outside.",
+      "common_mistakes": [
+        "Not shaking long enough can leave the drink warm."
+      ],
+      "timing_guidance": "15 seconds."
+    },
+    {
+      "step_number": 4,
+      "action": "Strain the mixture into a chilled martini glass.",
+      "technique_detail": "Use a fine strainer to catch pieces of blueberry pulp for a smooth finish.",
+      "visual_cue": "The drink should pour clear with a rich color.",
+      "common_mistakes": [
+        "Skipping the fine strain can result in a gritty texture."
+      ],
+      "timing_guidance": "10 seconds."
+    },
+    {
+      "step_number": 5,
+      "action": "Garnish with a skewer of fresh blueberries.",
+      "technique_detail": "Thread 3-5 fresh blueberries onto a cocktail pick and rest on the rim.",
+      "visual_cue": "Garnish looks fresh and vibrant.",
+      "timing_guidance": "5 seconds."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Blueberry Basil Martini",
+      "changes": [
+        "Add fresh basil leaves to muddle with blueberries."
+      ],
+      "description": "Adds a herbal freshness that complements the blueberry's sweetness."
+    },
+    {
+      "name": "Sparkling Blueberry Martini",
+      "changes": [
+        "Top with a splash of sparkling wine after shaking."
+      ],
+      "description": "Adds effervescence and a celebratory touch."
+    }
+  ],
+  "food_pairings": [
+    "Light seafood dishes",
+    "Fresh salads",
+    "Soft cheeses"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Beginner to Intermediate",
+  "drink_trivia": [
+    {
+      "fact": "Blueberries are rich in antioxidants and have been a favorite fruit in cocktails for their vibrant color and flavor.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "The martini glass, originally called a cocktail glass, became popular in the early 20th century as a stylish vessel for shaken drinks.",
+      "category": "history",
+      "source_period": "Early 1900s"
+    },
+    {
+      "fact": "Blueberry liqueurs have surged in popularity as craft distillers experiment with local and wild fruit flavors.",
+      "category": "culture",
+      "source_period": "2000s-present"
+    }
+  ]
+}

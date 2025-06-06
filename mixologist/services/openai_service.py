@@ -334,7 +334,7 @@ Recipe = namedtuple("Recipe", [
     "difficulty_rating", "preparation_time_minutes", "equipment_needed",
     "flavor_profile", "serving_size_base", "phonetic_pronunciations",
     "enhanced_steps", "suggested_variations", "food_pairings",
-    "optimal_serving_temperature", "skill_level_recommendation"
+    "optimal_serving_temperature", "skill_level_recommendation", "drink_trivia"
 ])
 
 logging.basicConfig(filename='app.log', level=logging.INFO)
@@ -570,6 +570,25 @@ def parse_recipe_arguments(arguments):
     food_pairings = arguments.get("food_pairings", [])
     optimal_serving_temperature = arguments.get("optimal_serving_temperature", "")
     skill_level_recommendation = arguments.get("skill_level_recommendation", "")
+    drink_trivia = arguments.get("drink_trivia", [])
+    
+    # Always ensure we have at least one trivia fact
+    if not drink_trivia and drink_name:
+        drink_trivia = [
+            {
+                "fact": f"The {drink_name} is a beloved cocktail enjoyed worldwide with many regional variations and personal interpretations.",
+                "category": "culture",
+                "source_period": "modern"
+            }
+        ]
+    
+    # Debug fallback trivia
+    print(f"=== PARSE_RECIPE_ARGUMENTS DEBUG ===")
+    print(f"drink_name: {drink_name}")
+    print(f"drink_trivia from OpenAI: {arguments.get('drink_trivia', 'NOT PROVIDED')}")
+    print(f"final drink_trivia: {drink_trivia}")
+    print(f"final trivia length: {len(drink_trivia) if drink_trivia else 0}")
+    print("=======================================")
     
     return Recipe(
         # Original fields
@@ -580,7 +599,7 @@ def parse_recipe_arguments(arguments):
         difficulty_rating, preparation_time_minutes, equipment_needed,
         flavor_profile, serving_size_base, phonetic_pronunciations,
         enhanced_steps, suggested_variations, food_pairings,
-        optimal_serving_temperature, skill_level_recommendation
+        optimal_serving_temperature, skill_level_recommendation, drink_trivia
     )
 
 def get_completion_from_messages(messages,

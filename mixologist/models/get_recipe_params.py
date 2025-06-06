@@ -44,6 +44,11 @@ class EnhancedStep(BaseModel):
     common_mistakes: List[str] = Field(default_factory=list, description="Common mistakes to avoid")
     timing_guidance: str = Field("", description="Timing guidance for this step")
 
+class TriviaFact(BaseModel):
+    fact: str = Field(..., description="An interesting trivia fact about the drink")
+    category: str = Field(..., description="Category of trivia (history, culture, ingredients, preparation, celebrity, etc.)")
+    source_period: str = Field("", description="Time period or era this fact relates to")
+
 class GetRecipeParams(BaseModel):
     # Original fields
     ingredients: List[Ingredient] = Field(..., description="List out the ingredients and their quantities")
@@ -71,4 +76,5 @@ class GetRecipeParams(BaseModel):
     food_pairings: List[str] = Field(default_factory=list, description="Recommended food pairings")
     optimal_serving_temperature: str = Field("", description="Optimal serving temperature")
     skill_level_recommendation: str = Field("", description="Recommended skill level for home bartenders")
+    drink_trivia: List[TriviaFact] = Field(default_factory=list, description="3-5 interesting trivia facts about the drink covering history, culture, ingredients, celebrities, or fun preparation facts")
 
