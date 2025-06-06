@@ -1414,36 +1414,166 @@ class _RecipeScreenState extends State<RecipeScreen> {
                       ),
                       const SizedBox(height: 16),
                       
-                      // Variations Section
+                      // Comprehensive Variations Section
                       if (widget.recipeData['suggested_variations'] is List && 
                           (widget.recipeData['suggested_variations'] as List).isNotEmpty) ...[
                         Text('Variations', style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 8),
-                        ...((widget.recipeData['suggested_variations'] as List).take(2).map((v) {
-                          final name = v['name'] ?? '';
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.arrow_right,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    name,
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                        Column(
+                          children: [
+                            for (var variation in widget.recipeData['suggested_variations'])
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                                   ),
                                 ),
-                              ],
-                            ),
-                          );
-                        })),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      variation['name'] ?? 'Variation',
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    if (variation['description'] != null && variation['description'].toString().isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        variation['description'],
+                                        style: Theme.of(context).textTheme.bodySmall,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                    if (variation['changes'] is List && (variation['changes'] as List).isNotEmpty) ...[
+                                      const SizedBox(height: 6),
+                                      Wrap(
+                                        spacing: 4,
+                                        children: (variation['changes'] as List).take(3)
+                                            .map((change) => Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  child: Text(
+                                                    change,
+                                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                                      color: Theme.of(context).colorScheme.secondary,
+                                                    ),
+                                                  ),
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      
+                      // Related Cocktails Section
+                      if (widget.recipeData['related_cocktails'] is List && 
+                          (widget.recipeData['related_cocktails'] as List).isNotEmpty) ...[
+                        Text('Related Cocktails', style: Theme.of(context).textTheme.titleMedium),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 80,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: widget.recipeData['related_cocktails'].length,
+                            itemBuilder: (context, index) {
+                              final cocktail = widget.recipeData['related_cocktails'][index];
+                              return Container(
+                                width: 120,
+                                margin: const EdgeInsets.only(right: 8),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: _isLoadingRelatedCocktail 
+                                        ? null 
+                                        : () => _loadRelatedCocktail(cocktail),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.3),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                                        ),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.local_bar,
+                                            size: 20,
+                                            color: Theme.of(context).colorScheme.secondary,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            cocktail,
+                                            style: Theme.of(context).textTheme.labelSmall,
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      
+                      // Food Pairings Section
+                      if (widget.recipeData['food_pairings'] is List && 
+                          (widget.recipeData['food_pairings'] as List).isNotEmpty) ...[
+                        Text('Food Pairings', style: Theme.of(context).textTheme.titleMedium),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: (widget.recipeData['food_pairings'] as List)
+                              .map((pairing) => Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.restaurant, 
+                                          size: 12, 
+                                          color: Theme.of(context).colorScheme.tertiary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          pairing,
+                                          style: Theme.of(context).textTheme.labelSmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
                         const SizedBox(height: 16),
                       ],
                       
