@@ -1436,7 +1436,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       itemBuilder: (context, index) {
         final ingredient = ingredients[index];
         final name = ingredient['name'] ?? ingredient.toString();
-        final imageKey = 'ingredient_\$name';
+        final imageKey = 'ingredient_$name';
         if (_specializedImages[imageKey] != null) {
           return ClipRRect(
             borderRadius: BorderRadius.circular(4),
@@ -1479,7 +1479,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: equipment.map((e) {
         final name = e['item'] ?? e.toString();
-        final imageKey = 'equipment_\$name';
+        final imageKey = 'equipment_$name';
         Widget child;
         if (_specializedImages[imageKey] != null) {
           child = ClipRRect(
