@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -68,8 +67,7 @@ class MethodCard extends StatefulWidget {
   final VoidCallback? onPrevious;
   final bool enableSwipeGestures;
   final bool enableKeyboardNavigation;
-  final bool enableAutoAdvance;
-  final Duration autoAdvanceDuration;
+  final ValueChanged<bool>? onCheckboxChanged;
 
   const MethodCard({
     super.key,
@@ -80,8 +78,7 @@ class MethodCard extends StatefulWidget {
     this.onPrevious,
     this.enableSwipeGestures = true,
     this.enableKeyboardNavigation = true,
-    this.enableAutoAdvance = false,
-    this.autoAdvanceDuration = const Duration(seconds: 30),
+    this.onCheckboxChanged,
   });
 
   @override
@@ -95,8 +92,6 @@ class _MethodCardState extends State<MethodCard>
   late AnimationController _swipeAnimationController;
   late Animation<Offset> _swipeAnimation;
   bool _isSwipeInProgress = false;
-  Timer? _autoAdvanceTimer;
-  double _timerProgress = 0.0;
 
   @override
   void initState() {
@@ -114,12 +109,10 @@ class _MethodCardState extends State<MethodCard>
       curve: Curves.easeInOut,
     ));
     
-    _startAutoAdvanceTimer();
   }
 
   @override
   void dispose() {
-    _autoAdvanceTimer?.cancel();
     _focusNode.dispose();
     _swipeAnimationController.dispose();
     super.dispose();
@@ -134,7 +127,6 @@ class _MethodCardState extends State<MethodCard>
 
   void _handleSwipeRight() {
     if (widget.onCompleted != null && !_isSwipeInProgress) {
-      _stopAutoAdvanceTimer();
       _triggerHapticFeedback(HapticFeedbackType.success);
       _animateSwipeComplete();
     }
@@ -197,38 +189,6 @@ class _MethodCardState extends State<MethodCard>
     }
   }
 
-  void _startAutoAdvanceTimer() {
-    if (!widget.enableAutoAdvance || 
-        widget.state == MethodCardState.completed ||
-        widget.onCompleted == null) {
-      return;
-    }
-    
-    _autoAdvanceTimer?.cancel();
-    _timerProgress = 0.0;
-    
-    const tickDuration = Duration(milliseconds: 100);
-    final totalTicks = widget.autoAdvanceDuration.inMilliseconds / tickDuration.inMilliseconds;
-    
-    _autoAdvanceTimer = Timer.periodic(tickDuration, (timer) {
-      setState(() {
-        _timerProgress += 1.0 / totalTicks;
-      });
-      
-      if (_timerProgress >= 1.0) {
-        timer.cancel();
-        _triggerHapticFeedback(HapticFeedbackType.medium);
-        widget.onCompleted?.call();
-      }
-    });
-  }
-
-  void _stopAutoAdvanceTimer() {
-    _autoAdvanceTimer?.cancel();
-    setState(() {
-      _timerProgress = 0.0;
-    });
-  }
 
 
   void _handleKeyPress(KeyEvent event) {
@@ -237,7 +197,6 @@ class _MethodCardState extends State<MethodCard>
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.space ||
           event.logicalKey == LogicalKeyboardKey.enter) {
-        _stopAutoAdvanceTimer();
         _triggerHapticFeedback(HapticFeedbackType.success);
         widget.onCompleted?.call();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
@@ -409,26 +368,6 @@ class _MethodCardState extends State<MethodCard>
                       ),
                   ],
                 ),
-                if (widget.enableAutoAdvance && _timerProgress > 0.0) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.hourglass_bottom, size: 16, color: theme.hintColor),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: LinearProgressIndicator(
-                          value: _timerProgress,
-                          backgroundColor: theme.colorScheme.surface,
-                          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${((1.0 - _timerProgress) * widget.autoAdvanceDuration.inSeconds).round()}s',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
                 ],
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
@@ -492,6 +431,16 @@ class _MethodCardState extends State<MethodCard>
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
+                    ),
+                  ),
+                if (widget.onCheckboxChanged != null)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Checkbox(
+                      value: widget.data.isCompleted,
+                      onChanged: widget.onCheckboxChanged,
+                      activeColor: theme.colorScheme.secondary,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
               ],

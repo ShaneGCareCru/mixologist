@@ -363,6 +363,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
     _saveProgress(); // Save progress when step is completed
   }
 
+  void _toggleStepCompleted(int stepIndex, bool completed) {
+    setState(() {
+      _stepCompletion[stepIndex] = completed;
+    });
+    _saveProgress();
+  }
+
   void _goToPreviousStep(int currentStepIndex) {
     if (currentStepIndex > 0) {
       setState(() {
@@ -2092,9 +2099,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 child: MouseRegion(
                   onEnter: (_) => setState(() => _hoveredStep = i),
                   onExit: (_) => setState(() => _hoveredStep = null),
-                  child: GestureDetector(
-                    onTap: () => _completeStep(i),
-                    child: MethodCard(
+                  child: MethodCard(
                       data: MethodCardData(
                         stepNumber: i + 1,
                         title: '',
@@ -2108,17 +2113,17 @@ class _RecipeScreenState extends State<RecipeScreen> {
                         proTip: _getProTipForStep(step),
                         tipCategory: _getTipCategoryForStep(step),
                       ),
-                      state: _stepCompletion[i] == true 
-                          ? MethodCardState.completed 
-                          : _hoveredStep == i 
-                              ? MethodCardState.active 
+                      state: _stepCompletion[i] == true
+                          ? MethodCardState.completed
+                          : _hoveredStep == i
+                              ? MethodCardState.active
                               : MethodCardState.defaultState,
-                      onCompleted: () => _completeStep(i),
-                      onPrevious: () => _goToPreviousStep(i),
+                      onCompleted: () => _toggleStepCompleted(i, true),
+                      onPrevious: () => _toggleStepCompleted(i, false),
                       enableSwipeGestures: true,
                       enableKeyboardNavigation: true,
-                      enableAutoAdvance: true,
-                      autoAdvanceDuration: const Duration(seconds: 15),
+                      onCheckboxChanged: (value) =>
+                          _toggleStepCompleted(i, value ?? false),
                     ),
                   ),
                 ),
