@@ -1,0 +1,196 @@
+{
+  "drink_name": "Sidecar",
+  "alcohol_content": 0.35,
+  "serving_glass": "Cocktail Glass",
+  "rim": "Salted",
+  "ingredients": [
+    {
+      "name": "Cognac",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Orange Liqueur (e.g., Cointreau)",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Fresh Lemon Juice",
+      "quantity": "3/4 oz"
+    }
+  ],
+  "steps": [
+    "Chill a cocktail glass by filling it with ice water and setting it aside.",
+    "In a shaker, combine the Cognac, orange liqueur, and fresh lemon juice with ice.",
+    "Shake well until the mixture is well-chilled, about 15 seconds.",
+    "Discard the ice water from the cocktail glass.",
+    "Optional: Rim the glass with sugar by rubbing a lemon wedge around the rim and dipping it into sugar.",
+    "Strain the cocktail into the chilled glass.",
+    "Garnish with a lemon twist."
+  ],
+  "garnish": [
+    "Lemon Twist"
+  ],
+  "drink_image_description": "A classic Sidecar cocktail served in a chilled cocktail glass with a sugared rim. The drink is a vibrant amber color, garnished elegantly with a lemon twist. The setting is bright with natural light highlighting the clarity and color of the drink, shot from a slightly overhead angle to capture the sugared rim and garnish detail.",
+  "drink_history": "The Sidecar cocktail is a classic from the Prohibition era, believed to have originated in the 1920s. It is named after the motorcycle attachment, symbolizing its smooth ride and balanced kick. Traditionally made with Cognac, orange liqueur, and lemon juice, it's celebrated for its perfect balance of sweet, sour, and strong flavors.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Cognac",
+      "brands": [
+        "Hennessy",
+        "R\u00e9my Martin",
+        "Martell"
+      ]
+    },
+    {
+      "ingredient": "Orange Liqueur",
+      "brands": [
+        "Cointreau",
+        "Grand Marnier",
+        "Combier"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Cognac",
+      "alternatives": [
+        "Brandy",
+        "Armagnac"
+      ]
+    },
+    {
+      "original": "Orange Liqueur",
+      "alternatives": [
+        "Triple Sec",
+        "Grand Marnier"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Margarita",
+    "Daiquiri",
+    "French 75",
+    "Cosmopolitan",
+    "Whiskey Sour",
+    "Tom Collins"
+  ],
+  "difficulty_rating": 3,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Cocktail Shaker",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    },
+    {
+      "item": "Jigger",
+      "essential": true
+    },
+    {
+      "item": "Cocktail Glass",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Citrus",
+      "Orange",
+      "Lemon"
+    ],
+    "secondary_notes": [
+      "Sweetness",
+      "Oak from Cognac"
+    ],
+    "mouthfeel": "Smooth and slightly warming",
+    "finish": "Clean and crisp finish with a lingering citrus zest",
+    "balance": "Well-balanced sweet and sour with a warming kick"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 6
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Chill the cocktail glass",
+      "technique_detail": "Fill the glass with ice water to chill it while preparing the cocktail.",
+      "visual_cue": "Frosty exterior on the glass signifies it's properly chilled.",
+      "common_mistakes": [
+        "Not chilling the glass can dilute the drink too quickly"
+      ],
+      "timing_guidance": "Chill for at least 2-3 minutes."
+    },
+    {
+      "step_number": 2,
+      "action": "Combine ingredients in a shaker with ice",
+      "technique_detail": "Use fresh lemon juice for the best flavor. Add Cognac, orange liqueur, and lemon juice into the shaker filled with ice.",
+      "visual_cue": "Ice should fill the shaker about halfway to ensure proper chilling and dilution.",
+      "common_mistakes": [
+        "Using bottled lemon juice instead of fresh",
+        "Adding too much ice can over-dilute the drink"
+      ],
+      "timing_guidance": "Shake vigorously for about 15 seconds."
+    },
+    {
+      "step_number": 3,
+      "action": "Prepare the glass rim with sugar (optional)",
+      "technique_detail": "Rub a lemon wedge around the rim and dip into sugar for a sweet contrast to the tartness.",
+      "visual_cue": "Even coating of sugar on the rim.",
+      "common_mistakes": [
+        "Uneven sugar coating",
+        "Skipping this step if desired for a traditional experience"
+      ],
+      "timing_guidance": "Do this step just before straining the cocktail."
+    },
+    {
+      "step_number": 4,
+      "action": "Strain the cocktail into the glass",
+      "technique_detail": "Use a fine strainer to ensure a smooth pour without ice shards.",
+      "visual_cue": "Clear, smooth liquid in the glass without ice chips.",
+      "common_mistakes": [
+        "Pouring directly without straining",
+        "Leaving ice shards in the drink"
+      ],
+      "timing_guidance": "Strain immediately after shaking."
+    },
+    {
+      "step_number": 5,
+      "action": "Garnish with a lemon twist",
+      "technique_detail": "Twist the lemon peel over the drink to release oils, then drop it in or hang on the rim.",
+      "visual_cue": "Bright yellow twist elegantly placed on the rim or floating on top.",
+      "common_mistakes": [
+        "Not twisting the peel to release oils",
+        "Using thick peel that adds bitterness"
+      ],
+      "timing_guidance": "Garnish immediately before serving."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Sidecar Royale",
+      "changes": [
+        "Replace Cognac with Champagne",
+        "Add a splash of orange liqueur"
+      ],
+      "description": "A sparkling variation that adds effervescence and a celebratory touch to the classic Sidecar."
+    },
+    {
+      "name": "Whiskey Sidecar",
+      "changes": [
+        "Substitute Cognac with a high-quality whiskey"
+      ],
+      "description": "A richer, bolder take on the Sidecar with the warm, smoky notes of whiskey."
+    }
+  ],
+  "food_pairings": [
+    "Charcuterie",
+    "Soft cheeses",
+    "Light seafood dishes"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Intermediate"
+}

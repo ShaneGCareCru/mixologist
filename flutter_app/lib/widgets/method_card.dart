@@ -363,21 +363,28 @@ class _MethodCardState extends State<MethodCard>
         mainAxisSize: MainAxisSize.min,
         children: [
           AspectRatio(
-            aspectRatio: 16 / 9,
+            aspectRatio: 2.0, // Wide aspect ratio for action images
             child: _buildImageWidget(theme),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Step ${widget.data.stepNumber}: ${widget.data.title}',
+                  'Step ${widget.data.stepNumber}',
                   style: theme.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
-                Text(widget.data.description,
-                    style: theme.textTheme.bodyMedium),
+                Flexible(
+                  child: Text(
+                    widget.data.description,
+                    style: theme.textTheme.bodyMedium,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -488,6 +495,7 @@ class _MethodCardState extends State<MethodCard>
                     ),
                   ),
               ],
+              ),
             ),
           ),
         ],

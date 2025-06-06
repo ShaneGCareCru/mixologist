@@ -1,5 +1,8 @@
 # mixologist
 
+[![PR Tests](https://github.com/ShaneGCareCru/mixologist/actions/workflows/pr-tests.yml/badge.svg)](https://github.com/ShaneGCareCru/mixologist/actions/workflows/pr-tests.yml)
+[![CI](https://github.com/ShaneGCareCru/mixologist/actions/workflows/ci.yml/badge.svg)](https://github.com/ShaneGCareCru/mixologist/actions/workflows/ci.yml)
+
 ## Modern Upscale NYC Bar Color Palette
 
 | Swatch | Use Case | Color Name | Hex Code | Description |

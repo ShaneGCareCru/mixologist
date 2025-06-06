@@ -1,0 +1,189 @@
+{
+  "drink_name": "Manhattan",
+  "alcohol_content": 0.35,
+  "serving_glass": "Coupe or Martini Glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Rye Whiskey",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Sweet Vermouth",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Angostura Bitters",
+      "quantity": "2 dashes"
+    },
+    {
+      "name": "Maraschino Cherry",
+      "quantity": "1 (for garnish)"
+    }
+  ],
+  "steps": [
+    "Fill a mixing glass with ice.",
+    "Add rye whiskey, sweet vermouth, and Angostura bitters to the mixing glass.",
+    "Stir well until chilled.",
+    "Strain into a chilled coupe or martini glass.",
+    "Garnish with a maraschino cherry."
+  ],
+  "garnish": [
+    "Maraschino Cherry"
+  ],
+  "drink_image_description": "A classic Manhattan cocktail served in a chilled coupe glass. The rich amber liquid is smooth and glossy, garnished with a single maraschino cherry resting at the bottom. The background is bright with soft, natural lighting highlighting the deep, inviting colors of the drink. The camera angle is slightly above eye-level, capturing the drink's elegant simplicity and timeless appeal.",
+  "drink_history": "The Manhattan cocktail dates back to the late 19th century and is believed to have been created at the Manhattan Club in New York City. It became an iconic American cocktail known for its balanced blend of whiskey, sweet vermouth, and bitters, symbolizing sophistication and urbanity.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Rye Whiskey",
+      "brands": [
+        "Rittenhouse",
+        "Bulleit",
+        "Old Overholt"
+      ]
+    },
+    {
+      "ingredient": "Sweet Vermouth",
+      "brands": [
+        "Carpano Antica Formula",
+        "Martini & Rossi",
+        "Dolin"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Rye Whiskey",
+      "alternatives": [
+        "Bourbon",
+        "Canadian Whisky"
+      ]
+    },
+    {
+      "original": "Sweet Vermouth",
+      "alternatives": [
+        "Dry Vermouth",
+        "Bianco Vermouth"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Rob Roy",
+    "Old Fashioned",
+    "Boulevardier",
+    "Whiskey Sour",
+    "Sazerac",
+    "Vieux Carr\u00e9"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Mixing Glass",
+      "essential": true
+    },
+    {
+      "item": "Bar Spoon",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Whiskey",
+      "Sweet Vermouth"
+    ],
+    "secondary_notes": [
+      "Bitters",
+      "Cherry"
+    ],
+    "mouthfeel": "Smooth and slightly viscous",
+    "finish": "Warm and lingering",
+    "balance": "Well-balanced between sweet, bitter, and strong"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "Stir well in a large mixing glass and strain into individual glasses."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Fill a mixing glass with ice.",
+      "technique_detail": "Use large ice cubes to chill the drink without over-diluting.",
+      "visual_cue": "Condensation forms on the outside of the mixing glass.",
+      "common_mistakes": [
+        "Using crushed ice which dilutes the drink too quickly."
+      ],
+      "timing_guidance": "About 30 seconds of stirring."
+    },
+    {
+      "step_number": 2,
+      "action": "Add rye whiskey, sweet vermouth, and Angostura bitters to the mixing glass.",
+      "technique_detail": "Measure precisely to maintain balance of flavors.",
+      "visual_cue": "Clear separation of liquids before stirring.",
+      "common_mistakes": [
+        "Adding too much vermouth which can overpower the whiskey."
+      ],
+      "timing_guidance": ""
+    },
+    {
+      "step_number": 3,
+      "action": "Stir well until chilled.",
+      "technique_detail": "Stir gently with a bar spoon, ensuring even chilling and dilution.",
+      "visual_cue": "The liquid becomes slightly more opaque and cold to the touch.",
+      "common_mistakes": [
+        "Shaking which bruises the whiskey and changes the texture."
+      ],
+      "timing_guidance": "Stir for about 30 seconds."
+    },
+    {
+      "step_number": 4,
+      "action": "Strain into a chilled coupe or martini glass.",
+      "technique_detail": "Use a fine strainer for a clean pour without ice shards.",
+      "visual_cue": "The glass is frosted from the chill.",
+      "common_mistakes": [
+        "Pouring directly without straining can result in ice chips in the drink."
+      ],
+      "timing_guidance": ""
+    },
+    {
+      "step_number": 5,
+      "action": "Garnish with a maraschino cherry.",
+      "technique_detail": "Place the cherry gently to avoid bruising.",
+      "visual_cue": "Cherry rests at the bottom of the glass.",
+      "common_mistakes": [
+        "Using a garnish that is not fresh or is too sweet."
+      ],
+      "timing_guidance": ""
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Perfect Manhattan",
+      "changes": [
+        "Use equal parts sweet and dry vermouth."
+      ],
+      "description": "A balanced variation that adds complexity with both sweet and dry vermouth."
+    },
+    {
+      "name": "Rob Roy",
+      "changes": [
+        "Substitute Scotch whisky for rye whiskey."
+      ],
+      "description": "A Scotch whisky version that offers a smokier flavor profile."
+    }
+  ],
+  "food_pairings": [
+    "Steak",
+    "Charcuterie",
+    "Dark Chocolate"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Intermediate bartenders"
+}
