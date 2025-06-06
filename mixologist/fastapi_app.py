@@ -505,7 +505,10 @@ async def generate_equipment_image(
 @app.post("/generate_method_image")
 async def generate_method_image(
     step_text: str = Form(...),
-    step_index: int = Form(default=0)
+    step_index: int = Form(default=0),
+    drink_name: str = Form(default=""),
+    ingredients: str = Form(default=""),
+    equipment: str = Form(default=""),
 ):
     """Generate an illustrative image for a recipe method step."""
     print(f"--- generate_method_image called for step {step_index} ---")
@@ -513,7 +516,16 @@ async def generate_method_image(
     try:
         async def event_stream():
             try:
-                async for b64_chunk in generate_method_image_stream(step_text, step_index):
+                ingredient_list = [i.strip() for i in ingredients.split(",") if i.strip()] if ingredients else []
+                equipment_list = [e.strip() for e in equipment.split(",") if e.strip()] if equipment else []
+
+                async for b64_chunk in generate_method_image_stream(
+                    step_text,
+                    step_index,
+                    drink_name=drink_name,
+                    ingredients=ingredient_list,
+                    equipment=equipment_list,
+                ):
                     sse_event = {"type": "partial_image", "b64_data": b64_chunk}
                     yield f"data: {json.dumps(sse_event)}\n\n"
 
