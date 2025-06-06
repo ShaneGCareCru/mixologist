@@ -88,12 +88,53 @@ import mixologist.services.openai_service as openai_service
 
 def test_get_completion_from_messages(monkeypatch):
     def fake_create(model, messages, temperature, max_tokens, functions, function_call):
-        arguments = {"drink_name": "Test Drink"}
-        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(function_call=SimpleNamespace(arguments=arguments)))])
+        arguments = '{"drink_name": "Test Drink"}'
+        return SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        function_call=SimpleNamespace(arguments=arguments)
+                    )
+                )
+            ]
+        )
 
     monkeypatch.setattr(openai_service.client.chat.completions, "create", fake_create)
 
-    sentinel = openai_service.Recipe([], 0, [], False, [], "", "", "", "Test Drink")
+    # Ensure the method expected by get_completion_from_messages exists
+    monkeypatch.setattr(
+        openai_service.GetRecipeParams,
+        "model_json_schema",
+        classmethod(lambda cls: {}),
+        raising=False,
+    )
+    monkeypatch.setattr(openai_service.logging, "info", lambda *args, **kwargs: None)
+
+    sentinel = openai_service.Recipe(
+        [],
+        0,
+        [],
+        False,
+        [],
+        "",
+        "",
+        "",
+        "Test Drink",
+        [],
+        [],
+        [],
+        0,
+        0,
+        [],
+        None,
+        None,
+        {},
+        [],
+        [],
+        [],
+        "",
+        "",
+    )
     captured = {}
     def fake_parse(args):
         captured['args'] = args
@@ -104,5 +145,5 @@ def test_get_completion_from_messages(monkeypatch):
     result = openai_service.get_completion_from_messages([{"role": "user", "content": "hi"}], model="test", temperature=0.1)
 
     assert result is sentinel
-    assert captured['args'] == {"drink_name": "Test Drink"}
+    assert captured['args'] == '{"drink_name": "Test Drink"}'
 
