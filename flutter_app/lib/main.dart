@@ -529,6 +529,14 @@ class _RecipeScreenState extends State<RecipeScreen> {
         _imageGenerationProgress['equipment_$equipmentName'] = false;
       }
     }
+    
+    // Initialize method/step images
+    if (widget.recipeData['steps'] is List) {
+      for (int i = 0; i < widget.recipeData['steps'].length; i++) {
+        _specializedImages['method_step_$i'] = null;
+        _imageGenerationProgress['method_step_$i'] = false;
+      }
+    }
   }
   
   // Load cached images by checking endpoints without generating new ones
@@ -909,6 +917,18 @@ class _RecipeScreenState extends State<RecipeScreen> {
         'ingredient_name': subject,
         'drink_context': widget.recipeData['drink_name'] ?? '',
       };
+    } else if (imageType.startsWith('method_') || imageType.startsWith('step_')) {
+      endpoint = 'generate_method_image';
+      bodyFields = {
+        'step_text': subject,
+        'step_index': context.isNotEmpty ? context : '0',
+      };
+    } else if (imageType.startsWith('equipment_')) {
+      endpoint = 'generate_equipment_image';
+      bodyFields = {
+        'equipment_name': subject,
+        'drink_context': widget.recipeData['drink_name'] ?? '',
+      };
     } else {
       return; // Unknown image type
     }
@@ -1025,6 +1045,21 @@ class _RecipeScreenState extends State<RecipeScreen> {
         // Only generate if not already cached or being generated
         if (_specializedImages[imageKey] == null && _imageGenerationProgress[imageKey] != true) {
           await _generateSpecializedImage(imageKey, equipmentName);
+          await Future.delayed(const Duration(milliseconds: 300));
+        }
+      }
+    }
+    
+    // Generate method/step images
+    if (widget.recipeData['steps'] is List) {
+      final steps = widget.recipeData['steps'] as List;
+      for (int i = 0; i < steps.length; i++) {
+        final stepDescription = steps[i];
+        final imageKey = 'method_step_$i';
+        
+        // Only generate if not already cached or being generated
+        if (_specializedImages[imageKey] == null && _imageGenerationProgress[imageKey] != true) {
+          await _generateSpecializedImage(imageKey, stepDescription, context: i.toString());
           await Future.delayed(const Duration(milliseconds: 300));
         }
       }
@@ -1866,7 +1901,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
             final key = _stepCardKeys.length > i ? _stepCardKeys[i] : GlobalKey();
             if (_stepCardKeys.length <= i) _stepCardKeys.add(key);
             final step = widget.recipeData['steps'][i];
-            final stepImageUrl = 'https://via.placeholder.com/400x225/e0e0e0/666666?text=Step+${i+1}';
+            final stepImageKey = 'method_step_$i';
+            final stepImageBytes = _specializedImages[stepImageKey];
+            final isGeneratingStepImage = _imageGenerationProgress[stepImageKey] == true;
             
             return Container(
               key: key,
@@ -1879,7 +1916,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
                     stepNumber: i + 1,
                     title: 'Step ${i + 1}',
                     description: step,
-                    imageUrl: stepImageUrl,
+                    imageBytes: stepImageBytes,
+                    isGenerating: isGeneratingStepImage,
                     imageAlt: 'Step ${i + 1} illustration',
                     isCompleted: _stepCompletion[i] ?? false,
                     duration: '30 sec',
