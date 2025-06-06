@@ -156,6 +156,7 @@ def test_get_completion_from_messages(monkeypatch):
         [],
         "",
         "",
+        [],
     )
     captured = {}
     def fake_parse(args):

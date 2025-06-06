@@ -420,27 +420,80 @@ async def generate_specialized_image_stream(
 
     print(f"--- {category.title()} image generation stream finished for {subject} ---")
 
-async def generate_method_image_stream(step_text: str, step_index: int = 0) -> AsyncGenerator[str, None]:
+async def _build_method_prompt(
+    step_text: str,
+    drink_name: str = "",
+    ingredients: Optional[List[str]] = None,
+    equipment: Optional[List[str]] = None,
+) -> str:
+    """Use GPT-4.1 to craft a short image subject for a method step."""
+    if async_client is None:
+        raise Exception("OpenAI async client not initialized. Please set OPENAI_API_KEY environment variable.")
+
+    ingredient_text = ", ".join(ingredients or [])
+    equipment_text = ", ".join(equipment or [])
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You create concise photographic scene descriptions of a bartender demonstrating a cocktail step. "
+                "Reply with a short phrase, no more than one sentence."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                f"Drink: {drink_name}\n"
+                f"Step: {step_text}\n"
+                f"Visible ingredients: {ingredient_text}\n"
+                f"Equipment in view: {equipment_text}\n"
+                "Describe the image subject."
+            ),
+        },
+    ]
+
+    response = await async_client.chat.completions.create(
+        model="gpt-4.1-mini-2025-04-14",
+        messages=messages,
+        temperature=0.5,
+        max_tokens=60,
+    )
+
+    return response.choices[0].message.content.strip()
+
+
+async def generate_method_image_stream(
+    step_text: str,
+    step_index: int = 0,
+    drink_name: str = "",
+    ingredients: Optional[List[str]] = None,
+    equipment: Optional[List[str]] = None,
+) -> AsyncGenerator[str, None]:
     """Generate an illustrative technique image for a recipe method step."""
-    moment = extract_visual_moments(step_text)
-    template = METHOD_PROMPT_TEMPLATES.get(moment["action"], f"{moment['action']} cocktail technique, professional bar scene")
+
     try:
-        prompt_subject = template.format(**moment["context"])
-    except Exception:
-        prompt_subject = template
+        prompt_subject = await _build_method_prompt(
+            step_text,
+            drink_name=drink_name,
+            ingredients=ingredients,
+            equipment=equipment,
+        )
+    except Exception as e:
+        logging.error(f"Method prompt generation failed: {e}")
+        prompt_subject = step_text
 
     try:
         async for chunk in generate_specialized_image_stream(
             subject=prompt_subject,
             category="technique",
             additional_context="",
-            cache_prefix=f"method_{step_index}"
+            cache_prefix=f"method_{step_index}",
         ):
             yield chunk
     except Exception as e:
         logging.error(f"Method image generation failed: {e}")
-        fallback = METHOD_FALLBACK_ICONS.get(moment["action"], DEFAULT_FALLBACK_ICON_B64)
-        yield fallback
+        yield DEFAULT_FALLBACK_ICON_B64
 
 async def generate_image_stream( # Renamed to indicate streaming and generator
     prompt: str,
