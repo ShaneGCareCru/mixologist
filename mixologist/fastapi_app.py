@@ -4,7 +4,17 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 import logging
 from typing import Optional, List, Dict
-from .services.openai_service import get_completion_from_messages, generate_image_stream, generate_specialized_image_stream, generate_recipe_cache_key, get_cached_recipe, save_recipe_to_cache, parse_ingredient_name, normalize_glass_name
+from .services.openai_service import (
+    get_completion_from_messages,
+    generate_image_stream,
+    generate_specialized_image_stream,
+    generate_method_image_stream,
+    generate_recipe_cache_key,
+    get_cached_recipe,
+    save_recipe_to_cache,
+    parse_ingredient_name,
+    normalize_glass_name,
+)
 
 app = FastAPI(title="Mixologist API")
 
@@ -490,6 +500,44 @@ async def generate_equipment_image(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generating equipment image: {str(e)}")
+
+@app.post("/generate_method_image")
+async def generate_method_image(
+    step_text: str = Form(...),
+    step_index: int = Form(default=0)
+):
+    """Generate an illustrative image for a recipe method step."""
+    print(f"--- generate_method_image called for step {step_index} ---")
+
+    try:
+        async def event_stream():
+            try:
+                async for b64_chunk in generate_method_image_stream(step_text, step_index):
+                    sse_event = {"type": "partial_image", "b64_data": b64_chunk}
+                    yield f"data: {json.dumps(sse_event)}\n\n"
+
+                yield f"data: {json.dumps({'type': 'stream_complete'})}\n\n"
+            except Exception as e:
+                print(f"!!! EXCEPTION in method image stream: {type(e).__name__} - {str(e)} !!!")
+                import traceback
+                traceback.print_exc()
+                error_event = {"type": "error", "message": str(e)}
+                yield f"data: {json.dumps(error_event)}\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
+
+    except Exception as e:
+        print(f"!!! EXCEPTION in generate_method_image: {type(e).__name__} - {str(e)} !!!")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating method image: {str(e)}")
 
 @app.post("/generate_recipe_visuals")
 async def generate_recipe_visuals(

@@ -6,7 +6,29 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 os.environ.setdefault("OPENAI_API_KEY", "test")
 
-from mixologist.services.openai_service import parse_recipe_arguments, Recipe
+import types
+dummy_flask = types.SimpleNamespace(
+    Flask=object,
+    Blueprint=lambda *a, **k: types.SimpleNamespace(
+        route=lambda *a, **k: (lambda f: f),
+        errorhandler=lambda *a, **k: (lambda f: f),
+        app_errorhandler=lambda *a, **k: (lambda f: f),
+    ),
+    request=None,
+    render_template_string=lambda *a, **k: "",
+    render_template=lambda *a, **k: "",
+    Response=object,
+    stream_with_context=lambda f: f,
+    jsonify=lambda *a, **k: {},
+)
+sys.modules.setdefault("flask", dummy_flask)
+sys.modules.setdefault("flask_cors", types.SimpleNamespace(CORS=lambda *a, **k: None))
+
+from mixologist.services.openai_service import (
+    parse_recipe_arguments,
+    Recipe,
+    extract_visual_moments,
+)
 
 
 def test_parse_recipe_arguments_json():
@@ -146,4 +168,10 @@ def test_get_completion_from_messages(monkeypatch):
 
     assert result is sentinel
     assert captured['args'] == '{"drink_name": "Test Drink"}'
+
+
+def test_extract_visual_moments_blend():
+    step = "Blend strawberries with ice until smooth."
+    result = extract_visual_moments(step)
+    assert result["action"] == "blend"
 

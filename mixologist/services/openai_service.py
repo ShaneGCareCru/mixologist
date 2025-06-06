@@ -36,6 +36,55 @@ STYLE_CONSTANTS = {
     "technique": "cocktail technique demonstration, hands visible, professional bartending, motion blur effect"
 }
 
+# Prompt templates for technique/method steps
+METHOD_PROMPT_TEMPLATES = {
+    "blend": "cocktail blending action, {ingredients} in blender, motion blur on blades, professional bar photography, side angle view",
+    "pour": "pouring {liquid} into {glass}, steady stream, professional cocktail photography, dramatic lighting, close-up angle",
+    "garnish": "placing {garnish} on cocktail rim, bartender hands visible, final presentation, shallow depth of field",
+}
+
+# Fallback single pixel icon for failed generation (1x1 transparent PNG)
+DEFAULT_FALLBACK_ICON_B64 = (
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=="
+)
+
+METHOD_FALLBACK_ICONS = {
+    key: DEFAULT_FALLBACK_ICON_B64 for key in METHOD_PROMPT_TEMPLATES.keys()
+}
+
+def detect_primary_action(step_text: str) -> str:
+    """Detect the main cocktail technique action from a step."""
+    keywords = ["blend", "pour", "garnish", "shake", "stir", "muddle", "strain"]
+    lower = step_text.lower()
+    for word in keywords:
+        if re.search(fr"\b{word}\w*\b", lower):
+            return word
+    return "other"
+
+def extract_context(step_text: str) -> Dict[str, str]:
+    """Extract simple context details like glass or liquid."""
+    context: Dict[str, str] = {}
+    lower = step_text.lower()
+    glass_match = re.search(r"into (?:a |an )?(?P<glass>[^.,]*?)(?: glass)?[., ]", lower)
+    if glass_match:
+        context["glass"] = glass_match.group("glass").strip()
+    liquid_match = re.search(r"pour ([^,\.]+)", lower)
+    if liquid_match:
+        context["liquid"] = liquid_match.group(1).strip()
+    return context
+
+def extract_important_details(step_text: str) -> str:
+    """Return the raw step as additional details for prompting."""
+    return step_text.strip()
+
+def extract_visual_moments(step_text: str) -> Dict[str, object]:
+    """Extract action and context info from a recipe step."""
+    return {
+        "action": detect_primary_action(step_text),
+        "context": extract_context(step_text),
+        "details": extract_important_details(step_text),
+    }
+
 # Ingredient categorization for appropriate image generation
 INGREDIENT_CATEGORIES = {
     # Spirits and alcoholic beverages - show the liquid in a glass or small container
@@ -370,6 +419,28 @@ async def generate_specialized_image_stream(
         raise 
 
     print(f"--- {category.title()} image generation stream finished for {subject} ---")
+
+async def generate_method_image_stream(step_text: str, step_index: int = 0) -> AsyncGenerator[str, None]:
+    """Generate an illustrative technique image for a recipe method step."""
+    moment = extract_visual_moments(step_text)
+    template = METHOD_PROMPT_TEMPLATES.get(moment["action"], f"{moment['action']} cocktail technique, professional bar scene")
+    try:
+        prompt_subject = template.format(**moment["context"])
+    except Exception:
+        prompt_subject = template
+
+    try:
+        async for chunk in generate_specialized_image_stream(
+            subject=prompt_subject,
+            category="technique",
+            additional_context="",
+            cache_prefix=f"method_{step_index}"
+        ):
+            yield chunk
+    except Exception as e:
+        logging.error(f"Method image generation failed: {e}")
+        fallback = METHOD_FALLBACK_ICONS.get(moment["action"], DEFAULT_FALLBACK_ICON_B64)
+        yield fallback
 
 async def generate_image_stream( # Renamed to indicate streaming and generator
     prompt: str,
