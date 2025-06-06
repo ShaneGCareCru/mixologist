@@ -7,14 +7,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http; // HTTP package
 // No longer importing flutter_client_sse
 import 'firebase_options.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:web/web.dart' as html;
 import 'widgets/section_preview.dart';
 import 'widgets/connection_line.dart';
 import 'widgets/drink_progress_glass.dart';
 import 'widgets/method_card.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -158,7 +156,6 @@ class LoginScreen extends StatelessWidget {
           onPressed: () async {
             try {
               await FirebaseAuth.instance.signInAnonymously();
-              print("Signed in anonymously");
               if (context.mounted) {
                 Navigator.pushReplacement(
                   context,
@@ -166,7 +163,6 @@ class LoginScreen extends StatelessWidget {
                 );
               }
             } catch (e) {
-              print("Error signing in anonymously: $e");
               if (context.mounted) { // Check mounted before showing SnackBar
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error signing in: $e')),
@@ -215,11 +211,9 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       } else {
         setState(() { _recipeError = 'Error fetching recipe: ${response.statusCode}'; });
-        print('Error fetching recipe: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       setState(() { _isLoadingRecipe = false; _recipeError = 'Failed to connect: $e'; });
-      print('Exception fetching recipe: $e');
     }
   }
 
@@ -240,10 +234,10 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
             onPressed: () async {
+              final nav = Navigator.of(context);
               await FirebaseAuth.instance.signOut();
               if (mounted) {
-                Navigator.pushReplacement(
-                  context,
+                nav.pushReplacement(
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
               }
@@ -263,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   user.isAnonymous
                       ? 'Signed in as: Anonymous (${user.uid.substring(0,6)}...)'
-                      : 'Signed in as: ${user.displayName ?? user.email ?? user.uid.substring(0,6)+"..."}',
+                      : 'Signed in as: ${user.displayName ?? user.email ?? '${user.uid.substring(0,6)}...'}',
                   textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -310,17 +304,16 @@ class _RecipeScreenState extends State<RecipeScreen> {
   // Epic 2: Interactive Recipe Components
   int _servingSize = 1;
   bool _isMetric = false; // false = oz, true = ml
-  Map<String, bool> _ingredientChecklist = {};
+  final Map<String, bool> _ingredientChecklist = {};
   
   // Epic 3: Visual Recipe Steps
-  Map<int, bool> _stepCompletion = {};
+  final Map<int, bool> _stepCompletion = {};
   
   // Dynamic Visual Generation System
   Map<String, Uint8List?> _specializedImages = {};
   Map<String, bool> _imageGenerationProgress = {};
   String _selectedSection = 'overview'; // Navigation state
   String? _expandedSection;
-  final Map<String, double> _sectionHeights = {};
   final Map<int, List<String>> _stepIngredientMap = {};
   final Map<int, List<String>> _stepEquipmentMap = {};
   final Map<String, GlobalKey> _ingredientIconKeys = {};
@@ -461,12 +454,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
       if (_expandedSection == id) {
         _expandedSection = null;
         if (kIsWeb) {
-          html.window.history.replaceState(null, '', '#');
+          web.window.history.replaceState(null, '', '#');
         }
       } else {
         _expandedSection = id;
         if (kIsWeb) {
-          html.window.history.replaceState(null, '', '#$id');
+          web.window.history.replaceState(null, '', '#$id');
         }
         
         // Auto-generate ingredient images when ingredients section is expanded
@@ -604,8 +597,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
       
       final http.StreamedResponse response = await _httpClient.send(request);
       if (response.statusCode == 200) {
-        bool foundCachedImage = false;
-        
         response.stream
             .transform(utf8.decoder)
             .transform(const LineSplitter())
@@ -619,7 +610,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   if (mounted) {
                     setState(() {
                       _specializedImages[imageType] = base64Decode(jsonData['b64_data']);
-                      foundCachedImage = true;
                     });
                   }
                 }
@@ -637,7 +627,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
       }
     } catch (e) {
       // Silently fail for cache checks - images can be generated later
-      print('Cache check failed for $imageType: $e');
     }
   }
 
@@ -692,7 +681,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
         setState(() {});
       }
     } catch (e) {
-      print('Error loading progress: $e');
       // Fallback to web storage if SharedPreferences fails
       if (kIsWeb) {
         await _loadProgressWeb();
@@ -720,7 +708,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
         await prefs.setBool('${recipeKey}_step_$step', _stepCompletion[step]!);
       }
     } catch (e) {
-      print('Error saving progress: $e');
       // Fallback to web storage if SharedPreferences fails
       if (kIsWeb) {
         await _saveProgressWeb();
@@ -745,17 +732,17 @@ class _RecipeScreenState extends State<RecipeScreen> {
       
       // Save ingredient checklist
       for (String ingredient in _ingredientChecklist.keys) {
-        html.window.localStorage['${recipeKey}_ingredient_$ingredient'] = 
+        web.window.localStorage['${recipeKey}_ingredient_$ingredient'] = 
             _ingredientChecklist[ingredient].toString();
       }
       
       // Save step completion
       for (int step in _stepCompletion.keys) {
-        html.window.localStorage['${recipeKey}_step_$step'] = 
+        web.window.localStorage['${recipeKey}_step_$step'] = 
             _stepCompletion[step].toString();
       }
     } catch (e) {
-      print('Error saving progress to localStorage: $e');
+      // Silently fail - localStorage may not be available
     }
   }
 
@@ -768,7 +755,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       // Load ingredient checklist
       final ingredientKeys = _ingredientChecklist.keys.toList();
       for (String ingredient in ingredientKeys) {
-        final saved = html.window.localStorage['${recipeKey}_ingredient_$ingredient'];
+        final saved = web.window.localStorage['${recipeKey}_ingredient_$ingredient'];
         if (saved != null) {
           _ingredientChecklist[ingredient] = saved.toLowerCase() == 'true';
         }
@@ -777,7 +764,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       // Load step completion
       final stepKeys = _stepCompletion.keys.toList();
       for (int step in stepKeys) {
-        final saved = html.window.localStorage['${recipeKey}_step_$step'];
+        final saved = web.window.localStorage['${recipeKey}_step_$step'];
         if (saved != null) {
           _stepCompletion[step] = saved.toLowerCase() == 'true';
         }
@@ -788,7 +775,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
         setState(() {});
       }
     } catch (e) {
-      print('Error loading progress from localStorage: $e');
+      // Silently fail - localStorage may not be available
     }
   }
 
@@ -971,12 +958,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   }
                 }
               } catch (e) {
-                print("Error parsing specialized image SSE data: $e");
+                // Ignore parsing errors
               }
             }
           },
           onError: (error) {
-            print('Specialized image stream error: $error');
             if (mounted) {
               setState(() {
                 _imageGenerationProgress[imageType] = false;
@@ -993,7 +979,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
         );
       }
     } catch (e) {
-      print('Error generating specialized image: $e');
       if (mounted) {
         setState(() {
           _imageGenerationProgress[imageType] = false;
@@ -1110,10 +1095,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
               final eventDataString = line.substring('data: '.length);
               try {
                 final jsonData = jsonDecode(eventDataString);
-                // Only log event type for cleaner logs
-                if (jsonData['type'] != null) {
-                  print("SSE Event: ${jsonData['type']}");
-                }
                 if (jsonData['type'] == 'partial_image' && jsonData['b64_data'] != null) {
                   if (mounted) {
                     setState(() {
@@ -1125,7 +1106,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   if (mounted) {
                     setState(() { _isImageStreamComplete = true; });
                   }
-                  print("Image stream complete from server.");
                   _imageStreamSubscription?.cancel(); 
                 } else if (jsonData['type'] == 'error') {
                   if (mounted) {
@@ -1134,21 +1114,17 @@ class _RecipeScreenState extends State<RecipeScreen> {
                       _currentImageBytes = null;
                     });
                   }
-                  print("Error from image stream: ${jsonData['message']}");
                   _imageStreamSubscription?.cancel();
                 }
               } catch (e) {
-                print("Error parsing SSE JSON data: $e. Data: ${eventDataString.length > 50 ? '${eventDataString.substring(0, 50)}...' : eventDataString}");
                 if (mounted) { setState(() { _imageStreamError = "Error parsing stream data."; });}
               }
             }
           },
           onError: (error) {
-            print('SSE Stream Listen Error: $error');
             if (mounted) { setState(() { _imageStreamError = 'SSE stream error: $error'; _currentImageBytes = null; });}
           },
           onDone: () {
-            print('SSE Stream Listen Done.');
             if (mounted && !_isImageStreamComplete && _imageStreamError == null) {
                  // setState(() { _imageStreamError = 'Image stream closed prematurely.'; });
             }
@@ -1156,11 +1132,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
           cancelOnError: true,
         );
       } else {
-        print('SSE initial request failed: ${response.statusCode} ${response.reasonPhrase}');
         if (mounted) { setState(() { _imageStreamError = 'Failed to connect to image stream: ${response.statusCode}';});}
       }
     } catch (e) {
-      print('Error sending SSE request: $e');
       if (mounted) { setState(() { _imageStreamError = 'Error connecting to image stream: $e';});}
     }
   }
@@ -1426,7 +1400,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                                 margin: const EdgeInsets.only(bottom: 8),
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
