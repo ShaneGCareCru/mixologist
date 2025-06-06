@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -31,7 +32,9 @@ class MethodCardData {
   final int stepNumber;
   final String title;
   final String description;
-  final String imageUrl;
+  final String? imageUrl;
+  final Uint8List? imageBytes;
+  final bool isGenerating;
   final String imageAlt;
   final bool isCompleted;
   final String duration;
@@ -43,7 +46,9 @@ class MethodCardData {
     required this.stepNumber,
     required this.title,
     required this.description,
-    required this.imageUrl,
+    this.imageUrl,
+    this.imageBytes,
+    this.isGenerating = false,
     required this.imageAlt,
     required this.isCompleted,
     required this.duration,
@@ -256,6 +261,91 @@ class _MethodCardState extends State<MethodCard>
     }
   }
 
+  Widget _buildImageWidget(ThemeData theme) {
+    // Show loading state
+    if (widget.data.isGenerating) {
+      return Container(
+        color: Colors.grey[200],
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 8),
+              Text('Generating image...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Show generated image from bytes
+    if (widget.data.imageBytes != null) {
+      return ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+        child: Image.memory(
+          widget.data.imageBytes!,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+      );
+    }
+
+    // Show cached network image from URL
+    if (widget.data.imageUrl != null && widget.data.imageUrl!.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: widget.data.imageUrl!,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: Colors.grey[200],
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        errorWidget: (context, url, error) => _buildPlaceholderWidget(theme),
+        memCacheWidth: 400,
+        memCacheHeight: 225,
+        maxWidthDiskCache: 800,
+        maxHeightDiskCache: 450,
+      );
+    }
+
+    // Show placeholder
+    return _buildPlaceholderWidget(theme);
+  }
+
+  Widget _buildPlaceholderWidget(ThemeData theme) {
+    return Container(
+      color: Colors.grey[100],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.image_not_supported, 
+                 size: 32, 
+                 color: Colors.grey[400]),
+            const SizedBox(height: 8),
+            Text(
+              widget.data.imageAlt,
+              style: TextStyle(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Tap "Generate Visuals" to create image',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -274,39 +364,7 @@ class _MethodCardState extends State<MethodCard>
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: CachedNetworkImage(
-              imageUrl: widget.data.imageUrl,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                color: Colors.grey[200],
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-              errorWidget: (context, url, error) => Container(
-                color: Colors.grey[100],
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.image_not_supported, 
-                           size: 32, 
-                           color: Colors.grey[400]),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.data.imageAlt,
-                        style: TextStyle(color: Colors.grey[600]),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              memCacheWidth: 400,
-              memCacheHeight: 225,
-              maxWidthDiskCache: 800,
-              maxHeightDiskCache: 450,
-            ),
+            child: _buildImageWidget(theme),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
