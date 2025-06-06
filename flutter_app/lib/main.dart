@@ -13,6 +13,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'widgets/section_preview.dart';
 import 'widgets/connection_line.dart';
 import 'widgets/lazy_load_section.dart';
+import 'widgets/drink_progress_glass.dart';
+import 'widgets/method_card.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -326,6 +328,65 @@ class _RecipeScreenState extends State<RecipeScreen> {
   int? _hoveredStep;
   bool _isGeneratingVisuals = false;
   bool _isLoadingRelatedCocktail = false;
+  
+  DrinkProgress get _currentDrinkProgress {
+    final totalSteps = _stepCompletion.length;
+    final completedSteps = _stepCompletion.values.where((completed) => completed).length;
+    
+    if (completedSteps == 0) return DrinkProgress.emptyGlass;
+    if (completedSteps < totalSteps * 0.4) return DrinkProgress.ingredientsAdded;
+    if (completedSteps < totalSteps * 0.8) return DrinkProgress.mixed;
+    if (completedSteps < totalSteps) return DrinkProgress.garnished;
+    return DrinkProgress.complete;
+  }
+  
+  String _getProgressText() {
+    switch (_currentDrinkProgress) {
+      case DrinkProgress.emptyGlass:
+        return 'Ready to start mixing';
+      case DrinkProgress.ingredientsAdded:
+        return 'Adding ingredients...';
+      case DrinkProgress.mixed:
+        return 'Mixing and blending...';
+      case DrinkProgress.garnished:
+        return 'Almost finished!';
+      case DrinkProgress.complete:
+        return 'Cocktail complete! 🍹';
+    }
+  }
+
+  void _completeStep(int stepIndex) {
+    setState(() {
+      _stepCompletion[stepIndex] = true;
+    });
+  }
+
+  void _goToPreviousStep(int currentStepIndex) {
+    if (currentStepIndex > 0) {
+      setState(() {
+        _stepCompletion[currentStepIndex - 1] = false;
+      });
+    }
+  }
+
+  String? _getProTipForStep(String stepText) {
+    // Simple pro tip generation based on step content
+    final stepLower = stepText.toLowerCase();
+    
+    if (stepLower.contains('shake') || stepLower.contains('shaking')) {
+      return 'Shake vigorously for 10-15 seconds to properly chill and dilute the drink.';
+    } else if (stepLower.contains('stir') || stepLower.contains('stirring')) {
+      return 'Stir gently for 20-30 seconds to avoid over-dilution while chilling.';
+    } else if (stepLower.contains('strain')) {
+      return 'Double strain through a fine mesh strainer for the smoothest texture.';
+    } else if (stepLower.contains('garnish')) {
+      return 'Express citrus oils over the drink by gently twisting the peel.';
+    } else if (stepLower.contains('muddle')) {
+      return 'Muddle gently to release oils without creating bitter flavors from over-crushing.';
+    }
+    
+    return null; // No pro tip for this step
+  }
 
   @override
   void initState() {
@@ -1526,7 +1587,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
             if (widget.recipeData['equipment_needed'] is List)
               _buildEquipmentIcons(),
             const SizedBox(height: 16),
-        // Progress indicator
+        // Progress indicator with animated glass
         if (widget.recipeData['steps'] is List)
           Card(
             child: Padding(
@@ -1543,101 +1604,79 @@ class _RecipeScreenState extends State<RecipeScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: _stepCompletion.values.where((completed) => completed).length / 
-                           widget.recipeData['steps'].length,
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.secondary),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        const SizedBox(height: 16),
-        // Step Cards
-        if (widget.recipeData['steps'] is List)
-          ...List.generate(widget.recipeData['steps'].length, (i) {
-            final key = _stepCardKeys.length > i ? _stepCardKeys[i] : GlobalKey();
-            if (_stepCardKeys.length <= i) _stepCardKeys.add(key);
-            return Container(
-              key: key,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: MouseRegion(
-                onEnter: (_) => setState(() => _hoveredStep = i),
-                onExit: (_) => setState(() => _hoveredStep = null),
-                child: Card(
-                  elevation: _stepCompletion[i] == true ? 2 : 4,
-                  color: _stepCompletion[i] == true
-                      ? Theme.of(context).colorScheme.secondaryContainer
-                      : Theme.of(context).colorScheme.surface,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 16),
+                  Row(
                     children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: _stepCompletion[i] == true 
-                              ? Theme.of(context).colorScheme.secondary
-                              : Theme.of(context).colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: _stepCompletion[i] == true
-                              ? Icon(
-                                  Icons.check,
-                                  color: Theme.of(context).colorScheme.onSecondary,
-                                  size: 18,
-                                )
-                              : Text(
-                                  '${i + 1}',
-                                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
+                      // Animated glass visualization
+                      DrinkProgressGlass(
+                        progress: _currentDrinkProgress,
+                        liquidColors: [
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(context).colorScheme.secondary,
+                        ],
                       ),
                       const SizedBox(width: 16),
+                      // Traditional progress bar
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              widget.recipeData['steps'][i],
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                decoration: _stepCompletion[i] == true 
-                                    ? TextDecoration.lineThrough 
-                                    : null,
-                              ),
+                            LinearProgressIndicator(
+                              value: _stepCompletion.values.where((completed) => completed).length / 
+                                     widget.recipeData['steps'].length,
+                              backgroundColor: Theme.of(context).colorScheme.surface,
+                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.secondary),
                             ),
                             const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Checkbox(
-                                  value: _stepCompletion[i] ?? false,
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      _stepCompletion[i] = value ?? false;
-                                    });
-                                  },
-                                  activeColor: Theme.of(context).colorScheme.secondary,
-                                ),
-                                Text(
-                                  'Complete',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ],
+                            Text(
+                              _getProgressText(),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                ),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+        // Step Cards with MethodCard widgets
+        if (widget.recipeData['steps'] is List)
+          ...List.generate(widget.recipeData['steps'].length, (i) {
+            final key = _stepCardKeys.length > i ? _stepCardKeys[i] : GlobalKey();
+            if (_stepCardKeys.length <= i) _stepCardKeys.add(key);
+            final step = widget.recipeData['steps'][i];
+            final stepImageUrl = 'https://via.placeholder.com/400x225/e0e0e0/666666?text=Step+${i+1}';
+            
+            return Container(
+              key: key,
+              margin: const EdgeInsets.only(bottom: 12),
+              child: MouseRegion(
+                onEnter: (_) => setState(() => _hoveredStep = i),
+                onExit: (_) => setState(() => _hoveredStep = null),
+                child: MethodCard(
+                  data: MethodCardData(
+                    stepNumber: i + 1,
+                    title: 'Step ${i + 1}',
+                    description: step,
+                    imageUrl: stepImageUrl,
+                    imageAlt: 'Step ${i + 1} illustration',
+                    isCompleted: _stepCompletion[i] ?? false,
+                    duration: '30 sec',
+                    difficulty: 'Easy',
+                    proTip: _getProTipForStep(step),
+                  ),
+                  state: _stepCompletion[i] == true 
+                      ? MethodCardState.completed 
+                      : _hoveredStep == i 
+                          ? MethodCardState.active 
+                          : MethodCardState.defaultState,
+                  onCompleted: () => _completeStep(i),
+                  onPrevious: () => _goToPreviousStep(i),
+                  enableSwipeGestures: true,
+                  enableKeyboardNavigation: true,
               ),
             ),
           );
