@@ -12,8 +12,15 @@ import 'package:mixologist_flutter/main.dart';
 
 void main() {
   testWidgets('Mixologist app smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MixologistApp());
+    // Build the LoginScreen directly wrapped in MaterialApp to avoid Firebase initialization
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.light(),
+        darkTheme: ThemeData.dark(),
+        themeMode: ThemeMode.system,
+        home: const LoginScreen(),
+      ),
+    );
 
     // Verify that the login screen is displayed
     expect(find.text('AI Mixologist'), findsAtLeast(1));
