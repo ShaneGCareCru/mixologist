@@ -7,8 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http; // HTTP package
 // No longer importing flutter_client_sse
 import 'firebase_options.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+// HTML functionality removed - using SharedPreferences for storage instead
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'widgets/section_preview.dart';
 import 'widgets/connection_line.dart';
@@ -249,7 +248,7 @@ class MixologistApp extends StatelessWidget {
         bodyLarge: TextStyle(
           fontSize: 16, 
           fontWeight: FontWeight.w400, 
-          color: Colors.white87,
+          color: Colors.white54,
           height: 1.5,
         ),
         bodyMedium: TextStyle(
@@ -1223,14 +1222,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
     setState(() {
       if (_expandedSection == id) {
         _expandedSection = null;
-        if (kIsWeb) {
-          html.window.history.replaceState(null, '', '#');
-        }
+        // URL hash management removed for cross-platform compatibility
       } else {
         _expandedSection = id;
-        if (kIsWeb) {
-          html.window.history.replaceState(null, '', '#$id');
-        }
+        // URL hash management removed for cross-platform compatibility
         
         // Auto-generate ingredient images when ingredients section is expanded
         if (id == 'ingredients') {
@@ -1425,7 +1420,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Future<void> _loadProgress() async {
     try {
       if (kIsWeb) {
-        await _loadProgressWeb();
+        await _loadProgress();
         return;
       }
       
@@ -1458,7 +1453,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       print('Error loading progress: $e');
       // Fallback to web storage if SharedPreferences fails
       if (kIsWeb) {
-        await _loadProgressWeb();
+        await _loadProgress();
       }
     }
   }
@@ -1466,7 +1461,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Future<void> _saveProgress() async {
     try {
       if (kIsWeb) {
-        await _saveProgressWeb();
+        await _saveProgress();
         return;
       }
       
@@ -1486,7 +1481,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       print('Error saving progress: $e');
       // Fallback to web storage if SharedPreferences fails
       if (kIsWeb) {
-        await _saveProgressWeb();
+        await _saveProgress();
       }
     }
   }
@@ -1500,49 +1495,47 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
 
-  Future<void> _saveProgressWeb() async {
-    if (!kIsWeb) return;
-    
+  Future<void> _saveProgress() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
       final recipeKey = _getRecipeKey();
       
       // Save ingredient checklist
       for (String ingredient in _ingredientChecklist.keys) {
-        html.window.localStorage['${recipeKey}_ingredient_$ingredient'] = 
-            _ingredientChecklist[ingredient].toString();
+        await prefs.setBool('${recipeKey}_ingredient_$ingredient', 
+            _ingredientChecklist[ingredient] ?? false);
       }
       
       // Save step completion
       for (int step in _stepCompletion.keys) {
-        html.window.localStorage['${recipeKey}_step_$step'] = 
-            _stepCompletion[step].toString();
+        await prefs.setBool('${recipeKey}_step_$step', 
+            _stepCompletion[step] ?? false);
       }
     } catch (e) {
-      print('Error saving progress to localStorage: $e');
+      print('Error saving progress: $e');
     }
   }
 
-  Future<void> _loadProgressWeb() async {
-    if (!kIsWeb) return;
-    
+  Future<void> _loadProgress() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
       final recipeKey = _getRecipeKey();
       
       // Load ingredient checklist
       final ingredientKeys = _ingredientChecklist.keys.toList();
       for (String ingredient in ingredientKeys) {
-        final saved = html.window.localStorage['${recipeKey}_ingredient_$ingredient'];
+        final saved = prefs.getBool('${recipeKey}_ingredient_$ingredient');
         if (saved != null) {
-          _ingredientChecklist[ingredient] = saved.toLowerCase() == 'true';
+          _ingredientChecklist[ingredient] = saved;
         }
       }
       
       // Load step completion
       final stepKeys = _stepCompletion.keys.toList();
       for (int step in stepKeys) {
-        final saved = html.window.localStorage['${recipeKey}_step_$step'];
+        final saved = prefs.getBool('${recipeKey}_step_$step');
         if (saved != null) {
-          _stepCompletion[step] = saved.toLowerCase() == 'true';
+          _stepCompletion[step] = saved;
         }
       }
       
