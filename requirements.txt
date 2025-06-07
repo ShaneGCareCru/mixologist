@@ -6,3 +6,4 @@ openai==1.84.0
 hypercorn
 python-multipart
 aiofiles
+pytest-asyncio

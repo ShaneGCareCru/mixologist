@@ -111,6 +111,10 @@ def canonicalize_step_text(step_text: str) -> str:
             return replacement
     return re.sub(r"[^a-z0-9 ]+", "", normalized).strip()
 
+def canonicalize_step(step_text: str) -> str:
+    """Alias for canonicalize_step_text to maintain test compatibility."""
+    return canonicalize_step_text(step_text)
+
 async def load_step_image_index() -> Dict[str, str]:
     if STEP_IMAGE_INDEX_FILE.exists():
         try:
