@@ -8,12 +8,10 @@ import 'package:http/http.dart' as http; // HTTP package
 // No longer importing flutter_client_sse
 import 'firebase_options.dart';
 // HTML functionality removed - using SharedPreferences for storage instead
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'widgets/section_preview.dart';
 import 'widgets/connection_line.dart';
 import 'widgets/drink_progress_glass.dart';
 import 'widgets/method_card.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -62,7 +60,7 @@ class MixologistApp extends StatelessWidget {
         error: deepBitters,
         tertiary: citrushZest,
         primaryContainer: champagneGold,
-        secondaryContainer: champagneGold.withOpacity(0.3),
+        secondaryContainer: champagneGold.withValues(alpha: 0.3),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
@@ -132,15 +130,15 @@ class MixologistApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         elevation: 12,
-        shadowColor: richWhiskey.withOpacity(0.2),
+        shadowColor: richWhiskey.withValues(alpha: 0.2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 6,
-          shadowColor: richWhiskey.withOpacity(0.3),
+          shadowColor: richWhiskey.withValues(alpha: 0.3),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
           textStyle: const TextStyle(
@@ -152,7 +150,7 @@ class MixologistApp extends StatelessWidget {
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 4,
-        shadowColor: richWhiskey.withOpacity(0.2),
+        shadowColor: richWhiskey.withValues(alpha: 0.2),
         backgroundColor: Colors.transparent,
         foregroundColor: richWhiskey,
         titleTextStyle: const TextStyle(
@@ -164,14 +162,14 @@ class MixologistApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white.withOpacity(0.8),
+        fillColor: Colors.white.withValues(alpha: 0.8),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: goldenAmber.withOpacity(0.3)),
+          borderSide: BorderSide(color: goldenAmber.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: goldenAmber.withOpacity(0.5)),
+          borderSide: BorderSide(color: goldenAmber.withValues(alpha: 0.5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -202,7 +200,7 @@ class MixologistApp extends StatelessWidget {
         surface: charcoalSurface,
         error: crimsonBitters,
         tertiary: citrusGlow,
-        primaryContainer: warmCopper.withOpacity(0.3),
+        primaryContainer: warmCopper.withValues(alpha: 0.3),
         secondaryContainer: smokyGlass,
       ),
       textTheme: const TextTheme(
@@ -288,7 +286,7 @@ class MixologistApp extends StatelessWidget {
         shadowColor: Colors.black54,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
-        color: smokyGlass.withOpacity(0.85),
+        color: smokyGlass.withValues(alpha: 0.85),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -317,14 +315,14 @@ class MixologistApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: smokyGlass.withOpacity(0.7),
+        fillColor: smokyGlass.withValues(alpha: 0.7),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: warmCopper.withOpacity(0.3)),
+          borderSide: BorderSide(color: warmCopper.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: warmCopper.withOpacity(0.5)),
+          borderSide: BorderSide(color: warmCopper.withValues(alpha: 0.5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -363,8 +361,8 @@ class MixologistBackground extends StatelessWidget {
         decoration: BoxDecoration(
           backgroundBlendMode: BlendMode.overlay,
           color: isCurrentlyDark 
-              ? Colors.black.withOpacity(0.1)
-              : Colors.white.withOpacity(0.1),
+              ? Colors.black.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.1),
         ),
         child: child,
       ),
@@ -437,25 +435,25 @@ class GlassmorphicCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: isDark
               ? [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.05),
+                  Colors.white.withValues(alpha: 0.1),
+                  Colors.white.withValues(alpha: 0.05),
                 ]
               : [
-                  Colors.white.withOpacity(0.25),
-                  Colors.white.withOpacity(0.1),
+                  Colors.white.withValues(alpha: 0.25),
+                  Colors.white.withValues(alpha: 0.1),
                 ],
         ),
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.2)
-              : Colors.white.withOpacity(0.3),
+              ? Colors.white.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withOpacity(0.5)
-                : Colors.grey.withOpacity(0.2),
+                ? Colors.black.withValues(alpha: 0.5)
+                : Colors.grey.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -467,8 +465,8 @@ class GlassmorphicCard extends StatelessWidget {
           padding: padding ?? const EdgeInsets.all(20),
           color: color ??
               (isDark
-                  ? Colors.black.withOpacity(0.2)
-                  : Colors.white.withOpacity(0.1)),
+                  ? Colors.black.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.1)),
           child: child,
         ),
       ),
@@ -520,7 +518,7 @@ class LoginScreen extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withOpacity(0.3),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -542,7 +540,7 @@ class LoginScreen extends StatelessWidget {
                         Text(
                           'Welcome to',
                           style: theme.textTheme.headlineSmall?.copyWith(
-                            color: theme.colorScheme.primary.withOpacity(0.8),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.8),
                             fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.center,
@@ -559,7 +557,7 @@ class LoginScreen extends StatelessWidget {
                         Text(
                           'Craft perfect cocktails with AI-powered recipes and step-by-step guidance',
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                             height: 1.5,
                           ),
                           textAlign: TextAlign.center,
@@ -661,13 +659,13 @@ class LoginScreen extends StatelessWidget {
         Icon(
           icon,
           size: 24,
-          color: theme.colorScheme.primary.withOpacity(0.7),
+          color: theme.colorScheme.primary.withValues(alpha: 0.7),
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -712,11 +710,11 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       } else {
         setState(() { _recipeError = 'Error fetching recipe: ${response.statusCode}'; });
-        print('Error fetching recipe: ${response.statusCode} - ${response.body}');
+        debugPrint('Error fetching recipe: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       setState(() { _isLoadingRecipe = false; _recipeError = 'Failed to connect: $e'; });
-      print('Exception fetching recipe: $e');
+      debugPrint('Exception fetching recipe: $e');
     }
   }
 
@@ -770,10 +768,10 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
             onPressed: () async {
+              final navigator = Navigator.of(context);
               await FirebaseAuth.instance.signOut();
               if (mounted) {
-                Navigator.pushReplacement(
-                  context,
+                navigator.pushReplacement(
                   PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
                     transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -837,7 +835,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ? 'Guest User (${user.uid.substring(0,6)}...)'
                                     : user.displayName ?? user.email ?? 'User',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                 ),
                               ),
                             ],
@@ -874,7 +872,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Find a classic recipe or describe your ideal cocktail',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -915,7 +913,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 56,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
-                                  color: theme.colorScheme.primary.withOpacity(0.1),
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                                 ),
                                 child: Center(
                                   child: CircularProgressIndicator(
@@ -967,7 +965,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Describe your perfect drink and let AI create a custom recipe',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -995,7 +993,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 56,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
-                                  color: theme.colorScheme.secondary.withOpacity(0.1),
+                                  color: theme.colorScheme.secondary.withValues(alpha: 0.1),
                                 ),
                                 child: Center(
                                   child: CircularProgressIndicator(
@@ -1069,14 +1067,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Map<String, bool> _ingredientChecklist = {};
   
   // Epic 3: Visual Recipe Steps
-  Map<int, bool> _stepCompletion = {};
+  final Map<int, bool> _stepCompletion = {};
   
   // Dynamic Visual Generation System
-  Map<String, Uint8List?> _specializedImages = {};
+  final Map<String, Uint8List?> _specializedImages = {};
   Map<String, bool> _imageGenerationProgress = {};
   String _selectedSection = 'overview'; // Navigation state
   String? _expandedSection;
-  final Map<String, double> _sectionHeights = {};
   final Map<int, List<String>> _stepIngredientMap = {};
   final Map<int, List<String>> _stepEquipmentMap = {};
   final Map<String, GlobalKey> _ingredientIconKeys = {};
@@ -1112,12 +1109,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
     }
   }
 
-  void _completeStep(int stepIndex) {
-    setState(() {
-      _stepCompletion[stepIndex] = true;
-    });
-    _saveProgress(); // Save progress when step is completed
-  }
 
   void _toggleStepCompleted(int stepIndex, bool completed) {
     setState(() {
@@ -1126,14 +1117,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
     _saveProgress();
   }
 
-  void _goToPreviousStep(int currentStepIndex) {
-    if (currentStepIndex > 0) {
-      setState(() {
-        _stepCompletion[currentStepIndex - 1] = false;
-      });
-      _saveProgress(); // Save progress when step is unchecked
-    }
-  }
 
   String? _getProTipForStep(String stepText) {
     // Simple pro tip generation based on step content
@@ -1363,7 +1346,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
       
       final http.StreamedResponse response = await _httpClient.send(request);
       if (response.statusCode == 200) {
-        bool foundCachedImage = false;
         
         response.stream
             .transform(utf8.decoder)
@@ -1378,7 +1360,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   if (mounted) {
                     setState(() {
                       _specializedImages[imageType] = base64Decode(jsonData['b64_data']);
-                      foundCachedImage = true;
                     });
                   }
                 }
@@ -1396,7 +1377,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       }
     } catch (e) {
       // Silently fail for cache checks - images can be generated later
-      print('Cache check failed for $imageType: $e');
+      debugPrint('Cache check failed for $imageType: $e');
     }
   }
 
@@ -1446,7 +1427,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
             _stepCompletion[step] ?? false);
       }
     } catch (e) {
-      print('Error saving progress: $e');
+      debugPrint('Error saving progress: $e');
     }
   }
 
@@ -1478,7 +1459,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
         setState(() {});
       }
     } catch (e) {
-      print('Error loading progress from localStorage: $e');
+      debugPrint('Error loading progress from localStorage: $e');
     }
   }
 
@@ -1661,12 +1642,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   }
                 }
               } catch (e) {
-                print("Error parsing specialized image SSE data: $e");
+                debugPrint("Error parsing specialized image SSE data: $e");
               }
             }
           },
           onError: (error) {
-            print('Specialized image stream error: $error');
+            debugPrint('Specialized image stream error: $error');
             if (mounted) {
               setState(() {
                 _imageGenerationProgress[imageType] = false;
@@ -1683,7 +1664,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
         );
       }
     } catch (e) {
-      print('Error generating specialized image: $e');
+      debugPrint('Error generating specialized image: $e');
       if (mounted) {
         setState(() {
           _imageGenerationProgress[imageType] = false;
@@ -1802,7 +1783,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 final jsonData = jsonDecode(eventDataString);
                 // Only log event type for cleaner logs
                 if (jsonData['type'] != null) {
-                  print("SSE Event: ${jsonData['type']}");
+                  debugPrint("SSE Event: ${jsonData['type']}");
                 }
                 if (jsonData['type'] == 'partial_image' && jsonData['b64_data'] != null) {
                   if (mounted) {
@@ -1815,7 +1796,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   if (mounted) {
                     setState(() { _isImageStreamComplete = true; });
                   }
-                  print("Image stream complete from server.");
+                  debugPrint("Image stream complete from server.");
                   _imageStreamSubscription?.cancel(); 
                 } else if (jsonData['type'] == 'error') {
                   if (mounted) {
@@ -1824,21 +1805,21 @@ class _RecipeScreenState extends State<RecipeScreen> {
                       _currentImageBytes = null;
                     });
                   }
-                  print("Error from image stream: ${jsonData['message']}");
+                  debugPrint("Error from image stream: ${jsonData['message']}");
                   _imageStreamSubscription?.cancel();
                 }
               } catch (e) {
-                print("Error parsing SSE JSON data: $e. Data: ${eventDataString.length > 50 ? '${eventDataString.substring(0, 50)}...' : eventDataString}");
+                debugPrint("Error parsing SSE JSON data: $e. Data: ${eventDataString.length > 50 ? '${eventDataString.substring(0, 50)}...' : eventDataString}");
                 if (mounted) { setState(() { _imageStreamError = "Error parsing stream data."; });}
               }
             }
           },
           onError: (error) {
-            print('SSE Stream Listen Error: $error');
+            debugPrint('SSE Stream Listen Error: $error');
             if (mounted) { setState(() { _imageStreamError = 'SSE stream error: $error'; _currentImageBytes = null; });}
           },
           onDone: () {
-            print('SSE Stream Listen Done.');
+            debugPrint('SSE Stream Listen Done.');
             if (mounted && !_isImageStreamComplete && _imageStreamError == null) {
                  // setState(() { _imageStreamError = 'Image stream closed prematurely.'; });
             }
@@ -1846,11 +1827,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
           cancelOnError: true,
         );
       } else {
-        print('SSE initial request failed: ${response.statusCode} ${response.reasonPhrase}');
+        debugPrint('SSE initial request failed: ${response.statusCode} ${response.reasonPhrase}');
         if (mounted) { setState(() { _imageStreamError = 'Failed to connect to image stream: ${response.statusCode}';});}
       }
     } catch (e) {
-      print('Error sending SSE request: $e');
+      debugPrint('Error sending SSE request: $e');
       if (mounted) { setState(() { _imageStreamError = 'Error connecting to image stream: $e';});}
     }
   }
@@ -2157,21 +2138,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
                         const SizedBox(height: 16),
                       ],
                       
-                      // Debug: Print trivia data
-                      Builder(
-                        builder: (context) {
-                          print('=== TRIVIA DEBUG ===');
-                          print('Recipe data keys: ${widget.recipeData.keys.toList()}');
-                          print('drink_trivia exists: ${widget.recipeData.containsKey('drink_trivia')}');
-                          print('drink_trivia value: ${widget.recipeData['drink_trivia']}');
-                          print('drink_trivia type: ${widget.recipeData['drink_trivia'].runtimeType}');
-                          if (widget.recipeData['drink_trivia'] is List) {
-                            print('drink_trivia length: ${(widget.recipeData['drink_trivia'] as List).length}');
-                          }
-                          print('===================');
-                          return const SizedBox.shrink();
-                        },
-                      ),
                       
                       // Trivia Section
                       if (widget.recipeData['drink_trivia'] is List && 
@@ -2819,10 +2785,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
             from: _stepCardKeys[_hoveredStep!],
             to: [
               ...?_stepIngredientMap[_hoveredStep!]
-                  ?.map((n) => _ingredientIconKeys[n])
+                  .map((n) => _ingredientIconKeys[n])
                   .whereType<GlobalKey>(),
               ...?_stepEquipmentMap[_hoveredStep!]
-                  ?.map((n) => _equipmentIconKeys[n])
+                  .map((n) => _equipmentIconKeys[n])
                   .whereType<GlobalKey>(),
             ],
             active: true,

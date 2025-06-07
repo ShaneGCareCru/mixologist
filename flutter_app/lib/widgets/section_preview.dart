@@ -54,25 +54,25 @@ class _SectionPreviewState extends State<SectionPreview>
               end: Alignment.bottomRight,
               colors: Theme.of(context).brightness == Brightness.dark
                   ? [
-                      Colors.white.withOpacity(0.1),
-                      Colors.white.withOpacity(0.05),
+                      Colors.white.withValues(alpha: 0.1),
+                      Colors.white.withValues(alpha: 0.05),
                     ]
                   : [
-                      Colors.white.withOpacity(0.25),
-                      Colors.white.withOpacity(0.1),
+                      Colors.white.withValues(alpha: 0.25),
+                      Colors.white.withValues(alpha: 0.1),
                     ],
             ),
             border: Border.all(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withOpacity(0.2)
-                  : Colors.white.withOpacity(0.3),
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.3),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.black.withOpacity(0.5)
-                    : Colors.grey.withOpacity(0.2),
+                    ? Colors.black.withValues(alpha: 0.5)
+                    : Colors.grey.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -82,8 +82,8 @@ class _SectionPreviewState extends State<SectionPreview>
             borderRadius: BorderRadius.circular(20),
             child: Container(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black.withOpacity(0.2)
-                  : Colors.white.withOpacity(0.1),
+                  ? Colors.black.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.1),
               child: Stack(
             children: [
               Column(
