@@ -37,7 +37,7 @@ from mixologist.services.openai_service import (
     detect_primary_action,
     extract_context,
     extract_important_details,
-    canonicalize_step,
+    canonicalize_step_text,
     parse_ingredient_name,
     normalize_glass_name,
     generate_cache_key,
@@ -421,7 +421,7 @@ class TestStepCanonicalization:
 
         for input_step, expected_canonical in test_cases:
             # Act
-            result = canonicalize_step(input_step)
+            result = canonicalize_step_text(input_step)
             
             # Assert
             assert result == expected_canonical, f"Failed for: {input_step}"
@@ -437,7 +437,7 @@ class TestStepCanonicalization:
         ]
 
         # Act & Assert
-        canonical_results = [canonicalize_step(step) for step in variations]
+        canonical_results = [canonicalize_step_text(step) for step in variations]
         assert all(result == canonical_results[0] for result in canonical_results)
 
 

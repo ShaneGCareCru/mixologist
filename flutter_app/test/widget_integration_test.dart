@@ -10,8 +10,8 @@ void main() {
     
     testWidgets('DrinkProgressGlass displays correct progress', (tester) async {
       // Arrange
-      const double testProgress = 0.6;
-      const Color testColor = Colors.blue;
+      const DrinkProgress testProgress = DrinkProgress.mixed;
+      const List<Color> testColors = [Colors.blue, Colors.green];
 
       // Act
       await tester.pumpWidget(
@@ -19,7 +19,7 @@ void main() {
           home: Scaffold(
             body: DrinkProgressGlass(
               progress: testProgress,
-              color: testColor,
+              liquidColors: testColors,
             ),
           ),
         ),
@@ -32,23 +32,23 @@ void main() {
       expect(find.byType(CustomPaint), findsWidgets);
     });
 
-    testWidgets('DrinkProgressGlass handles progress bounds correctly', (tester) async {
-      // Test cases for edge values
-      final testCases = [
-        0.0,    // Minimum
-        0.5,    // Middle
-        1.0,    // Maximum
-        1.5,    // Over maximum (should be clamped)
-        -0.1,   // Under minimum (should be clamped)
+    testWidgets('DrinkProgressGlass handles all progress states correctly', (tester) async {
+      // Test cases for all enum values
+      final progressValues = [
+        DrinkProgress.emptyGlass,
+        DrinkProgress.ingredientsAdded,
+        DrinkProgress.mixed,
+        DrinkProgress.garnished,
+        DrinkProgress.complete,
       ];
 
-      for (final progress in testCases) {
+      for (final progress in progressValues) {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
               body: DrinkProgressGlass(
                 progress: progress,
-                color: Colors.red,
+                liquidColors: const [Colors.red, Colors.orange],
               ),
             ),
           ),
@@ -62,35 +62,59 @@ void main() {
       }
     });
 
-    testWidgets('ConnectionLine renders between points', (tester) async {
+    testWidgets('ConnectionLine renders when active', (tester) async {
       // Arrange
-      const startPoint = Offset(50, 50);
-      const endPoint = Offset(150, 150);
+      final fromKey = GlobalKey();
+      final toKey = GlobalKey();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CustomPaint(
-              painter: ConnectionLinePainter(
-                startPoint: startPoint,
-                endPoint: endPoint,
-              ),
-              size: const Size(200, 200),
+            body: Stack(
+              children: [
+                Positioned(
+                  top: 50,
+                  left: 50,
+                  child: Container(
+                    key: fromKey,
+                    width: 50,
+                    height: 50,
+                    color: Colors.blue,
+                  ),
+                ),
+                Positioned(
+                  top: 150,
+                  left: 150,
+                  child: Container(
+                    key: toKey,
+                    width: 50,
+                    height: 50,
+                    color: Colors.red,
+                  ),
+                ),
+                ConnectionLine(
+                  from: fromKey,
+                  to: [toKey],
+                  active: true,
+                ),
+              ],
             ),
           ),
         ),
       );
 
       // Assert
+      expect(find.byType(ConnectionLine), findsOneWidget);
       expect(find.byType(CustomPaint), findsOneWidget);
     });
 
     testWidgets('SectionPreview displays correct content', (tester) async {
       // Arrange
       const testTitle = "Test Section";
-      const testDescription = "This is a test description";
       const testIcon = Icons.local_bar;
+      const previewWidget = Text("Preview content");
+      const expandedWidget = Text("Expanded content");
 
       // Act
       await tester.pumpWidget(
@@ -98,9 +122,13 @@ void main() {
           home: Scaffold(
             body: SectionPreview(
               title: testTitle,
-              description: testDescription,
               icon: testIcon,
-              onTap: () {},
+              previewContent: previewWidget,
+              expandedContent: expandedWidget,
+              totalItems: 5,
+              expanded: false,
+              onOpen: () {},
+              onClose: () {},
             ),
           ),
         ),
@@ -108,7 +136,7 @@ void main() {
 
       // Assert
       expect(find.text(testTitle), findsOneWidget);
-      expect(find.text(testDescription), findsOneWidget);
+      expect(find.text("Preview content"), findsOneWidget);
       expect(find.byIcon(testIcon), findsOneWidget);
     });
 
@@ -125,16 +153,20 @@ void main() {
           home: Scaffold(
             body: SectionPreview(
               title: "Tappable Section",
-              description: "Tap me!",
               icon: Icons.touch_app,
-              onTap: onTapHandler,
+              previewContent: const Text("Tap me!"),
+              expandedContent: const Text("Expanded!"),
+              totalItems: 3,
+              expanded: false,
+              onOpen: onTapHandler,
+              onClose: () {},
             ),
           ),
         ),
       );
 
       // Tap the section
-      await tester.tap(find.byType(SectionPreview));
+      await tester.tap(find.byType(ListTile));
       await tester.pumpAndSettle();
 
       // Assert
@@ -282,22 +314,22 @@ void main() {
     });
 
     testWidgets('DrinkProgressGlass with different colors renders correctly', (tester) async {
-      // Test different colors
-      final colors = [
-        Colors.red,
-        Colors.green,
-        Colors.blue,
-        Colors.orange,
-        Colors.purple,
+      // Test different color combinations
+      final colorCombinations = [
+        [Colors.red, Colors.pink],
+        [Colors.green, Colors.teal],
+        [Colors.blue, Colors.cyan],
+        [Colors.orange, Colors.amber],
+        [Colors.purple, Colors.indigo],
       ];
 
-      for (final color in colors) {
+      for (final colors in colorCombinations) {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
               body: DrinkProgressGlass(
-                progress: 0.7,
-                color: color,
+                progress: DrinkProgress.garnished,
+                liquidColors: colors,
               ),
             ),
           ),
@@ -311,37 +343,59 @@ void main() {
       }
     });
 
-    testWidgets('ConnectionLine with different line styles', (tester) async {
+    testWidgets('ConnectionLine with different configurations', (tester) async {
       // Test different connection line configurations
       final testConfigurations = [
-        {
-          'start': const Offset(0, 0),
-          'end': const Offset(100, 100),
-          'color': Colors.black,
-        },
-        {
-          'start': const Offset(50, 0),
-          'end': const Offset(50, 200),
-          'color': Colors.blue,
-        },
-        {
-          'start': const Offset(0, 100),
-          'end': const Offset(200, 100),
-          'color': Colors.red,
-        },
+        {'active': true},
+        {'active': false},
       ];
 
       for (final config in testConfigurations) {
+        final fromKey = GlobalKey();
+        final toKey1 = GlobalKey();
+        final toKey2 = GlobalKey();
+        
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: CustomPaint(
-                painter: ConnectionLinePainter(
-                  startPoint: config['start'] as Offset,
-                  endPoint: config['end'] as Offset,
-                  color: config['color'] as Color,
-                ),
-                size: const Size(200, 200),
+              body: Stack(
+                children: [
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      key: fromKey,
+                      width: 30,
+                      height: 30,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  Positioned(
+                    top: 100,
+                    left: 100,
+                    child: Container(
+                      key: toKey1,
+                      width: 30,
+                      height: 30,
+                      color: Colors.red,
+                    ),
+                  ),
+                  Positioned(
+                    top: 150,
+                    left: 50,
+                    child: Container(
+                      key: toKey2,
+                      width: 30,
+                      height: 30,
+                      color: Colors.green,
+                    ),
+                  ),
+                  ConnectionLine(
+                    from: fromKey,
+                    to: [toKey1, toKey2],
+                    active: config['active'] as bool,
+                  ),
+                ],
               ),
             ),
           ),
@@ -370,17 +424,21 @@ void main() {
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: DrinkProgressGlass(
-                      progress: 0.4,
-                      color: Colors.blue,
+                      progress: DrinkProgress.ingredientsAdded,
+                      liquidColors: const [Colors.blue, Colors.lightBlue],
                     ),
                   ),
                   
                   // Section preview
                   SectionPreview(
                     title: "Current Step",
-                    description: "Making your cocktail",
                     icon: Icons.local_bar,
-                    onTap: () {},
+                    previewContent: const Text("Making your cocktail"),
+                    expandedContent: const Text("Detailed cocktail preparation"),
+                    totalItems: 1,
+                    expanded: false,
+                    onOpen: () {},
+                    onClose: () {},
                   ),
                   
                   // Method cards
@@ -441,14 +499,18 @@ void main() {
               body: Column(
                 children: [
                   DrinkProgressGlass(
-                    progress: 0.5,
-                    color: theme.primaryColor,
+                    progress: DrinkProgress.mixed,
+                    liquidColors: [theme.primaryColor, theme.colorScheme.secondary],
                   ),
                   SectionPreview(
                     title: "Theme Test",
-                    description: "Testing ${theme.brightness.name} theme",
                     icon: Icons.palette,
-                    onTap: () {},
+                    previewContent: Text("Testing ${theme.brightness.name} theme"),
+                    expandedContent: Text("Full ${theme.brightness.name} theme test"),
+                    totalItems: 2,
+                    expanded: false,
+                    onOpen: () {},
+                    onClose: () {},
                   ),
                   MethodCard(
                     data: const MethodCardData(

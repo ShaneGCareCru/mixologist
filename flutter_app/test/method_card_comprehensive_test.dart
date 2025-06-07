@@ -233,7 +233,7 @@ void main() {
         78, 68, 174, 66, 96, 130
       ]);
 
-      const dataWithImage = MethodCardData(
+      final dataWithImage = MethodCardData(
         stepNumber: 1,
         title: 'Shake',
         description: 'Shake ingredients',
