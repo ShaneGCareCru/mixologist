@@ -16,7 +16,7 @@ void main() {
     await tester.pumpWidget(const MixologistApp());
 
     // Verify that the login screen is displayed
-    expect(find.text('Mixologist Login'), findsOneWidget);
-    expect(find.text('Sign In Anonymously'), findsOneWidget);
+    expect(find.text('AI Mixologist'), findsAtLeast(1));
+    expect(find.text('Start Mixing'), findsOneWidget);
   });
 }

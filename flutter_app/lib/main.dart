@@ -1417,74 +1417,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     _loadProgress();
   }
 
-  Future<void> _loadProgress() async {
-    try {
-      if (kIsWeb) {
-        await _loadProgress();
-        return;
-      }
-      
-      final prefs = await SharedPreferences.getInstance();
-      final recipeKey = _getRecipeKey();
-      
-      // Load ingredient checklist
-      final ingredientKeys = _ingredientChecklist.keys.toList();
-      for (String ingredient in ingredientKeys) {
-        final saved = prefs.getBool('${recipeKey}_ingredient_$ingredient');
-        if (saved != null) {
-          _ingredientChecklist[ingredient] = saved;
-        }
-      }
-      
-      // Load step completion
-      final stepKeys = _stepCompletion.keys.toList();
-      for (int step in stepKeys) {
-        final saved = prefs.getBool('${recipeKey}_step_$step');
-        if (saved != null) {
-          _stepCompletion[step] = saved;
-        }
-      }
-      
-      // Update UI if any progress was loaded
-      if (mounted) {
-        setState(() {});
-      }
-    } catch (e) {
-      print('Error loading progress: $e');
-      // Fallback to web storage if SharedPreferences fails
-      if (kIsWeb) {
-        await _loadProgress();
-      }
-    }
-  }
 
-  Future<void> _saveProgress() async {
-    try {
-      if (kIsWeb) {
-        await _saveProgress();
-        return;
-      }
-      
-      final prefs = await SharedPreferences.getInstance();
-      final recipeKey = _getRecipeKey();
-      
-      // Save ingredient checklist
-      for (String ingredient in _ingredientChecklist.keys) {
-        await prefs.setBool('${recipeKey}_ingredient_$ingredient', _ingredientChecklist[ingredient]!);
-      }
-      
-      // Save step completion
-      for (int step in _stepCompletion.keys) {
-        await prefs.setBool('${recipeKey}_step_$step', _stepCompletion[step]!);
-      }
-    } catch (e) {
-      print('Error saving progress: $e');
-      // Fallback to web storage if SharedPreferences fails
-      if (kIsWeb) {
-        await _saveProgress();
-      }
-    }
-  }
 
   String _getRecipeKey() {
     // Generate a unique key for this recipe based on its content
