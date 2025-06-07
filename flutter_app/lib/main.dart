@@ -154,27 +154,33 @@ class LoginScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Mixologist Login')),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            try {
-              await FirebaseAuth.instance.signInAnonymously();
-              print("Signed in anonymously");
-              if (context.mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                );
-              }
-            } catch (e) {
-              print("Error signing in anonymously: $e");
-              if (context.mounted) { // Check mounted before showing SnackBar
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error signing in: $e')),
-                );
-              }
-            }
-          },
-          child: const Text('Sign In Anonymously'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Welcome to AI Mixologist', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await FirebaseAuth.instance.signInAnonymously();
+                  if (context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error signing in: $e')),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+              child: const Text('Sign In Anonymously'),
+            ),
+          ],
         ),
       ),
     );
@@ -190,8 +196,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _drinkQueryController = TextEditingController();
+  final _drinkPreferencesController = TextEditingController();
   bool _isLoadingRecipe = false;
+  bool _isLoadingCustom = false;
   String? _recipeError;
+  String? _customError;
 
   Future<void> _getRecipe() async {
     if (_drinkQueryController.text.isEmpty) {
@@ -223,9 +232,38 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _createCustomDrink() async {
+    if (_drinkPreferencesController.text.isEmpty) {
+      setState(() { _customError = 'Please describe your ideal drink.'; });
+      return;
+    }
+    setState(() { _isLoadingCustom = true; _customError = null; });
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8081/create_from_description'),
+        body: {'drink_description': _drinkPreferencesController.text},
+      );
+      setState(() { _isLoadingCustom = false; });
+      if (response.statusCode == 200) {
+        final recipeData = jsonDecode(response.body);
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => RecipeScreen(recipeData: recipeData)),
+          );
+        }
+      } else {
+        setState(() { _customError = 'Error creating drink: ${response.statusCode}'; });
+      }
+    } catch (e) {
+      setState(() { _isLoadingCustom = false; _customError = 'Failed to connect: $e'; });
+    }
+  }
+
   @override
   void dispose() {
     _drinkQueryController.dispose();
+    _drinkPreferencesController.dispose();
     super.dispose();
   }
 
@@ -278,12 +316,31 @@ class _HomeScreenState extends State<HomeScreen> {
               onSubmitted: (_) => _getRecipe(),
             ),
             const SizedBox(height: 20),
+            TextField(
+              controller: _drinkPreferencesController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: 'Describe Your Ideal Drink',
+                hintText: 'fruity and bubbly with rum...',
+                border: const OutlineInputBorder(),
+                errorText: _customError,
+              ),
+            ),
+            const SizedBox(height: 20),
             _isLoadingRecipe
                 ? const Center(child: CircularProgressIndicator())
                 : ElevatedButton(
                     style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                     onPressed: _getRecipe,
                     child: const Text('Get Recipe', style: TextStyle(fontSize: 16)),
+                  ),
+            const SizedBox(height: 10),
+            _isLoadingCustom
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                    onPressed: _createCustomDrink,
+                    child: const Text('Create Custom Drink', style: TextStyle(fontSize: 16)),
                   ),
           ],
         ),

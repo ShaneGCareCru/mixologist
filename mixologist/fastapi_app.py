@@ -101,6 +101,60 @@ async def create_drink(drink_query: str = Form(...)):
         logging.error(f"Error creating drink recipe: {e}")
         raise HTTPException(status_code=500, detail=f"Error creating recipe: {str(e)}")
 
+
+@app.post("/create_from_description")
+async def create_drink_from_description(drink_description: str = Form(...)):
+    """Create a custom drink from a free form description."""
+    try:
+        cache_key = generate_recipe_cache_key(drink_description)
+        print(f"--- Generated recipe cache key: {cache_key} for description ---")
+
+        cached_recipe = await get_cached_recipe(cache_key)
+        if cached_recipe:
+            print("--- Found cached recipe for description, returning cached data ---")
+            return cached_recipe
+
+        user_query = f"""
+        I want you to act like the world's most important bartender.
+        I'm going to describe the kind of cocktail I want. Use these preferences to invent a brand new drink with a unique name.
+        Description: {drink_description}
+        """
+
+        recipe = get_completion_from_messages([{"role": "user", "content": user_query}])
+
+        recipe_data = {
+            "drink_name": recipe.drink_name,
+            "alcohol_content": recipe.alcohol_content,
+            "serving_glass": recipe.serving_glass,
+            "rim": 'Salted' if recipe.rim else 'No salt',
+            "ingredients": recipe.ingredients,
+            "steps": recipe.steps,
+            "garnish": recipe.garnish,
+            "drink_image_description": recipe.drink_image_description,
+            "drink_history": recipe.drink_history,
+            "brand_recommendations": recipe.brand_recommendations,
+            "ingredient_substitutions": recipe.ingredient_substitutions,
+            "related_cocktails": recipe.related_cocktails,
+            "difficulty_rating": recipe.difficulty_rating,
+            "preparation_time_minutes": recipe.preparation_time_minutes,
+            "equipment_needed": recipe.equipment_needed,
+            "flavor_profile": recipe.flavor_profile,
+            "serving_size_base": recipe.serving_size_base,
+            "phonetic_pronunciations": recipe.phonetic_pronunciations,
+            "enhanced_steps": recipe.enhanced_steps,
+            "suggested_variations": recipe.suggested_variations,
+            "food_pairings": recipe.food_pairings,
+            "optimal_serving_temperature": recipe.optimal_serving_temperature,
+            "skill_level_recommendation": recipe.skill_level_recommendation,
+            "drink_trivia": recipe.drink_trivia,
+        }
+
+        await save_recipe_to_cache(cache_key, recipe_data)
+        return recipe_data
+    except Exception as e:
+        logging.error(f"Error creating custom drink: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating recipe: {str(e)}")
+
 @app.post("/generate_image")
 async def generate_image_route(
     image_description: str = Form(...),

@@ -20,4 +20,8 @@ This palette aims to combine an intimate ambience with modern industrial touches
 
 A basic Flutter client is located in `flutter_app/`. It targets desktop, tablet and mobile platforms from a single code base. The login flow is intended to use Firebase Authentication, while requests to the OpenAI API are proxied through a secure cloud function so the API key remains server‑side.
 
+### Custom drink creation
+
+The API exposes `/create_from_description` for generating a brand new cocktail when a user describes their preferences instead of providing a drink name. The Flutter home screen includes a text field for these descriptions and will display the generated recipe with a unique name.
+
 See `flutter_app/README.md` for setup instructions.
