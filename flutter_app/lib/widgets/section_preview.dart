@@ -46,9 +46,45 @@ class _SectionPreviewState extends State<SectionPreview>
             ? Duration.zero
             : const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        child: Card(
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: Theme.of(context).brightness == Brightness.dark
+                  ? [
+                      Colors.white.withOpacity(0.1),
+                      Colors.white.withOpacity(0.05),
+                    ]
+                  : [
+                      Colors.white.withOpacity(0.25),
+                      Colors.white.withOpacity(0.1),
+                    ],
+            ),
+            border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.2)
+                  : Colors.white.withOpacity(0.3),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.black.withOpacity(0.5)
+                    : Colors.grey.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black.withOpacity(0.2)
+                  : Colors.white.withOpacity(0.1),
+              child: Stack(
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +143,9 @@ class _SectionPreviewState extends State<SectionPreview>
                     onPressed: widget.onClose,
                   ),
                 ),
-            ],
+              ],
+            ),
+            ),
           ),
         ),
       ),

@@ -43,98 +43,435 @@ class MixologistApp extends StatelessWidget {
   }
 
   ThemeData _buildLightTheme() {
-    const whiskey = Color(0xFF8B4513);
-    const amber = Color(0xFFFFBF00);
-    const ice = Color(0xFFE3F2FD);
-    const bitters = Color(0xFF8B0000);
-    const orangePeel = Color(0xFFFF8C00);
-
+    // Enhanced cocktail-inspired color palette
+    const richWhiskey = Color(0xFF6D4C2D);
+    const goldenAmber = Color(0xFFD4A574);
+    const champagneGold = Color(0xFFF7E7CE);
+    const deepBitters = Color(0xFF722F37);
+    const citrushZest = Color(0xFFE67E22);
+    const crystallIce = Color(0xFFF8FAFE);
+    
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: whiskey,
+        seedColor: richWhiskey,
         brightness: Brightness.light,
-        primary: whiskey,
-        secondary: amber,
-        surface: ice,
-        error: bitters,
-        tertiary: orangePeel,
+        primary: richWhiskey,
+        secondary: goldenAmber,
+        surface: crystallIce,
+        error: deepBitters,
+        tertiary: citrushZest,
+        primaryContainer: champagneGold,
+        secondaryContainer: champagneGold.withOpacity(0.3),
       ),
       textTheme: const TextTheme(
-        displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5),
-        displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: -0.5),
-        headlineLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -0.25),
-        headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: -0.25),
-        titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-        bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-        bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
-        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        labelSmall: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+        displayLarge: TextStyle(
+          fontSize: 32, 
+          fontWeight: FontWeight.w800, 
+          letterSpacing: -0.5,
+          height: 1.1,
+        ),
+        displayMedium: TextStyle(
+          fontSize: 28, 
+          fontWeight: FontWeight.w700, 
+          letterSpacing: -0.5,
+          height: 1.2,
+        ),
+        headlineLarge: TextStyle(
+          fontSize: 24, 
+          fontWeight: FontWeight.w600, 
+          letterSpacing: -0.25,
+          height: 1.3,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 20, 
+          fontWeight: FontWeight.w600, 
+          letterSpacing: -0.25,
+          height: 1.3,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 18, 
+          fontWeight: FontWeight.w600,
+          height: 1.4,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 16, 
+          fontWeight: FontWeight.w600,
+          height: 1.4,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16, 
+          fontWeight: FontWeight.w400,
+          height: 1.5,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14, 
+          fontWeight: FontWeight.w400,
+          height: 1.5,
+        ),
+        bodySmall: TextStyle(
+          fontSize: 12, 
+          fontWeight: FontWeight.w400,
+          height: 1.4,
+        ),
+        labelLarge: TextStyle(
+          fontSize: 14, 
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.1,
+        ),
+        labelMedium: TextStyle(
+          fontSize: 12, 
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.1,
+        ),
+        labelSmall: TextStyle(
+          fontSize: 10, 
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.1,
+        ),
       ),
       cardTheme: CardThemeData(
-        elevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 12,
+        shadowColor: richWhiskey.withOpacity(0.2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
+        color: Colors.white.withOpacity(0.9),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          elevation: 6,
+          shadowColor: richWhiskey.withOpacity(0.3),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
         ),
+      ),
+      appBarTheme: AppBarTheme(
+        elevation: 0,
+        scrolledUnderElevation: 4,
+        shadowColor: richWhiskey.withOpacity(0.2),
+        backgroundColor: Colors.transparent,
+        foregroundColor: richWhiskey,
+        titleTextStyle: const TextStyle(
+          color: richWhiskey,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.25,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: goldenAmber.withOpacity(0.3)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: goldenAmber.withOpacity(0.5)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: richWhiskey, width: 2),
+        ),
+        contentPadding: const EdgeInsets.all(20),
       ),
       visualDensity: VisualDensity.adaptivePlatformDensity,
     );
   }
 
   ThemeData _buildDarkTheme() {
-    const whiskey = Color(0xFF8B4513);
-    const amber = Color(0xFFFFBF00);
-    const darkIce = Color(0xFF1A1A1A);
-    const bitters = Color(0xFF8B0000);
-    const orangePeel = Color(0xFFFF8C00);
-
+    // Enhanced dark cocktail bar theme
+    const darkAmber = Color(0xFFD4A574);
+    const warmCopper = Color(0xFFB8860B);
+    const charcoalSurface = Color(0xFF1C1C1E);
+    const smokyGlass = Color(0xFF2C2C2E);
+    const crimsonBitters = Color(0xFF8B1538);
+    const citrusGlow = Color(0xFFFFB347);
+    
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: whiskey,
+        seedColor: darkAmber,
         brightness: Brightness.dark,
-        primary: amber,
-        secondary: orangePeel,
-        surface: darkIce,
-        error: bitters,
+        primary: darkAmber,
+        secondary: warmCopper,
+        surface: charcoalSurface,
+        error: crimsonBitters,
+        tertiary: citrusGlow,
+        primaryContainer: warmCopper.withOpacity(0.3),
+        secondaryContainer: smokyGlass,
       ),
       textTheme: const TextTheme(
-        displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, color: Colors.white),
-        displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: -0.5, color: Colors.white),
-        headlineLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -0.25, color: Colors.white),
-        headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: -0.25, color: Colors.white),
-        titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
-        titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-        bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.white70),
-        bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white70),
-        bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.white60),
-        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
-        labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white),
-        labelSmall: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white),
+        displayLarge: TextStyle(
+          fontSize: 32, 
+          fontWeight: FontWeight.w800, 
+          letterSpacing: -0.5, 
+          color: Colors.white,
+          height: 1.1,
+        ),
+        displayMedium: TextStyle(
+          fontSize: 28, 
+          fontWeight: FontWeight.w700, 
+          letterSpacing: -0.5, 
+          color: Colors.white,
+          height: 1.2,
+        ),
+        headlineLarge: TextStyle(
+          fontSize: 24, 
+          fontWeight: FontWeight.w600, 
+          letterSpacing: -0.25, 
+          color: Colors.white,
+          height: 1.3,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 20, 
+          fontWeight: FontWeight.w600, 
+          letterSpacing: -0.25, 
+          color: Colors.white,
+          height: 1.3,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 18, 
+          fontWeight: FontWeight.w600, 
+          color: Colors.white,
+          height: 1.4,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 16, 
+          fontWeight: FontWeight.w600, 
+          color: Colors.white,
+          height: 1.4,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16, 
+          fontWeight: FontWeight.w400, 
+          color: Colors.white87,
+          height: 1.5,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14, 
+          fontWeight: FontWeight.w400, 
+          color: Colors.white70,
+          height: 1.5,
+        ),
+        bodySmall: TextStyle(
+          fontSize: 12, 
+          fontWeight: FontWeight.w400, 
+          color: Colors.white60,
+          height: 1.4,
+        ),
+        labelLarge: TextStyle(
+          fontSize: 14, 
+          fontWeight: FontWeight.w500, 
+          color: Colors.white,
+          letterSpacing: 0.1,
+        ),
+        labelMedium: TextStyle(
+          fontSize: 12, 
+          fontWeight: FontWeight.w500, 
+          color: Colors.white,
+          letterSpacing: 0.1,
+        ),
+        labelSmall: TextStyle(
+          fontSize: 10, 
+          fontWeight: FontWeight.w500, 
+          color: Colors.white,
+          letterSpacing: 0.1,
+        ),
       ),
       cardTheme: CardThemeData(
-        elevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 16,
+        shadowColor: Colors.black54,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
-        color: const Color(0xFF2A2A2A),
+        color: smokyGlass.withOpacity(0.85),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          elevation: 8,
+          shadowColor: Colors.black45,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
+      appBarTheme: AppBarTheme(
+        elevation: 0,
+        scrolledUnderElevation: 8,
+        shadowColor: Colors.black54,
+        backgroundColor: Colors.transparent,
+        foregroundColor: darkAmber,
+        titleTextStyle: const TextStyle(
+          color: darkAmber,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.25,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: smokyGlass.withOpacity(0.7),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: warmCopper.withOpacity(0.3)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: warmCopper.withOpacity(0.5)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: darkAmber, width: 2),
+        ),
+        labelStyle: const TextStyle(color: Colors.white70),
+        hintStyle: const TextStyle(color: Colors.white54),
+        contentPadding: const EdgeInsets.all(20),
+      ),
       visualDensity: VisualDensity.adaptivePlatformDensity,
+    );
+  }
+}
+
+// Enhanced background component with gradient and subtle patterns
+class MixologistBackground extends StatelessWidget {
+  final Widget child;
+  final bool isDark;
+  
+  const MixologistBackground({
+    super.key, 
+    required this.child,
+    this.isDark = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isCurrentlyDark = brightness == Brightness.dark;
+    
+    return Container(
+      decoration: BoxDecoration(
+        gradient: isCurrentlyDark ? _buildDarkGradient() : _buildLightGradient(),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          backgroundBlendMode: BlendMode.overlay,
+          color: isCurrentlyDark 
+              ? Colors.black.withOpacity(0.1)
+              : Colors.white.withOpacity(0.1),
+        ),
+        child: child,
+      ),
+    );
+  }
+  
+  LinearGradient _buildLightGradient() {
+    return const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color(0xFFF7E7CE), // Champagne gold
+        Color(0xFFE8D5B7), // Warm cream
+        Color(0xFFD4A574), // Golden amber
+        Color(0xFFF8FAFE), // Crystal ice
+      ],
+      stops: [0.0, 0.3, 0.7, 1.0],
+    );
+  }
+  
+  LinearGradient _buildDarkGradient() {
+    return const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color(0xFF1C1C1E), // Charcoal surface
+        Color(0xFF2C2C2E), // Smoky glass
+        Color(0xFF1A1A1A), // Deep black
+        Color(0xFF2A2A2A), // Warm charcoal
+      ],
+      stops: [0.0, 0.3, 0.7, 1.0],
+    );
+  }
+}
+
+// Enhanced glass card effect
+class GlassmorphicCard extends StatelessWidget {
+  final Widget child;
+  final double? width;
+  final double? height;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final double borderRadius;
+  final Color? color;
+  
+  const GlassmorphicCard({
+    super.key,
+    required this.child,
+    this.width,
+    this.height,
+    this.padding,
+    this.margin,
+    this.borderRadius = 20,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    return Container(
+      width: width,
+      height: height,
+      margin: margin,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.05),
+                ]
+              : [
+                  Colors.white.withOpacity(0.25),
+                  Colors.white.withOpacity(0.1),
+                ],
+        ),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.2)
+              : Colors.white.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.5)
+                : Colors.grey.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: Container(
+          padding: padding ?? const EdgeInsets.all(20),
+          color: color ??
+              (isDark
+                  ? Colors.black.withOpacity(0.2)
+                  : Colors.white.withOpacity(0.1)),
+          child: child,
+        ),
+      ),
     );
   }
 }
@@ -151,38 +488,189 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Mixologist Login')),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Welcome to AI Mixologist', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await FirebaseAuth.instance.signInAnonymously();
-                  if (context.mounted) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const HomeScreen()),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error signing in: $e')),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
-              child: const Text('Sign In Anonymously'),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text('AI Mixologist'),
+        centerTitle: true,
+      ),
+      body: MixologistBackground(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // App logo/icon area with cocktail glass icon
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary,
+                          theme.colorScheme.secondary,
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.local_bar,
+                      size: 60,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Welcome text with enhanced styling
+                  GlassmorphicCard(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Welcome to',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: theme.colorScheme.primary.withOpacity(0.8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          'AI Mixologist',
+                          style: theme.textTheme.displayMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Craft perfect cocktails with AI-powered recipes and step-by-step guidance',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 40),
+                  
+                  // Enhanced sign-in button
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(maxWidth: 300),
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        try {
+                          await FirebaseAuth.instance.signInAnonymously();
+                          if (context.mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
+                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  return FadeTransition(opacity: animation, child: child);
+                                },
+                                transitionDuration: const Duration(milliseconds: 500),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error signing in: $e'),
+                                backgroundColor: theme.colorScheme.error,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.login, size: 20),
+                      label: const Text('Start Mixing'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 56),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Subtle feature highlights
+                  GlassmorphicCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildFeatureIcon(
+                          context,
+                          Icons.auto_awesome,
+                          'AI Recipes',
+                        ),
+                        _buildFeatureIcon(
+                          context,
+                          Icons.check_circle_outline,
+                          'Step Guide',
+                        ),
+                        _buildFeatureIcon(
+                          context,
+                          Icons.palette,
+                          'Visual Aid',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
+    );
+  }
+  
+  Widget _buildFeatureIcon(BuildContext context, IconData icon, String label) {
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 24,
+          color: theme.colorScheme.primary.withOpacity(0.7),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -270,9 +758,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
+    final theme = Theme.of(context);
+    
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('AI Mixologist'),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -282,68 +774,275 @@ class _HomeScreenState extends State<HomeScreen> {
               if (mounted) {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    transitionDuration: const Duration(milliseconds: 500),
+                  ),
                 );
               }
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            if (user != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Text(
-                  user.isAnonymous
-                      ? 'Signed in as: Anonymous (${user.uid.substring(0,6)}...)'
-                      : 'Signed in as: ${user.displayName ?? user.email ?? user.uid.substring(0,6)+"..."}',
-                  textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall,
+      body: MixologistBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const SizedBox(height: 20),
+                
+                // Welcome section with user info
+                if (user != null)
+                  GlassmorphicCard(
+                    margin: const EdgeInsets.only(bottom: 32),
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary,
+                                theme.colorScheme.secondary,
+                              ],
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome Back!',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                user.isAnonymous
+                                    ? 'Guest User (${user.uid.substring(0,6)}...)'
+                                    : user.displayName ?? user.email ?? 'User',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                // Quick actions section
+                GlassmorphicCard(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.local_bar,
+                            color: theme.colorScheme.primary,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Create Your Perfect Drink',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Find a classic recipe or describe your ideal cocktail',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Search by name field
+                      TextField(
+                        controller: _drinkQueryController,
+                        decoration: InputDecoration(
+                          labelText: 'Search by Drink Name',
+                          hintText: 'e.g., Margarita, Old Fashioned, Mojito',
+                          prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary),
+                          errorText: _recipeError,
+                        ),
+                        onSubmitted: (_) => _getRecipe(),
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Quick search buttons
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _buildQuickSearchChip(context, 'Margarita'),
+                          _buildQuickSearchChip(context, 'Old Fashioned'),
+                          _buildQuickSearchChip(context, 'Mojito'),
+                          _buildQuickSearchChip(context, 'Manhattan'),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Get recipe button
+                      SizedBox(
+                        width: double.infinity,
+                        child: _isLoadingRecipe
+                            ? Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  color: theme.colorScheme.primary.withOpacity(0.1),
+                                ),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              )
+                            : ElevatedButton.icon(
+                                onPressed: _getRecipe,
+                                icon: const Icon(Icons.search, size: 20),
+                                label: const Text('Find Recipe'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(double.infinity, 56),
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            TextField(
-              controller: _drinkQueryController,
-              decoration: InputDecoration(
-                labelText: 'Enter Drink Name',
-                hintText: 'e.g., Margarita, Old Fashioned',
-                border: const OutlineInputBorder(),
-                errorText: _recipeError,
-              ),
-              onSubmitted: (_) => _getRecipe(),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _drinkPreferencesController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Describe Your Ideal Drink',
-                hintText: 'fruity and bubbly with rum...',
-                border: const OutlineInputBorder(),
-                errorText: _customError,
-              ),
-            ),
-            const SizedBox(height: 20),
-            _isLoadingRecipe
-                ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
-                    onPressed: _getRecipe,
-                    child: const Text('Get Recipe', style: TextStyle(fontSize: 16)),
+                
+                const SizedBox(height: 24),
+                
+                // Custom drink section
+                GlassmorphicCard(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome,
+                            color: theme.colorScheme.secondary,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'AI Custom Creation',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Describe your perfect drink and let AI create a custom recipe',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      TextField(
+                        controller: _drinkPreferencesController,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          labelText: 'Describe Your Ideal Drink',
+                          hintText: 'I want something fruity and bubbly with rum, maybe with tropical flavors...',
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(bottom: 60),
+                            child: Icon(Icons.edit, color: theme.colorScheme.secondary),
+                          ),
+                          errorText: _customError,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      SizedBox(
+                        width: double.infinity,
+                        child: _isLoadingCustom
+                            ? Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  color: theme.colorScheme.secondary.withOpacity(0.1),
+                                ),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: theme.colorScheme.secondary,
+                                  ),
+                                ),
+                              )
+                            : ElevatedButton.icon(
+                                onPressed: _createCustomDrink,
+                                icon: const Icon(Icons.auto_awesome, size: 20),
+                                label: const Text('Create Custom Drink'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.secondary,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(double.infinity, 56),
+                                ),
+                              ),
+                      ),
+                    ],
                   ),
-            const SizedBox(height: 10),
-            _isLoadingCustom
-                ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
-                    onPressed: _createCustomDrink,
-                    child: const Text('Create Custom Drink', style: TextStyle(fontSize: 16)),
-                  ),
-          ],
+                ),
+                
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
         ),
+      ),
+    );
+  }
+  
+  Widget _buildQuickSearchChip(BuildContext context, String drinkName) {
+    final theme = Theme.of(context);
+    return ActionChip(
+      label: Text(drinkName),
+      onPressed: () {
+        _drinkQueryController.text = drinkName;
+        _getRecipe();
+      },
+      backgroundColor: theme.colorScheme.primaryContainer,
+      labelStyle: TextStyle(
+        color: theme.colorScheme.onPrimaryContainer,
+        fontWeight: FontWeight.w500,
+      ),
+      side: BorderSide.none,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
       ),
     );
   }
