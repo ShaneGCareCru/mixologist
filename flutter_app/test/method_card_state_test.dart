@@ -12,6 +12,8 @@ void main() {
       isCompleted: false,
       duration: '10s',
       difficulty: 'easy',
+      proTip: 'Use a Boston shaker for best results',
+      tipCategory: TipCategory.technique,
     );
 
     await tester.pumpWidget(
@@ -20,9 +22,17 @@ void main() {
       ),
     );
 
-    expect(find.text('Shake well'), findsNothing);
-    await tester.tap(find.byType(MethodCard));
-    await tester.pumpAndSettle();
+    // Description should always be visible
     expect(find.text('Shake well'), findsOneWidget);
+    
+    // Pro tip should be hidden initially
+    expect(find.text('Use a Boston shaker for best results'), findsNothing);
+    
+    // Tap the expand button to show pro tip
+    await tester.tap(find.byIcon(Icons.keyboard_arrow_down));
+    await tester.pumpAndSettle();
+    
+    // Pro tip should now be visible
+    expect(find.text('Use a Boston shaker for best results'), findsOneWidget);
   });
 }
