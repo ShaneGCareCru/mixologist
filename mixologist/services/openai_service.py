@@ -23,6 +23,10 @@ RECIPE_CACHE_DIR = BASE_DIR / "static" / "cache" / "recipes"
 IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 RECIPE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
+# Index file mapping canonicalized method steps to cached image keys
+STEP_IMAGE_INDEX_FILE = BASE_DIR / "static" / "cache" / "step_image_index.json"
+STEP_IMAGE_INDEX_FILE.parent.mkdir(parents=True, exist_ok=True)
+
 print(f"Recipe cache directory: {RECIPE_CACHE_DIR}")
 print(f"Image cache directory: {IMAGE_CACHE_DIR}")
 
@@ -86,6 +90,54 @@ def extract_visual_moments(step_text: str) -> Dict[str, object]:
         "context": extract_context(step_text),
         "details": extract_important_details(step_text),
     }
+
+# --- Canonical step handling for method image caching ---
+
+CANONICAL_STEP_PATTERNS = {
+    r"salt(ed)? the rim": "salt rim glass",
+    r"strain .* into": "strain into glass",
+    r"shake": "shake with ice",
+    r"stir": "stir ingredients",
+    r"muddle": "muddle ingredients",
+    r"garnish": "garnish drink",
+    r"pour": "pour into glass",
+}
+
+def canonicalize_step_text(step_text: str) -> str:
+    """Normalize a recipe step into a canonical phrase."""
+    normalized = step_text.lower()
+    for pattern, replacement in CANONICAL_STEP_PATTERNS.items():
+        if re.search(pattern, normalized):
+            return replacement
+    return re.sub(r"[^a-z0-9 ]+", "", normalized).strip()
+
+async def load_step_image_index() -> Dict[str, str]:
+    if STEP_IMAGE_INDEX_FILE.exists():
+        try:
+            async with aiofiles.open(STEP_IMAGE_INDEX_FILE, "r") as f:
+                data = await f.read()
+                return json.loads(data) if data else {}
+        except Exception:
+            return {}
+    return {}
+
+async def save_step_image_index(index: Dict[str, str]) -> None:
+    async with aiofiles.open(STEP_IMAGE_INDEX_FILE, "w") as f:
+        await f.write(json.dumps(index))
+
+async def get_cached_step_image(step_text: str) -> Optional[str]:
+    step_hash = hashlib.sha256(canonicalize_step_text(step_text).encode()).hexdigest()[:16]
+    index = await load_step_image_index()
+    cache_key = index.get(step_hash)
+    if cache_key:
+        return await get_cached_image(cache_key)
+    return None
+
+async def save_step_image_mapping(step_text: str, cache_key: str) -> None:
+    step_hash = hashlib.sha256(canonicalize_step_text(step_text).encode()).hexdigest()[:16]
+    index = await load_step_image_index()
+    index[step_hash] = cache_key
+    await save_step_image_index(index)
 
 # Ingredient categorization for appropriate image generation
 INGREDIENT_CATEGORIES = {
@@ -507,6 +559,12 @@ async def generate_method_image_stream(
 ) -> AsyncGenerator[str, None]:
     """Generate an illustrative technique image for a recipe method step."""
 
+    # Check for an existing image mapped to this step
+    cached_step_image = await get_cached_step_image(step_text)
+    if cached_step_image:
+        yield cached_step_image
+        return
+
     try:
         prompt_subject = await _build_method_prompt(
             step_text,
@@ -518,17 +576,28 @@ async def generate_method_image_stream(
         logging.error(f"Method prompt generation failed: {e}")
         prompt_subject = step_text
 
+    cache_prefix = f"method_{step_index}"
+    cache_key_input = f"{cache_prefix}_{prompt_subject}_technique_"
+    cache_hash = hashlib.sha256(cache_key_input.encode()).hexdigest()[:16]
+    cache_key = f"technique_{cache_hash}"
+
+    last_chunk = None
+
     try:
         async for chunk in generate_specialized_image_stream(
             subject=prompt_subject,
             category="technique",
             additional_context="",
-            cache_prefix=f"method_{step_index}",
+            cache_prefix=cache_prefix,
         ):
+            last_chunk = chunk
             yield chunk
     except Exception as e:
         logging.error(f"Method image generation failed: {e}")
         yield DEFAULT_FALLBACK_ICON_B64
+    else:
+        if last_chunk:
+            await save_step_image_mapping(step_text, cache_key)
 
 async def generate_image_stream( # Renamed to indicate streaming and generator
     prompt: str,
