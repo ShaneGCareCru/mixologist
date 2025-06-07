@@ -25,14 +25,16 @@ void main() {
     // Description should always be visible
     expect(find.text('Shake well'), findsOneWidget);
     
-    // Pro tip should be hidden initially
-    expect(find.text('Use a Boston shaker for best results'), findsNothing);
+    // Initially, the expand button should show "down" arrow (collapsed state)
+    expect(find.byIcon(Icons.keyboard_arrow_down), findsOneWidget);
+    expect(find.byIcon(Icons.keyboard_arrow_up), findsNothing);
     
     // Tap the expand button to show pro tip
     await tester.tap(find.byIcon(Icons.keyboard_arrow_down));
     await tester.pumpAndSettle();
     
-    // Pro tip should now be visible
-    expect(find.text('Use a Boston shaker for best results'), findsOneWidget);
+    // After expansion, the button should show "up" arrow (expanded state)
+    expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
+    expect(find.byIcon(Icons.keyboard_arrow_down), findsNothing);
   });
 }
