@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,11 +6,41 @@ import 'package:mixologist_flutter/widgets/method_card.dart';
 
 void main() {
   group('MethodCard Comprehensive Tests', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    
+    setUpAll(() {
+      // Mock vibration platform channel
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('vibration'),
+        (MethodCall methodCall) async {
+          switch (methodCall.method) {
+            case 'hasVibrator':
+              return true;
+            case 'vibrate':
+              return null;
+            default:
+              throw PlatformException(
+                code: 'Unimplemented',
+                details: 'The vibration plugin does not implement ${methodCall.method}',
+              );
+          }
+        },
+      );
+    });
+
+    tearDownAll(() {
+      // Clean up platform channel mocks
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('vibration'), null);
+    });
+
     // Arrange: Common test data
     const baseMethodCardData = MethodCardData(
       stepNumber: 1,
       title: 'Shake',
       description: 'Shake all ingredients with ice vigorously',
+      imageUrl: 'https://example.com/image.png',
       imageAlt: 'Shaking cocktail',
       isCompleted: false,
       duration: '15s',
@@ -42,6 +73,7 @@ void main() {
         stepNumber: 2,
         title: 'Strain',
         description: 'Strain into glass',
+        imageUrl: 'https://example.com/strain.png',
         imageAlt: 'Straining cocktail',
         isCompleted: false,
         duration: '5s',
@@ -171,6 +203,7 @@ void main() {
         stepNumber: 1,
         title: 'Shake',
         description: 'Shake ingredients',
+        imageUrl: 'https://example.com/shake.png',
         imageAlt: 'Shaking',
         isCompleted: true,
         duration: '15s',
@@ -202,6 +235,7 @@ void main() {
         stepNumber: 1,
         title: 'Shake',
         description: 'Shake ingredients',
+        imageUrl: 'https://example.com/shake.png',
         imageAlt: 'Shaking',
         isCompleted: false,
         duration: '15s',
@@ -236,6 +270,7 @@ void main() {
         stepNumber: 1,
         title: 'Shake',
         description: 'Shake ingredients',
+        imageUrl: 'https://example.com/shake.png',
         imageAlt: 'Shaking',
         isCompleted: false,
         duration: '15s',
@@ -266,7 +301,7 @@ void main() {
         isCompleted: false,
         duration: '15s',
         difficulty: 'medium',
-        // No imageUrl or imageBytes provided
+        // No imageUrl or imageBytes provided - testing placeholder
       );
 
       // Act: Build widget without image
