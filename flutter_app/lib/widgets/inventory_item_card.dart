@@ -22,21 +22,11 @@ class _InventoryItemCardState extends State<InventoryItemCard> {
   bool _isUpdating = false;
 
   Color get _quantityColor {
-    switch (widget.item.quantity) {
-      case QuantityDescription.empty:
-      case QuantityDescription.almostEmpty:
-        return Colors.red;
-      case QuantityDescription.quarterBottle:
-        return Colors.orange;
-      case QuantityDescription.halfBottle:
-        return Colors.yellow.shade700;
-      case QuantityDescription.threeQuarterBottle:
-      case QuantityDescription.fullBottle:
-      case QuantityDescription.multipleBottles:
-        return Colors.green;
-      default:
-        return Colors.blue;
-    }
+    // Use fullness value for more accurate color representation
+    if (widget.item.fullness <= 0.1) return Colors.red;
+    if (widget.item.fullness <= 0.25) return Colors.orange;
+    if (widget.item.fullness <= 0.5) return Colors.yellow.shade700;
+    return Colors.green;
   }
 
   IconData get _categoryIcon {
@@ -119,7 +109,10 @@ class _InventoryItemCardState extends State<InventoryItemCard> {
 
     if (confirmed == true) {
       try {
-        await InventoryService.deleteInventoryItem(widget.item.id);
+        await InventoryService.deleteInventoryItem(
+          widget.item.id,
+          imagePath: widget.item.imagePath,
+        );
         widget.onDelete();
         
         ScaffoldMessenger.of(context).showSnackBar(
