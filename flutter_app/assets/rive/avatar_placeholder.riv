@@ -1,0 +1,6 @@
+# Placeholder Rive file for AI Assistant Avatar
+# This is a placeholder file - replace with actual Rive animation file
+# The Rive file should contain:
+# - A head/face with three mouth states: closed, mid, open
+# - A state machine with a boolean "isTalking" input
+# - Mouth animation driven by the isTalking boolean

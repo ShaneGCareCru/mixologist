@@ -21,9 +21,17 @@ dependencies:
   image_picker: ^1.0.4
   path_provider: ^2.1.1
   path: ^1.8.3
+  # AI Assistant voice interaction dependencies
+  rive: ^0.12.4
+  web_socket_channel: ^3.0.0
+  flutter_audio_capture: ^0.2.7
+  just_audio: ^0.9.36
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/rive/
+    - assets/audio/
 dev_dependencies:
   flutter_test:
     sdk: flutter
