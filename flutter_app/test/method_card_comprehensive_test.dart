@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,11 +6,37 @@ import 'package:mixologist_flutter/widgets/method_card.dart';
 
 void main() {
   group('MethodCard Comprehensive Tests', () {
+    setUpAll(() {
+      // Mock platform channels for vibration and haptic feedback
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('vibration'),
+        (MethodCall methodCall) async {
+          return true;
+        },
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('flutter/hapticfeedback'),
+        (MethodCall methodCall) async {
+          return null;
+        },
+      );
+    });
+
+    tearDownAll(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('vibration'), null);
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('flutter/hapticfeedback'), null);
+    });
+
     // Arrange: Common test data
     const baseMethodCardData = MethodCardData(
       stepNumber: 1,
       title: 'Shake',
       description: 'Shake all ingredients with ice vigorously',
+      imageUrl: 'https://example.com/shake.jpg',
       imageAlt: 'Shaking cocktail',
       isCompleted: false,
       duration: '15s',
@@ -42,6 +69,7 @@ void main() {
         stepNumber: 2,
         title: 'Strain',
         description: 'Strain into glass',
+        imageUrl: 'https://example.com/strain.jpg',
         imageAlt: 'Straining cocktail',
         isCompleted: false,
         duration: '5s',
@@ -171,6 +199,7 @@ void main() {
         stepNumber: 1,
         title: 'Shake',
         description: 'Shake ingredients',
+        imageUrl: 'https://example.com/shake.jpg',
         imageAlt: 'Shaking',
         isCompleted: true,
         duration: '15s',
@@ -202,6 +231,7 @@ void main() {
         stepNumber: 1,
         title: 'Shake',
         description: 'Shake ingredients',
+        imageUrl: 'https://example.com/shake.jpg',
         imageAlt: 'Shaking',
         isCompleted: false,
         duration: '15s',
@@ -236,6 +266,7 @@ void main() {
         stepNumber: 1,
         title: 'Shake',
         description: 'Shake ingredients',
+        imageUrl: 'https://example.com/shake.jpg',
         imageAlt: 'Shaking',
         isCompleted: false,
         duration: '15s',

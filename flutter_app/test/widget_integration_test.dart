@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixologist_flutter/widgets/method_card.dart';
 import 'package:mixologist_flutter/widgets/drink_progress_glass.dart';
@@ -7,6 +8,30 @@ import 'package:mixologist_flutter/widgets/section_preview.dart';
 
 void main() {
   group('Widget Integration Tests', () {
+    setUpAll(() {
+      // Mock platform channels for vibration and haptic feedback
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('vibration'),
+        (MethodCall methodCall) async {
+          return true;
+        },
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('flutter/hapticfeedback'),
+        (MethodCall methodCall) async {
+          return null;
+        },
+      );
+    });
+
+    tearDownAll(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('vibration'), null);
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('flutter/hapticfeedback'), null);
+    });
     
     testWidgets('DrinkProgressGlass displays correct progress', (tester) async {
       // Arrange
@@ -104,6 +129,9 @@ void main() {
         ),
       );
 
+      // Ensure render objects are attached
+      await tester.pumpAndSettle();
+
       // Assert
       expect(find.byType(ConnectionLine), findsOneWidget);
       expect(find.byType(CustomPaint), findsOneWidget);
@@ -180,6 +208,7 @@ void main() {
           stepNumber: 1,
           title: 'Muddle',
           description: 'Muddle mint leaves',
+          imageUrl: 'https://example.com/muddle.jpg',
           imageAlt: 'Muddling',
           isCompleted: false,
           duration: '30s',
@@ -189,6 +218,7 @@ void main() {
           stepNumber: 2,
           title: 'Shake',
           description: 'Shake with ice',
+          imageUrl: 'https://example.com/shake.jpg',
           imageAlt: 'Shaking',
           isCompleted: false,
           duration: '15s',
@@ -198,6 +228,7 @@ void main() {
           stepNumber: 3,
           title: 'Strain',
           description: 'Strain into glass',
+          imageUrl: 'https://example.com/strain.jpg',
           imageAlt: 'Straining',
           isCompleted: false,
           duration: '5s',
@@ -253,6 +284,7 @@ void main() {
                   stepNumber: i + 1,
                   title: 'Test Step ${i + 1}',
                   description: 'Testing state: ${state.toString()}',
+                  imageUrl: 'https://example.com/test${i + 1}.jpg',
                   imageAlt: 'Test',
                   isCompleted: state == MethodCardState.completed,
                   duration: '10s',
@@ -290,6 +322,7 @@ void main() {
                   stepNumber: 1,
                   title: 'Test',
                   description: 'Testing tip category',
+                  imageUrl: 'https://example.com/test.jpg',
                   imageAlt: 'Test',
                   isCompleted: false,
                   duration: '10s',
@@ -401,6 +434,9 @@ void main() {
           ),
         );
 
+        // Ensure render objects are attached
+        await tester.pumpAndSettle();
+
         // Should render without errors
         expect(find.byType(CustomPaint), findsOneWidget);
 
@@ -452,6 +488,7 @@ void main() {
                         stepNumber: index + 1,
                         title: 'Step ${index + 1}',
                         description: 'Description for step ${index + 1}',
+                        imageUrl: 'https://example.com/step${index + 1}.jpg',
                         imageAlt: 'Step ${index + 1} image',
                         isCompleted: index == 0, // First step completed
                         duration: '${(index + 1) * 10}s',
@@ -517,6 +554,7 @@ void main() {
                       stepNumber: 1,
                       title: 'Theme Test Step',
                       description: 'Testing theme adaptation',
+                      imageUrl: 'https://example.com/theme-test.jpg',
                       imageAlt: 'Theme test',
                       isCompleted: false,
                       duration: '30s',
