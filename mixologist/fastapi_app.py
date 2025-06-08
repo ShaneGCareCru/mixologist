@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Form, HTTPException
+from fastapi import FastAPI, Form, HTTPException, File, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import logging
+import base64
 from typing import Optional, List, Dict
 from .services.openai_service import (
     get_completion_from_messages,
@@ -14,6 +15,11 @@ from .services.openai_service import (
     save_recipe_to_cache,
     parse_ingredient_name,
     normalize_glass_name,
+)
+from .services.inventory_service import InventoryService
+from .models.inventory_models import (
+    InventoryAddRequest, InventoryUpdateRequest, ImageRecognitionRequest,
+    InventoryFilterRequest, QuantityDescription, IngredientCategory
 )
 
 app = FastAPI(title="Mixologist API")
@@ -728,3 +734,193 @@ async def generate_recipe_visuals(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generating recipe visuals: {str(e)}")
+
+# ==================== INVENTORY ENDPOINTS ====================
+
+@app.get("/inventory")
+async def get_inventory():
+    """Get all inventory items."""
+    try:
+        items = await InventoryService.get_all_items()
+        return {"items": [item.model_dump() for item in items]}
+    except Exception as e:
+        logging.error(f"Error getting inventory: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting inventory: {str(e)}")
+
+@app.post("/inventory")
+async def add_inventory_item(
+    name: str = Form(...),
+    category: str = Form(...),
+    quantity: str = Form(...),
+    brand: str = Form(None),
+    notes: str = Form(None)
+):
+    """Add a new item to inventory."""
+    try:
+        # Convert string parameters to enums
+        category_enum = IngredientCategory(category.lower())
+        quantity_enum = QuantityDescription(quantity.lower().replace(" ", "_"))
+        
+        request = InventoryAddRequest(
+            name=name,
+            category=category_enum,
+            quantity=quantity_enum,
+            brand=brand,
+            notes=notes
+        )
+        
+        item = await InventoryService.add_item(request)
+        return {"message": "Item added successfully", "item": item.model_dump()}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid category or quantity: {str(e)}")
+    except Exception as e:
+        logging.error(f"Error adding inventory item: {e}")
+        raise HTTPException(status_code=500, detail=f"Error adding item: {str(e)}")
+
+@app.get("/inventory/{item_id}")
+async def get_inventory_item(item_id: str):
+    """Get specific inventory item by ID."""
+    try:
+        item = await InventoryService.get_item_by_id(item_id)
+        if not item:
+            raise HTTPException(status_code=404, detail="Item not found")
+        return {"item": item.model_dump()}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting inventory item: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting item: {str(e)}")
+
+@app.put("/inventory/{item_id}")
+async def update_inventory_item(
+    item_id: str,
+    quantity: str = Form(None),
+    brand: str = Form(None),
+    notes: str = Form(None),
+    expires_soon: bool = Form(None)
+):
+    """Update an inventory item."""
+    try:
+        # Convert quantity if provided
+        quantity_enum = None
+        if quantity:
+            quantity_enum = QuantityDescription(quantity.lower().replace(" ", "_"))
+        
+        request = InventoryUpdateRequest(
+            quantity=quantity_enum,
+            brand=brand,
+            notes=notes,
+            expires_soon=expires_soon
+        )
+        
+        item = await InventoryService.update_item(item_id, request)
+        if not item:
+            raise HTTPException(status_code=404, detail="Item not found")
+        
+        return {"message": "Item updated successfully", "item": item.model_dump()}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid quantity: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating inventory item: {e}")
+        raise HTTPException(status_code=500, detail=f"Error updating item: {str(e)}")
+
+@app.delete("/inventory/{item_id}")
+async def delete_inventory_item(item_id: str):
+    """Delete an inventory item."""
+    try:
+        success = await InventoryService.delete_item(item_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Item not found")
+        
+        return {"message": "Item deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting inventory item: {e}")
+        raise HTTPException(status_code=500, detail=f"Error deleting item: {str(e)}")
+
+@app.get("/inventory/stats")
+async def get_inventory_stats():
+    """Get inventory statistics."""
+    try:
+        stats = await InventoryService.get_stats()
+        return {"stats": stats.model_dump()}
+    except Exception as e:
+        logging.error(f"Error getting inventory stats: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting stats: {str(e)}")
+
+@app.post("/inventory/analyze_image")
+async def analyze_inventory_image(file: UploadFile = File(...)):
+    """Analyze image to recognize cocktail ingredients using OpenAI 4o vision."""
+    try:
+        # Read and encode image
+        image_data = await file.read()
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        
+        # Get existing inventory for context
+        existing_items = await InventoryService.get_all_items()
+        existing_names = [item.name for item in existing_items]
+        
+        # Create recognition request
+        request = ImageRecognitionRequest(
+            image_base64=image_base64,
+            existing_inventory=existing_names
+        )
+        
+        # Analyze image
+        response = await InventoryService.analyze_image_for_ingredients(request)
+        
+        return {"recognition_results": response.model_dump()}
+    except Exception as e:
+        logging.error(f"Error analyzing inventory image: {e}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing image: {str(e)}")
+
+@app.post("/inventory/check_recipe")
+async def check_recipe_availability(ingredients: str = Form(...)):
+    """Check if recipe ingredients are available in inventory."""
+    try:
+        # Parse ingredients JSON
+        try:
+            recipe_ingredients = json.loads(ingredients)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid ingredients JSON format")
+        
+        availability = await InventoryService.check_recipe_availability(recipe_ingredients)
+        
+        return {"availability": availability}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error checking recipe availability: {e}")
+        raise HTTPException(status_code=500, detail=f"Error checking availability: {str(e)}")
+
+@app.get("/inventory/compatible_recipes")
+async def get_compatible_recipes(
+    available_only: bool = True,
+    include_substitutions: bool = True
+):
+    """Get recipe suggestions based on current inventory."""
+    try:
+        recipes = await InventoryService.get_compatible_recipes(
+            available_only=available_only,
+            include_substitutions=include_substitutions
+        )
+        
+        return {"compatible_recipes": recipes}
+    except Exception as e:
+        logging.error(f"Error getting compatible recipes: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting recipes: {str(e)}")
+
+@app.get("/inventory/categories")
+async def get_inventory_categories():
+    """Get list of available ingredient categories."""
+    categories = [{"value": cat.value, "label": cat.value.replace("_", " ").title()} for cat in IngredientCategory]
+    return {"categories": categories}
+
+@app.get("/inventory/quantities")
+async def get_quantity_options():
+    """Get list of available quantity descriptions."""
+    quantities = [{"value": qty.value, "label": qty.value.replace("_", " ").title()} for qty in QuantityDescription]
+    return {"quantities": quantities}

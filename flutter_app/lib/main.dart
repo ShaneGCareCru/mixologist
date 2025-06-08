@@ -13,6 +13,7 @@ import 'widgets/connection_line.dart';
 import 'widgets/drink_progress_glass.dart';
 import 'widgets/method_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'pages/inventory_page.dart';
 
 
 void main() async {
@@ -764,6 +765,17 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('AI Mixologist'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.inventory),
+            tooltip: 'Inventory',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const InventoryPage(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
