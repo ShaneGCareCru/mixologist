@@ -53,8 +53,19 @@ async def create_drink(drink_query: str = Form(...)):
         
         print(f"--- No cached recipe found for {drink_query}, generating new recipe ---")
         
-        ingredients = ""  # This seems unused or hardcoded empty, might need review later
-        ingredients_part = f"The ingredients I have are: {ingredients}\n" if ingredients else ""
+        # Check if user wants inventory-limited recipes
+        limit_to_inventory = False  # Can be passed as parameter later
+        ingredients_part = ""
+        
+        if limit_to_inventory:
+            try:
+                from .services.inventory_service import InventoryService
+                available_items = await InventoryService.get_all_items()
+                if available_items:
+                    available_ingredients = [item.name for item in available_items if item.quantity not in ['empty', 'almost_empty']]
+                    ingredients_part = f"Limit ingredients to only what I have available: {', '.join(available_ingredients)}\n"
+            except:
+                pass  # Fallback to normal recipe generation
         
         # Restore proper OpenAI prompt
         user_query = f"""
@@ -924,3 +935,117 @@ async def get_quantity_options():
     """Get list of available quantity descriptions."""
     quantities = [{"value": qty.value, "label": qty.value.replace("_", " ").title()} for qty in QuantityDescription]
     return {"quantities": quantities}
+
+@app.post("/create_with_inventory")
+async def create_drink_with_inventory_filter(
+    drink_query: str = Form(...),
+    limit_to_inventory: bool = Form(True),
+    allow_substitutions: bool = Form(True)
+):
+    """Create a drink recipe that considers available inventory."""
+    try:
+        # Generate cache key that includes inventory preferences
+        cache_key_suffix = f"_inv_{limit_to_inventory}_{allow_substitutions}" if limit_to_inventory else ""
+        cache_key = generate_recipe_cache_key(drink_query + cache_key_suffix)
+        print(f"--- Generated inventory-aware cache key: {cache_key} for query: {drink_query} ---")
+        
+        # Check for cached recipe first
+        cached_recipe = await get_cached_recipe(cache_key)
+        if cached_recipe:
+            print(f"--- Found cached inventory-aware recipe for {drink_query}, returning cached data ---")
+            return cached_recipe
+        
+        print(f"--- No cached inventory-aware recipe found for {drink_query}, generating new recipe ---")
+        
+        # Get available inventory
+        ingredients_part = ""
+        availability_context = ""
+        
+        if limit_to_inventory:
+            try:
+                available_items = await InventoryService.get_all_items()
+                if available_items:
+                    # Get available ingredients (not empty or almost empty)
+                    available_ingredients = [
+                        item.name for item in available_items 
+                        if item.quantity not in ['empty', 'almost_empty']
+                    ]
+                    
+                    if available_ingredients:
+                        ingredients_part = f"IMPORTANT: Only use ingredients I have available: {', '.join(available_ingredients)}\n"
+                        availability_context = "Focus on creating a recipe using only the available ingredients listed above."
+                        
+                        if allow_substitutions:
+                            availability_context += " If you need to make substitutions, suggest common alternatives that might be available."
+                    else:
+                        ingredients_part = "No ingredients currently available in inventory.\n"
+                        availability_context = "Suggest a simple recipe with common ingredients that the user should stock."
+                else:
+                    availability_context = "Inventory is empty. Suggest essential ingredients for this drink."
+            except Exception as e:
+                print(f"Error getting inventory: {e}")
+                # Fallback to normal recipe generation
+        
+        # Enhanced OpenAI prompt with inventory awareness
+        user_query = f"""
+        I want you to act like the world's most important bartender. 
+        You're the bartender that will carry on the culture of bartending for the entire world. 
+        I'm going to tell you the name of a drink, and you need to create the best representation of that drink based on its name alone. 
+        It's possible that this drink is unknown; you will still respond. 
+        {ingredients_part}
+        {availability_context}
+        The drink I want you to tell me about is: {drink_query}
+        """
+        
+        recipe = get_completion_from_messages([{"role": "user", "content": user_query}])
+        
+        # Enhanced recipe data with inventory context
+        recipe_data = {
+            # Original fields from OpenAI
+            "drink_name": recipe.drink_name,
+            "alcohol_content": recipe.alcohol_content,
+            "serving_glass": recipe.serving_glass,
+            "rim": 'Salted' if recipe.rim else 'No salt',
+            "ingredients": recipe.ingredients,
+            "steps": recipe.steps,
+            "garnish": recipe.garnish,
+            "drink_image_description": recipe.drink_image_description,
+            "drink_history": recipe.drink_history,
+            
+            # Enhanced fields
+            "brand_recommendations": recipe.brand_recommendations,
+            "ingredient_substitutions": recipe.ingredient_substitutions,
+            "related_cocktails": recipe.related_cocktails,
+            "difficulty_rating": recipe.difficulty_rating,
+            "preparation_time_minutes": recipe.preparation_time_minutes,
+            "equipment_needed": recipe.equipment_needed,
+            "flavor_profile": recipe.flavor_profile,
+            "serving_size_base": recipe.serving_size_base,
+            "phonetic_pronunciations": recipe.phonetic_pronunciations,
+            "enhanced_steps": recipe.enhanced_steps,
+            "suggested_variations": recipe.suggested_variations,
+            "food_pairings": recipe.food_pairings,
+            "optimal_serving_temperature": recipe.optimal_serving_temperature,
+            "skill_level_recommendation": recipe.skill_level_recommendation,
+            "drink_trivia": recipe.drink_trivia,
+            
+            # Inventory-specific fields
+            "created_with_inventory_filter": limit_to_inventory,
+            "allows_substitutions": allow_substitutions,
+        }
+        
+        # Check availability of this recipe if inventory filtering was used
+        if limit_to_inventory:
+            try:
+                availability = await InventoryService.check_recipe_availability(recipe.ingredients)
+                recipe_data["inventory_availability"] = availability
+            except Exception as e:
+                print(f"Error checking recipe availability: {e}")
+        
+        # Save the new recipe to cache
+        await save_recipe_to_cache(cache_key, recipe_data)
+        
+        return recipe_data
+    except Exception as e:
+        logging.error(f"Error creating inventory-aware drink recipe: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating recipe: {str(e)}")
