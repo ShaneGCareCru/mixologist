@@ -681,7 +681,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _drinkQueryController = TextEditingController();
+  final SearchController _searchController = SearchController();
   final _drinkPreferencesController = TextEditingController();
   bool _isLoadingRecipe = false;
   bool _isLoadingCustom = false;
@@ -689,7 +689,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _customError;
 
   Future<void> _getRecipe() async {
-    if (_drinkQueryController.text.isEmpty) {
+    if (_searchController.text.isEmpty) {
       setState(() { _recipeError = 'Please enter a drink name.'; });
       return;
     }
@@ -697,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final response = await http.post(
         Uri.parse('http://127.0.0.1:8081/create'), // Changed port to 8081
-        body: {'drink_query': _drinkQueryController.text},
+        body: {'drink_query': _searchController.text},
       );
       setState(() { _isLoadingRecipe = false; });
       if (response.statusCode == 200) {
@@ -748,7 +748,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _drinkQueryController.dispose();
+    _searchController.dispose();
     _drinkPreferencesController.dispose();
     super.dispose();
   }
@@ -877,15 +877,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 24),
                       
-                      // Search by name field
-                      TextField(
-                        controller: _drinkQueryController,
-                        decoration: InputDecoration(
-                          labelText: 'Search by Drink Name',
-                          hintText: 'e.g., Margarita, Old Fashioned, Mojito',
-                          prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary),
-                          errorText: _recipeError,
-                        ),
+                      // Search by name field using SearchAnchor
+                      SearchAnchor.bar(
+                        searchController: _searchController,
+                        barHintText: 'Search by Drink Name',
+                        suggestionsBuilder: (context, controller) {
+                          final query = controller.text.toLowerCase();
+                          final suggestions = [
+                            'Margarita',
+                            'Old Fashioned',
+                            'Mojito',
+                            'Manhattan'
+                          ].where((drink) => drink.toLowerCase().contains(query));
+                          return suggestions
+                              .map((drink) => ListTile(
+                                    title: Text(drink),
+                                    onTap: () {
+                                      _searchController.text = drink;
+                                      _searchController.closeView(drink);
+                                      _getRecipe();
+                                    },
+                                  ))
+                              .toList();
+                        },
                         onSubmitted: (_) => _getRecipe(),
                       ),
                       
@@ -1030,7 +1044,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return ActionChip(
       label: Text(drinkName),
       onPressed: () {
-        _drinkQueryController.text = drinkName;
+        _searchController.text = drinkName;
         _getRecipe();
       },
       backgroundColor: theme.colorScheme.primaryContainer,
@@ -3099,6 +3113,28 @@ class _RecipeScreenState extends State<RecipeScreen> {
         title: Text(widget.recipeData['drink_name'] ?? 'Recipe'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'Drink Details',
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                showDragHandle: true,
+                enableDrag: true,
+                builder: (context) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      widget.recipeData['description'] ?? 'No description',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

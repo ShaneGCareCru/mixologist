@@ -387,6 +387,24 @@ class _MethodCardState extends State<MethodCard>
                     Text(widget.data.difficulty,
                         style: theme.textTheme.bodySmall),
                     const Spacer(),
+                    MenuAnchor(
+                      builder: (context, controller) => IconButton(
+                        icon: const Icon(Icons.more_vert),
+                        onPressed: () {
+                          controller.isOpen ? controller.close() : controller.open();
+                        },
+                      ),
+                      menuChildren: [
+                        MenuItemButton(
+                          onPressed: widget.onCompleted,
+                          child: const Text('Mark completed'),
+                        ),
+                        MenuItemButton(
+                          onPressed: widget.onPrevious,
+                          child: const Text('Previous step'),
+                        ),
+                      ],
+                    ),
                     if (widget.data.proTip != null)
                       IconButton(
                         icon: Icon(
