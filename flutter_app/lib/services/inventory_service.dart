@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import '../models/inventory_models.dart';
 
 class InventoryService {
@@ -28,6 +31,7 @@ class InventoryService {
     required String name,
     required String category,
     required String quantity,
+    File? sourceImage,
     String? brand,
     String? notes,
   }) async {
@@ -40,8 +44,22 @@ class InventoryService {
       request.fields['name'] = name;
       request.fields['category'] = category;
       request.fields['quantity'] = quantity;
+      request.fields['fullness'] = QuantityDescription.getFullnessValue(quantity).toString();
       if (brand != null && brand.isNotEmpty) request.fields['brand'] = brand;
       if (notes != null && notes.isNotEmpty) request.fields['notes'] = notes;
+
+      // Generate and store stylized image if source image provided
+      String? imagePath;
+      if (sourceImage != null) {
+        imagePath = await _generateAndStoreStylizedImage(
+          sourceImage: sourceImage,
+          itemName: name,
+          category: category,
+        );
+        if (imagePath != null) {
+          request.fields['image_path'] = imagePath;
+        }
+      }
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -62,6 +80,8 @@ class InventoryService {
   static Future<InventoryItem> updateInventoryItem({
     required String itemId,
     String? quantity,
+    double? fullness,
+    String? imagePath,
     String? brand,
     String? notes,
     bool? expiresSoon,
@@ -72,7 +92,15 @@ class InventoryService {
         Uri.parse('$baseUrl/inventory/$itemId'),
       );
       
-      if (quantity != null) request.fields['quantity'] = quantity;
+      if (quantity != null) {
+        request.fields['quantity'] = quantity;
+        // Also update fullness based on quantity if not explicitly provided
+        if (fullness == null) {
+          request.fields['fullness'] = QuantityDescription.getFullnessValue(quantity).toString();
+        }
+      }
+      if (fullness != null) request.fields['fullness'] = fullness.toString();
+      if (imagePath != null) request.fields['image_path'] = imagePath;
       if (brand != null) request.fields['brand'] = brand;
       if (notes != null) request.fields['notes'] = notes;
       if (expiresSoon != null) request.fields['expires_soon'] = expiresSoon.toString();
@@ -93,11 +121,16 @@ class InventoryService {
   }
 
   // Delete inventory item
-  static Future<void> deleteInventoryItem(String itemId) async {
+  static Future<void> deleteInventoryItem(String itemId, {String? imagePath}) async {
     try {
       final response = await http.delete(Uri.parse('$baseUrl/inventory/$itemId'));
       
-      if (response.statusCode != 200) {
+      if (response.statusCode == 200) {
+        // Also delete the stored image if it exists
+        if (imagePath != null) {
+          await deleteStoredImage(imagePath);
+        }
+      } else {
         final errorData = json.decode(response.body);
         throw Exception(errorData['detail'] ?? 'Failed to delete item');
       }
@@ -233,5 +266,135 @@ class InventoryService {
     } catch (e) {
       throw Exception('Error loading quantities: $e');
     }
+  }
+
+  // Image Management Methods
+
+  // Get the local images directory
+  static Future<Directory> _getImagesDirectory() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final imagesDir = Directory(path.join(appDir.path, 'bar_images'));
+    if (!await imagesDir.exists()) {
+      await imagesDir.create(recursive: true);
+    }
+    return imagesDir;
+  }
+
+  // Generate a filename for a bottle image
+  static String _generateImageFilename(String itemName, String category) {
+    final sanitized = itemName.toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
+        .replaceAll(RegExp(r'\s+'), '_');
+    return '${category}_$sanitized.png';
+  }
+
+  // Check if stylized image already exists for this item
+  static Future<String?> getExistingImagePath(String itemName, String category) async {
+    try {
+      final imagesDir = await _getImagesDirectory();
+      final filename = _generateImageFilename(itemName, category);
+      final file = File(path.join(imagesDir.path, filename));
+      
+      if (await file.exists()) {
+        return file.path;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Generate and store a stylized bottle image
+  static Future<String?> _generateAndStoreStylizedImage({
+    required File sourceImage,
+    required String itemName,
+    required String category,
+  }) async {
+    try {
+      // Check if image already exists to avoid regeneration
+      final existingPath = await getExistingImagePath(itemName, category);
+      if (existingPath != null) {
+        return existingPath;
+      }
+
+      // Generate stylized image using AI
+      final stylizedImageData = await _generateStylizedImage(sourceImage, itemName, category);
+      if (stylizedImageData == null) {
+        return null;
+      }
+
+      // Store the image locally
+      final imagesDir = await _getImagesDirectory();
+      final filename = _generateImageFilename(itemName, category);
+      final file = File(path.join(imagesDir.path, filename));
+      
+      await file.writeAsBytes(stylizedImageData);
+      return file.path;
+    } catch (e) {
+      print('Error generating and storing stylized image: $e');
+      return null;
+    }
+  }
+
+  // Generate stylized image using AI API
+  static Future<Uint8List?> _generateStylizedImage(File sourceImage, String itemName, String category) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/inventory/generate_stylized_image'),
+      );
+      
+      request.files.add(await http.MultipartFile.fromPath('file', sourceImage.path));
+      request.fields['item_name'] = itemName;
+      request.fields['category'] = category;
+      request.fields['style'] = 'cartoon bar item in an 8-bit pixel style with transparent background';
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Failed to generate stylized image');
+      }
+    } catch (e) {
+      print('Error generating stylized image: $e');
+      return null;
+    }
+  }
+
+  // Delete stored image for an item
+  static Future<void> deleteStoredImage(String? imagePath) async {
+    if (imagePath != null) {
+      try {
+        final file = File(imagePath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (e) {
+        print('Error deleting stored image: $e');
+      }
+    }
+  }
+
+  // Regenerate stylized image for an existing item
+  static Future<String?> regenerateStylizedImage({
+    required File sourceImage,
+    required String itemName,
+    required String category,
+    String? oldImagePath,
+  }) async {
+    // Delete old image first
+    if (oldImagePath != null) {
+      await deleteStoredImage(oldImagePath);
+    }
+
+    // Generate new image
+    return await _generateAndStoreStylizedImage(
+      sourceImage: sourceImage,
+      itemName: itemName,
+      category: category,
+    );
   }
 }

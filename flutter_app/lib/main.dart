@@ -13,7 +13,7 @@ import 'widgets/connection_line.dart';
 import 'widgets/drink_progress_glass.dart';
 import 'widgets/method_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'pages/inventory_page.dart';
+import 'pages/unified_inventory_page.dart';
 
 
 void main() async {
@@ -771,7 +771,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const InventoryPage(),
+                  builder: (context) => const UnifiedInventoryPage(),
                 ),
               );
             },

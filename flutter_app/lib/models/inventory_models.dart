@@ -3,6 +3,8 @@ class InventoryItem {
   final String name;
   final String category;
   final String quantity;
+  final double fullness; // 0.0 to 1.0
+  final String? imagePath; // local path to stylized image
   final String? brand;
   final String? notes;
   final DateTime addedDate;
@@ -14,6 +16,8 @@ class InventoryItem {
     required this.name,
     required this.category,
     required this.quantity,
+    required this.fullness,
+    this.imagePath,
     this.brand,
     this.notes,
     required this.addedDate,
@@ -27,6 +31,8 @@ class InventoryItem {
       name: json['name'],
       category: json['category'],
       quantity: json['quantity'],
+      fullness: (json['fullness'] ?? 1.0).toDouble(),
+      imagePath: json['image_path'],
       brand: json['brand'],
       notes: json['notes'],
       addedDate: DateTime.parse(json['added_date']),
@@ -41,6 +47,8 @@ class InventoryItem {
       'name': name,
       'category': category,
       'quantity': quantity,
+      'fullness': fullness,
+      'image_path': imagePath,
       'brand': brand,
       'notes': notes,
       'added_date': addedDate.toIso8601String(),
@@ -54,6 +62,8 @@ class InventoryItem {
     String? name,
     String? category,
     String? quantity,
+    double? fullness,
+    String? imagePath,
     String? brand,
     String? notes,
     DateTime? addedDate,
@@ -65,6 +75,8 @@ class InventoryItem {
       name: name ?? this.name,
       category: category ?? this.category,
       quantity: quantity ?? this.quantity,
+      fullness: fullness ?? this.fullness,
+      imagePath: imagePath ?? this.imagePath,
       brand: brand ?? this.brand,
       notes: notes ?? this.notes,
       addedDate: addedDate ?? this.addedDate,
@@ -260,6 +272,35 @@ class QuantityDescription {
         return 'Very Large Amount';
       default:
         return quantity;
+    }
+  }
+
+  static double getFullnessValue(String quantity) {
+    switch (quantity) {
+      case empty:
+        return 0.0;
+      case almostEmpty:
+        return 0.1;
+      case quarterBottle:
+        return 0.25;
+      case halfBottle:
+        return 0.5;
+      case threeQuarterBottle:
+        return 0.75;
+      case fullBottle:
+        return 1.0;
+      case multipleBottles:
+        return 1.0; // Could be > 1.0 but we'll cap at 1.0 for display
+      case smallAmount:
+        return 0.2;
+      case mediumAmount:
+        return 0.5;
+      case largeAmount:
+        return 0.8;
+      case veryLargeAmount:
+        return 1.0;
+      default:
+        return 1.0;
     }
   }
 }
