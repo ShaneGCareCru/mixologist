@@ -153,7 +153,7 @@ class _GlassPainter extends CustomPainter {
       }
       if (progress.level >= 3) {
         // Garnished state - add some transparency/sparkle effect
-        liquidColor = liquidColor.withValues(alpha: 0.9);
+        liquidColor = liquidColor.withOpacity(0.9);
       }
 
       final liquidPaint = Paint()
@@ -169,7 +169,7 @@ class _GlassPainter extends CustomPainter {
         shinePath.lineTo(centerX + topWidth / 2, topY);
         
         final shinePaint = Paint()
-          ..color = Colors.white.withValues(alpha: 0.3)
+          ..color = Colors.white.withOpacity(0.3)
           ..strokeWidth = 2
           ..style = PaintingStyle.stroke;
         

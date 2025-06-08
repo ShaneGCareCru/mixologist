@@ -320,23 +320,23 @@ class _MethodCardState extends State<MethodCard>
           end: Alignment.bottomRight,
           colors: theme.brightness == Brightness.dark
               ? [
-                  Colors.white.withValues(alpha: 0.12),
-                  Colors.white.withValues(alpha: 0.06),
+                  Colors.white.withOpacity(0.12),
+                  Colors.white.withOpacity(0.06),
                 ]
               : [
-                  Colors.white.withValues(alpha: 0.3),
-                  Colors.white.withValues(alpha: 0.15),
+                  Colors.white.withOpacity(0.3),
+                  Colors.white.withOpacity(0.15),
                 ],
         ),
         border: Border.all(
-          color: _borderColor(theme).withValues(alpha: 0.6),
+          color: _borderColor(theme).withOpacity(0.6),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
             color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.6)
-                : _borderColor(theme).withValues(alpha: 0.2),
+                ? Colors.black.withOpacity(0.6)
+                : _borderColor(theme).withOpacity(0.2),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -346,8 +346,8 @@ class _MethodCardState extends State<MethodCard>
         borderRadius: BorderRadius.circular(20),
         child: Container(
           color: theme.brightness == Brightness.dark
-              ? Colors.black.withValues(alpha: 0.25)
-              : Colors.white.withValues(alpha: 0.15),
+              ? Colors.black.withOpacity(0.25)
+              : Colors.white.withOpacity(0.15),
           child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -458,7 +458,7 @@ class _MethodCardState extends State<MethodCard>
                     child: Text(
                       'Shortcuts: Space/Enter to complete, ← to go back, Esc to unfocus',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                   ),
@@ -530,23 +530,23 @@ class _MethodCardState extends State<MethodCard>
           end: Alignment.bottomRight,
           colors: theme.brightness == Brightness.dark
               ? [
-                  Colors.white.withValues(alpha: 0.08),
-                  Colors.white.withValues(alpha: 0.04),
+                  Colors.white.withOpacity(0.08),
+                  Colors.white.withOpacity(0.04),
                 ]
               : [
-                  Colors.white.withValues(alpha: 0.2),
-                  Colors.white.withValues(alpha: 0.1),
+                  Colors.white.withOpacity(0.2),
+                  Colors.white.withOpacity(0.1),
                 ],
         ),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.5),
+          color: theme.dividerColor.withOpacity(0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
             color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.4)
-                : Colors.grey.withValues(alpha: 0.15),
+                ? Colors.black.withOpacity(0.4)
+                : Colors.grey.withOpacity(0.15),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -556,14 +556,14 @@ class _MethodCardState extends State<MethodCard>
         borderRadius: BorderRadius.circular(20),
         child: Container(
           color: theme.brightness == Brightness.dark
-              ? Colors.black.withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.1),
+              ? Colors.black.withOpacity(0.2)
+              : Colors.white.withOpacity(0.1),
           child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: Container(color: theme.disabledColor.withValues(alpha: 0.1)),
+            child: Container(color: theme.disabledColor.withOpacity(0.1)),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -573,13 +573,13 @@ class _MethodCardState extends State<MethodCard>
                 Container(
                   height: 20,
                   width: double.infinity,
-                  color: theme.disabledColor.withValues(alpha: 0.1),
+                  color: theme.disabledColor.withOpacity(0.1),
                 ),
                 const SizedBox(height: 8),
                 Container(
                   height: 14,
                   width: double.infinity,
-                  color: theme.disabledColor.withValues(alpha: 0.1),
+                  color: theme.disabledColor.withOpacity(0.1),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -587,13 +587,13 @@ class _MethodCardState extends State<MethodCard>
                     Container(
                       height: 12,
                       width: 60,
-                      color: theme.disabledColor.withValues(alpha: 0.1),
+                      color: theme.disabledColor.withOpacity(0.1),
                     ),
                     const SizedBox(width: 8),
                     Container(
                       height: 12,
                       width: 60,
-                      color: theme.disabledColor.withValues(alpha: 0.1),
+                      color: theme.disabledColor.withOpacity(0.1),
                     ),
                   ],
                 ),
