@@ -16,6 +16,11 @@ dependencies:
   vibration: ^1.8.4
   cached_network_image: ^3.3.1
   shared_preferences: ^2.2.2
+  # Camera and inventory management dependencies
+  camera: ^0.10.5+5
+  image_picker: ^1.0.4
+  path_provider: ^2.1.1
+  path: ^1.8.3
 
 flutter:
   uses-material-design: true
