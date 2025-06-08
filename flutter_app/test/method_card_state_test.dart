@@ -8,6 +8,7 @@ void main() {
       stepNumber: 1,
       title: 'Shake',
       description: 'Shake well',
+      imageUrl: 'https://example.com/image.png',
       imageAlt: 'alt',
       isCompleted: false,
       duration: '10s',

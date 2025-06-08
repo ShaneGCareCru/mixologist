@@ -60,7 +60,7 @@ class MixologistApp extends StatelessWidget {
         error: deepBitters,
         tertiary: citrushZest,
         primaryContainer: champagneGold,
-        secondaryContainer: champagneGold.withValues(alpha: 0.3),
+        secondaryContainer: champagneGold.withOpacity(0.3),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
@@ -130,15 +130,15 @@ class MixologistApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         elevation: 12,
-        shadowColor: richWhiskey.withValues(alpha: 0.2),
+        shadowColor: richWhiskey.withOpacity( 0.2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.white.withOpacity( 0.9),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 6,
-          shadowColor: richWhiskey.withValues(alpha: 0.3),
+          shadowColor: richWhiskey.withOpacity( 0.3),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
           textStyle: const TextStyle(
@@ -150,7 +150,7 @@ class MixologistApp extends StatelessWidget {
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 4,
-        shadowColor: richWhiskey.withValues(alpha: 0.2),
+        shadowColor: richWhiskey.withOpacity( 0.2),
         backgroundColor: Colors.transparent,
         foregroundColor: richWhiskey,
         titleTextStyle: const TextStyle(
@@ -162,14 +162,14 @@ class MixologistApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.8),
+        fillColor: Colors.white.withOpacity( 0.8),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: goldenAmber.withValues(alpha: 0.3)),
+          borderSide: BorderSide(color: goldenAmber.withOpacity( 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: goldenAmber.withValues(alpha: 0.5)),
+          borderSide: BorderSide(color: goldenAmber.withOpacity( 0.5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -200,7 +200,7 @@ class MixologistApp extends StatelessWidget {
         surface: charcoalSurface,
         error: crimsonBitters,
         tertiary: citrusGlow,
-        primaryContainer: warmCopper.withValues(alpha: 0.3),
+        primaryContainer: warmCopper.withOpacity( 0.3),
         secondaryContainer: smokyGlass,
       ),
       textTheme: const TextTheme(
@@ -286,7 +286,7 @@ class MixologistApp extends StatelessWidget {
         shadowColor: Colors.black54,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
-        color: smokyGlass.withValues(alpha: 0.85),
+        color: smokyGlass.withOpacity( 0.85),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -315,14 +315,14 @@ class MixologistApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: smokyGlass.withValues(alpha: 0.7),
+        fillColor: smokyGlass.withOpacity( 0.7),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: warmCopper.withValues(alpha: 0.3)),
+          borderSide: BorderSide(color: warmCopper.withOpacity( 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: warmCopper.withValues(alpha: 0.5)),
+          borderSide: BorderSide(color: warmCopper.withOpacity( 0.5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -361,8 +361,8 @@ class MixologistBackground extends StatelessWidget {
         decoration: BoxDecoration(
           backgroundBlendMode: BlendMode.overlay,
           color: isCurrentlyDark 
-              ? Colors.black.withValues(alpha: 0.1)
-              : Colors.white.withValues(alpha: 0.1),
+              ? Colors.black.withOpacity( 0.1)
+              : Colors.white.withOpacity( 0.1),
         ),
         child: child,
       ),
@@ -435,25 +435,25 @@ class GlassmorphicCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: isDark
               ? [
-                  Colors.white.withValues(alpha: 0.1),
-                  Colors.white.withValues(alpha: 0.05),
+                  Colors.white.withOpacity( 0.1),
+                  Colors.white.withOpacity( 0.05),
                 ]
               : [
-                  Colors.white.withValues(alpha: 0.25),
-                  Colors.white.withValues(alpha: 0.1),
+                  Colors.white.withOpacity( 0.25),
+                  Colors.white.withOpacity( 0.1),
                 ],
         ),
         border: Border.all(
           color: isDark
-              ? Colors.white.withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.3),
+              ? Colors.white.withOpacity( 0.2)
+              : Colors.white.withOpacity( 0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withValues(alpha: 0.5)
-                : Colors.grey.withValues(alpha: 0.2),
+                ? Colors.black.withOpacity( 0.5)
+                : Colors.grey.withOpacity( 0.2),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -465,8 +465,8 @@ class GlassmorphicCard extends StatelessWidget {
           padding: padding ?? const EdgeInsets.all(20),
           color: color ??
               (isDark
-                  ? Colors.black.withValues(alpha: 0.2)
-                  : Colors.white.withValues(alpha: 0.1)),
+                  ? Colors.black.withOpacity( 0.2)
+                  : Colors.white.withOpacity( 0.1)),
           child: child,
         ),
       ),
@@ -518,7 +518,7 @@ class LoginScreen extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                          color: theme.colorScheme.primary.withOpacity( 0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -540,7 +540,7 @@ class LoginScreen extends StatelessWidget {
                         Text(
                           'Welcome to',
                           style: theme.textTheme.headlineSmall?.copyWith(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                            color: theme.colorScheme.primary.withOpacity( 0.8),
                             fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.center,
@@ -557,7 +557,7 @@ class LoginScreen extends StatelessWidget {
                         Text(
                           'Craft perfect cocktails with AI-powered recipes and step-by-step guidance',
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                            color: theme.colorScheme.onSurface.withOpacity( 0.7),
                             height: 1.5,
                           ),
                           textAlign: TextAlign.center,
@@ -659,13 +659,13 @@ class LoginScreen extends StatelessWidget {
         Icon(
           icon,
           size: 24,
-          color: theme.colorScheme.primary.withValues(alpha: 0.7),
+          color: theme.colorScheme.primary.withOpacity( 0.7),
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            color: theme.colorScheme.onSurface.withOpacity( 0.6),
           ),
         ),
       ],
@@ -835,7 +835,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ? 'Guest User (${user.uid.substring(0,6)}...)'
                                     : user.displayName ?? user.email ?? 'User',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                  color: theme.colorScheme.onSurface.withOpacity( 0.7),
                                 ),
                               ),
                             ],
@@ -872,7 +872,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Find a classic recipe or describe your ideal cocktail',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface.withOpacity( 0.7),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -913,7 +913,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 56,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                  color: theme.colorScheme.primary.withOpacity( 0.1),
                                 ),
                                 child: Center(
                                   child: CircularProgressIndicator(
@@ -965,7 +965,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Describe your perfect drink and let AI create a custom recipe',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface.withOpacity( 0.7),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -993,7 +993,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 56,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
-                                  color: theme.colorScheme.secondary.withValues(alpha: 0.1),
+                                  color: theme.colorScheme.secondary.withOpacity( 0.1),
                                 ),
                                 child: Center(
                                   child: CircularProgressIndicator(
@@ -1895,7 +1895,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                         section['icon'] as IconData,
                         color: isSelected 
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            : Theme.of(context).colorScheme.onSurface.withOpacity( 0.6),
                         size: 24,
                       ),
                       const SizedBox(height: 4),
@@ -1904,7 +1904,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: isSelected 
                               ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              : Theme.of(context).colorScheme.onSurface.withOpacity( 0.6),
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                         ),
                         textAlign: TextAlign.center,
@@ -1979,7 +1979,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.7),
+                                color: Colors.black.withOpacity( 0.7),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -2000,7 +2000,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.7),
+                                color: Colors.black.withOpacity( 0.7),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -2447,7 +2447,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                         color: Theme.of(context)
                             .colorScheme
                             .secondary
-                            .withValues(alpha: 0.6),
+                            .withOpacity( 0.6),
                         blurRadius: 6,
                       )
                     ]
@@ -2961,7 +2961,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                                   cocktail,
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: _isLoadingRelatedCocktail 
-                                        ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)
+                                        ? Theme.of(context).colorScheme.onSurface.withOpacity( 0.6)
                                         : null,
                                   ),
                                   textAlign: TextAlign.center,
@@ -2973,7 +2973,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                                     margin: const EdgeInsets.only(top: 4),
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
+                                      color: Theme.of(context).colorScheme.secondary.withOpacity( 0.2),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -3108,7 +3108,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
               color: Theme.of(context).colorScheme.surface,
               border: Border(
                 bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  color: Theme.of(context).colorScheme.outline.withOpacity( 0.3),
                   width: 1,
                 ),
               ),
