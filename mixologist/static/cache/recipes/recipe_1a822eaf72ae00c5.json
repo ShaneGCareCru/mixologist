@@ -1,0 +1,205 @@
+{
+  "drink_name": "Pisco Sour",
+  "alcohol_content": 0.25,
+  "serving_glass": "Coupe glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Pisco",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Fresh lemon juice",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Simple syrup",
+      "quantity": "0.75 oz"
+    },
+    {
+      "name": "Egg white",
+      "quantity": "1"
+    },
+    {
+      "name": "Angostura bitters",
+      "quantity": "2 dashes"
+    }
+  ],
+  "steps": [
+    "Add pisco, fresh lemon juice, simple syrup, and egg white to a shaker without ice.",
+    "Dry shake vigorously for about 15 seconds to emulsify the egg white.",
+    "Add ice to the shaker and shake again very well until chilled.",
+    "Strain into a chilled coupe glass.",
+    "Add 2 dashes of Angostura bitters on top for aroma and garnish."
+  ],
+  "garnish": [
+    "Angostura bitters"
+  ],
+  "drink_image_description": "A perfectly crafted Pisco Sour in a classic coupe glass set on a bright surface with natural lighting. The frothy white foam from the egg white is topped with delicate drops of amber Angostura bitters, creating a contrast. The background is light and airy, capturing the essence of a refreshing South American cocktail. The camera angle is slightly above the glass to showcase the foam and bitters artfully.",
+  "drink_history": "The Pisco Sour is a classic cocktail originating from Peru, with roots dating back to the early 20th century. It is considered the national drink of Peru and is celebrated for its unique blend of pisco, citrus, and frothy egg white. The cocktail was popularized by Victor Vaughen Morris, an American bartender who settled in Lima in the 1920s. It has since become an iconic drink symbolizing Peruvian culture and hospitality.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Pisco",
+      "brands": [
+        "Barsol",
+        "Macchu Pisco",
+        "Pisco Port\u00f3n"
+      ]
+    },
+    {
+      "ingredient": "Simple syrup",
+      "brands": [
+        "Homemade simple syrup",
+        "Monin"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Fresh lemon juice",
+      "alternatives": [
+        "Fresh lime juice"
+      ]
+    },
+    {
+      "original": "Simple syrup",
+      "alternatives": [
+        "Agave syrup",
+        "Honey syrup"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Margarita",
+    "Whiskey Sour",
+    "Daiquiri",
+    "Caipirinha",
+    "Tommy's Margarita",
+    "Amaretto Sour"
+  ],
+  "difficulty_rating": 3,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Cocktail shaker",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    },
+    {
+      "item": "Measuring jigger",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Citrus",
+      "Sweet",
+      "Sour"
+    ],
+    "secondary_notes": [
+      "Creamy",
+      "Herbal from bitters"
+    ],
+    "mouthfeel": "Smooth and frothy due to the egg white",
+    "finish": "Clean and slightly tangy finish",
+    "balance": "Well balanced between sweet and sour with a creamy texture"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "Scale ingredients proportionally for batches, shake well with ice to ensure proper dilution and froth."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Add pisco, fresh lemon juice, simple syrup, and egg white to a shaker without ice.",
+      "technique_detail": "This dry shake helps emulsify the egg white, creating a frothy texture.",
+      "visual_cue": "Foam starts to build up inside the shaker.",
+      "common_mistakes": [
+        "Skipping the dry shake",
+        "Not shaking vigorously enough"
+      ],
+      "timing_guidance": "Shake vigorously for about 15 seconds."
+    },
+    {
+      "step_number": 2,
+      "action": "Add ice to the shaker and shake again very well until chilled.",
+      "technique_detail": "This second shake chills and dilutes the cocktail properly.",
+      "visual_cue": "Condensation forms on the outside of the shaker.",
+      "common_mistakes": [
+        "Not shaking long enough",
+        "Using too little ice"
+      ],
+      "timing_guidance": "Shake for about 15-20 seconds until well chilled."
+    },
+    {
+      "step_number": 3,
+      "action": "Strain into a chilled coupe glass.",
+      "technique_detail": "Double strain if desired to remove ice shards and ensure smooth texture.",
+      "visual_cue": "Cocktail pours smoothly with foam on top.",
+      "common_mistakes": [
+        "Not chilling the glass",
+        "Pouring too quickly and breaking the foam"
+      ],
+      "timing_guidance": ""
+    },
+    {
+      "step_number": 4,
+      "action": "Add 2 dashes of Angostura bitters on top for aroma and garnish.",
+      "technique_detail": "Use a dropper or the end of a spoon to place bitters carefully.",
+      "visual_cue": "Bitters create decorative patterns on the foam.",
+      "common_mistakes": [
+        "Using too much bitters",
+        "Not adding bitters on top of foam"
+      ],
+      "timing_guidance": ""
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Maracuya Sour",
+      "changes": [
+        "Replace lemon juice with passion fruit juice"
+      ],
+      "description": "A tropical twist on the classic Pisco Sour with the sweet and tangy flavor of passion fruit."
+    },
+    {
+      "name": "Spiced Pisco Sour",
+      "changes": [
+        "Add a pinch of cinnamon or nutmeg"
+      ],
+      "description": "Adds warm spice notes to complement the citrus and sweetness."
+    }
+  ],
+  "food_pairings": [
+    "Ceviche",
+    "Grilled seafood",
+    "Light salads"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Intermediate - requires proper shaking technique for foam",
+  "drink_trivia": [
+    {
+      "fact": "The Pisco Sour was invented by Victor Vaughen Morris, an American bartender in Lima, Peru, in the 1920s.",
+      "category": "history",
+      "source_period": "1920s"
+    },
+    {
+      "fact": "It is considered the national drink of Peru and is celebrated annually on National Pisco Sour Day, held on the first Saturday of February.",
+      "category": "culture"
+    },
+    {
+      "fact": "The use of egg white in cocktails became popular in the early 20th century to add texture and frothiness.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "Angostura bitters are traditionally used as a garnish to add aroma and a slight herbal bitterness to balance the sweetness and sourness.",
+      "category": "preparation"
+    }
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "drink_name": "Margarita",
+  "alcohol_content": 0.3,
+  "serving_glass": "Cocktail glass (also known as a margarita glass)",
+  "rim": "Salted",
+  "ingredients": [
+    {
+      "name": "Tequila",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Triple Sec (orange liqueur)",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Fresh lime juice",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Salt",
+      "quantity": "to rim the glass"
+    }
+  ],
+  "steps": [
+    "Rub the rim of the glass with a lime wedge to make the salt stick to it.",
+    "Dip the rim of the glass in salt to coat it.",
+    "In a shaker, combine tequila, triple sec, and fresh lime juice with ice.",
+    "Shake well until chilled.",
+    "Strain the mixture into the salted rim glass filled with fresh ice.",
+    "Garnish with a lime wheel."
+  ],
+  "garnish": [
+    "Lime wheel"
+  ],
+  "drink_image_description": "A vibrant margarita cocktail served in a classic margarita glass with a salted rim. The drink is a pale green hue from the fresh lime juice and tequila, garnished with a bright green lime wheel on the rim. The glass is set against a bright, sunny background with natural lighting that highlights the condensation on the glass and the salt crystals on the rim. The photo is taken from a slight top angle, capturing the inviting freshness and zest of the ingredients.",
+  "drink_history": "The Margarita is one of the most iconic cocktails originating from Mexico, believed to have been created in the 1930s or 1940s. Its exact origin is debated, with stories attributing it to various bartenders and socialites. The drink gained popularity in the United States during the mid-20th century and has since become a staple in bars worldwide, celebrated for its perfect balance of sweet, sour, and salty flavors.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Tequila",
+      "brands": [
+        "Patr\u00f3n",
+        "Don Julio",
+        "Herradura"
+      ]
+    },
+    {
+      "ingredient": "Triple Sec (orange liqueur)",
+      "brands": [
+        "Cointreau",
+        "Grand Marnier",
+        "Combier"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Triple Sec (orange liqueur)",
+      "alternatives": [
+        "Cointreau",
+        "Grand Marnier",
+        "Combier"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Tequila Sunrise",
+    "Paloma",
+    "Daiquiri",
+    "Sidecar",
+    "Cosmopolitan",
+    "Caipirinha"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Cocktail shaker",
+      "essential": true
+    },
+    {
+      "item": "Jigger",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Citrus",
+      "Sweet",
+      "Salty",
+      "Alcoholic"
+    ],
+    "secondary_notes": [
+      "Fresh",
+      "Zesty",
+      "Bright"
+    ],
+    "mouthfeel": "Smooth and refreshing with a slight tang from the lime juice.",
+    "finish": "Clean and crisp finish with a lingering citrus zest.",
+    "balance": "Well-balanced with the sweetness of the triple sec complementing the tartness of the lime and the warmth of the tequila."
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Rub the rim of the glass with a lime wedge to make the salt stick to it.",
+      "technique_detail": "Ensure the entire rim is moistened evenly for a uniform salt coating.",
+      "visual_cue": "The rim should appear wet and slightly glossy.",
+      "common_mistakes": [
+        "Not moistening the rim enough, causing the salt not to stick properly."
+      ],
+      "timing_guidance": "Do this step immediately before salting the rim."
+    },
+    {
+      "step_number": 2,
+      "action": "Dip the rim of the glass in salt to coat it.",
+      "technique_detail": "Use coarse salt for best texture and flavor.",
+      "visual_cue": "The rim should have an even and thick layer of salt crystals.",
+      "common_mistakes": [
+        "Using fine salt which can dissolve too quickly."
+      ],
+      "timing_guidance": "Do this step right after moistening the rim."
+    },
+    {
+      "step_number": 3,
+      "action": "In a shaker, combine tequila, triple sec, and fresh lime juice with ice.",
+      "technique_detail": "Use fresh lime juice for the best flavor; avoid bottled juice.",
+      "visual_cue": "Ingredients mixing with ice, creating condensation on the shaker.",
+      "common_mistakes": [
+        "Using pre-made mixes or bottled lime juice."
+      ],
+      "timing_guidance": "Shake immediately after adding ingredients."
+    },
+    {
+      "step_number": 4,
+      "action": "Shake well until chilled.",
+      "technique_detail": "Shake vigorously for about 15 seconds to chill and dilute properly.",
+      "visual_cue": "Shaker becomes cold to the touch and condensation forms.",
+      "common_mistakes": [
+        "Not shaking long enough, resulting in a warm drink."
+      ],
+      "timing_guidance": "Aim for about 15 seconds of shaking."
+    },
+    {
+      "step_number": 5,
+      "action": "Strain the mixture into the salted rim glass filled with fresh ice.",
+      "technique_detail": "Use a fine strainer to avoid ice shards in the glass.",
+      "visual_cue": "Clear, smooth pour without ice chunks.",
+      "common_mistakes": [
+        "Pouring directly without straining, causing ice shards."
+      ],
+      "timing_guidance": "Strain immediately after shaking."
+    },
+    {
+      "step_number": 6,
+      "action": "Garnish with a lime wheel.",
+      "technique_detail": "Cut the lime wheel evenly for a neat presentation.",
+      "visual_cue": "Lime wheel placed neatly on the rim of the glass.",
+      "common_mistakes": [
+        "Uneven or too thick lime slices."
+      ],
+      "timing_guidance": "Garnish just before serving."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Frozen Margarita",
+      "changes": [
+        "Blend the ingredients with ice instead of shaking with ice cubes."
+      ],
+      "description": "A slushy, icy version of the classic margarita, perfect for hot weather."
+    },
+    {
+      "name": "Spicy Margarita",
+      "changes": [
+        "Add a slice of jalape\u00f1o or a dash of hot sauce to the shaker."
+      ],
+      "description": "Adds a spicy kick to the traditional margarita, enhancing the flavors with heat."
+    }
+  ],
+  "food_pairings": [
+    "Tacos",
+    "Guacamole",
+    "Ceviche",
+    "Grilled shrimp"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Beginner to Intermediate",
+  "drink_trivia": [
+    {
+      "fact": "The Margarita is often associated with Mexican culture and is a popular choice during Cinco de Mayo celebrations.",
+      "category": "culture"
+    },
+    {
+      "fact": "Some stories claim the Margarita was created for a customer who was allergic to all spirits except tequila.",
+      "category": "history"
+    },
+    {
+      "fact": "The salted rim is not only decorative but enhances the flavor by balancing the drink's sourness.",
+      "category": "preparation"
+    },
+    {
+      "fact": "Famous personalities like Frank Sinatra helped popularize the Margarita in the United States.",
+      "category": "celebrity"
+    }
+  ]
+}

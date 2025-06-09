@@ -1268,10 +1268,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
   
   void _initializeSpecializedImages() {
-    _specializedImages = {
+    _specializedImages.clear();
+    _specializedImages.addAll({
       'glassware': null,
       'garnish': null,
-    };
+    });
     _imageGenerationProgress = {
       'glassware': false,
       'garnish': false,
@@ -2808,10 +2809,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
             from: _stepCardKeys[_hoveredStep!],
             to: [
               ...?_stepIngredientMap[_hoveredStep!]
-                  .map((n) => _ingredientIconKeys[n])
+                  ?.map((n) => _ingredientIconKeys[n])
                   .whereType<GlobalKey>(),
               ...?_stepEquipmentMap[_hoveredStep!]
-                  .map((n) => _equipmentIconKeys[n])
+                  ?.map((n) => _equipmentIconKeys[n])
                   .whereType<GlobalKey>(),
             ],
             active: true,

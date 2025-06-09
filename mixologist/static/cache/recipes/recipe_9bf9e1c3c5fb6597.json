@@ -1,0 +1,230 @@
+{
+  "drink_name": "Old Fashioned",
+  "alcohol_content": 0.32,
+  "serving_glass": "Old Fashioned glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Bourbon or Rye Whiskey",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Sugar cube",
+      "quantity": "1"
+    },
+    {
+      "name": "Angostura bitters",
+      "quantity": "2-3 dashes"
+    },
+    {
+      "name": "Water",
+      "quantity": "a splash"
+    },
+    {
+      "name": "Orange peel",
+      "quantity": "1 twist"
+    },
+    {
+      "name": "Maraschino cherry",
+      "quantity": "1"
+    }
+  ],
+  "steps": [
+    "Place the sugar cube in an Old Fashioned glass.",
+    "Add the bitters and a splash of water to the sugar cube.",
+    "Muddle until the sugar cube is dissolved.",
+    "Fill the glass with ice cubes.",
+    "Pour the bourbon or rye whiskey over the ice.",
+    "Stir gently to combine the flavors.",
+    "Express the oil of an orange peel over the glass and drop it in.",
+    "Garnish with a maraschino cherry."
+  ],
+  "garnish": [
+    "Orange peel",
+    "Maraschino cherry"
+  ],
+  "drink_image_description": "A classic Old Fashioned cocktail served in a clear Old Fashioned glass with large ice cubes, garnished with a bright orange peel twist and a red maraschino cherry on a wooden bar counter. The lighting is warm and inviting, highlighting the rich amber color of the whiskey and the glistening sugar at the bottom of the glass. The background is softly blurred with a cozy bar ambiance.",
+  "drink_history": "The Old Fashioned is one of the oldest known cocktails, dating back to the early 19th century. It originated as a simple mixture of spirits, sugar, water, and bitters, embodying the essence of classic cocktail culture. It became popular in American bars and has remained a staple due to its timeless flavor and elegant simplicity.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Bourbon or Rye Whiskey",
+      "brands": [
+        "Woodford Reserve",
+        "Buffalo Trace",
+        "Rittenhouse Rye"
+      ]
+    },
+    {
+      "ingredient": "Angostura bitters",
+      "brands": [
+        "Angostura"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Bourbon or Rye Whiskey",
+      "alternatives": [
+        "Canadian whisky",
+        "Irish whiskey"
+      ]
+    },
+    {
+      "original": "Sugar cube",
+      "alternatives": [
+        "simple syrup",
+        "honey"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Manhattan",
+    "Whiskey Sour",
+    "Sazerac",
+    "Rob Roy",
+    "Boulevardier",
+    "Vieux Carr\u00e9"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Old Fashioned glass",
+      "essential": true
+    },
+    {
+      "item": "Muddler",
+      "essential": true
+    },
+    {
+      "item": "Bar spoon",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Whiskey",
+      "Bitters",
+      "Sweetness"
+    ],
+    "secondary_notes": [
+      "Citrus",
+      "Oak",
+      "Vanilla"
+    ],
+    "mouthfeel": "Smooth and warming with a slight syrupy texture from the sugar",
+    "finish": "Long and slightly bitter with lingering orange and cherry notes",
+    "balance": "Perfectly balanced between sweetness, bitterness, and the robust character of whiskey"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "Multiply ingredients proportionally for larger batches, muddle sugar and bitters before adding whiskey."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Place the sugar cube in an Old Fashioned glass.",
+      "technique_detail": "Use a sugar cube rather than granulated sugar for better control over sweetness and texture.",
+      "visual_cue": "The sugar cube should sit at the bottom of the glass, dry and intact."
+    },
+    {
+      "step_number": 2,
+      "action": "Add the bitters and a splash of water to the sugar cube.",
+      "technique_detail": "The water helps dissolve the sugar and evenly distribute the bitters.",
+      "visual_cue": "You should see the sugar cube start to dissolve and absorb the bitters."
+    },
+    {
+      "step_number": 3,
+      "action": "Muddle until the sugar cube is dissolved.",
+      "technique_detail": "Use a muddler to crush the sugar cube completely, ensuring no granules remain undissolved.",
+      "visual_cue": "The mixture should look syrupy and uniform."
+    },
+    {
+      "step_number": 4,
+      "action": "Fill the glass with ice cubes.",
+      "technique_detail": "Use large ice cubes to chill the drink without diluting it too quickly.",
+      "visual_cue": "The glass should be filled to near the top with clear, large ice cubes."
+    },
+    {
+      "step_number": 5,
+      "action": "Pour the bourbon or rye whiskey over the ice.",
+      "technique_detail": "Pour slowly to avoid splashing and to maintain the clarity of the drink.",
+      "visual_cue": "The whiskey should flow smoothly over the ice, gradually filling the glass."
+    },
+    {
+      "step_number": 6,
+      "action": "Stir gently to combine the flavors.",
+      "technique_detail": "Use a bar spoon to stir gently for about 20 seconds to mix without overly diluting.",
+      "visual_cue": "The drink should appear well mixed but still clear."
+    },
+    {
+      "step_number": 7,
+      "action": "Express the oil of an orange peel over the glass and drop it in.",
+      "technique_detail": "Hold the peel over the drink and twist it to release aromatic oils before garnishing.",
+      "visual_cue": "You may see a fine mist of oil spray over the surface of the drink."
+    },
+    {
+      "step_number": 8,
+      "action": "Garnish with a maraschino cherry.",
+      "technique_detail": "Use a fresh maraschino cherry to add a pop of color and a hint of sweetness.",
+      "visual_cue": "The cherry should rest on the surface or skewered on a cocktail pick."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Smoky Old Fashioned",
+      "changes": [
+        "Use a smoky Scotch whisky instead of bourbon or rye."
+      ],
+      "description": "Adds a smoky depth and complexity to the classic Old Fashioned."
+    },
+    {
+      "name": "Maple Old Fashioned",
+      "changes": [
+        "Replace sugar cube with pure maple syrup."
+      ],
+      "description": "Gives a rich, sweet, and slightly woody flavor profile."
+    },
+    {
+      "name": "Spiced Old Fashioned",
+      "changes": [
+        "Add a dash of cinnamon or clove bitters."
+      ],
+      "description": "Adds warm spice notes to the cocktail, perfect for colder months."
+    }
+  ],
+  "food_pairings": [
+    "Grilled steak",
+    "Dark chocolate",
+    "Smoked nuts"
+  ],
+  "optimal_serving_temperature": "Slightly chilled, around 50-55\u00b0F (10-13\u00b0C)",
+  "skill_level_recommendation": "Beginner to intermediate",
+  "drink_trivia": [
+    {
+      "fact": "The Old Fashioned is often credited as the first cocktail ever created, dating back to the early 1800s.",
+      "category": "history",
+      "source_period": "19th century"
+    },
+    {
+      "fact": "The name 'Old Fashioned' comes from patrons requesting their cocktails made the 'old-fashioned way' before more elaborate mixed drinks became popular.",
+      "category": "culture"
+    },
+    {
+      "fact": "The cocktail was popularized at the Pendennis Club in Louisville, Kentucky, which helped cement bourbon's place in cocktail history.",
+      "category": "history",
+      "source_period": "Late 19th century"
+    },
+    {
+      "fact": "Classic Old Fashioneds rarely use fruit garnish other than a twist of citrus and a cherry, emphasizing the spirit's flavor.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "Bartenders often use a large ice cube in an Old Fashioned to chill the drink slowly while minimizing dilution.",
+      "category": "preparation"
+    }
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "drink_name": "Tropical Zest Kick",
+  "alcohol_content": 0.35,
+  "serving_glass": "Coupe glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Fresh lemon juice",
+      "quantity": "1.5 oz"
+    },
+    {
+      "name": "Passion fruit puree",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Spiced rum",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Simple syrup",
+      "quantity": "0.75 oz"
+    },
+    {
+      "name": "Angostura bitters",
+      "quantity": "2 dashes"
+    }
+  ],
+  "steps": [
+    "Add fresh lemon juice, passion fruit puree, spiced rum, simple syrup, and Angostura bitters into a shaker filled with ice.",
+    "Shake vigorously until well chilled.",
+    "Strain into a chilled coupe glass.",
+    "Garnish with a thin lemon wheel and a small sprig of mint."
+  ],
+  "garnish": [
+    "Lemon wheel",
+    "Mint sprig"
+  ],
+  "drink_image_description": "A vibrant cocktail in a coupe glass featuring a bright yellow-orange hue from passion fruit and lemon, garnished with a fresh lemon wheel and mint sprig, shot with soft natural lighting highlighting condensation on the glass, set against a bright, airy background.",
+  "drink_history": "This cocktail was invented as a playful twist on the classic sour with tropical passion fruit and the warming spice of rum, designed to deliver a fruity yet bold sipping experience.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Spiced rum",
+      "brands": [
+        "Captain Morgan",
+        "Sailor Jerry",
+        "Kraken"
+      ]
+    },
+    {
+      "ingredient": "Simple syrup",
+      "brands": [
+        "Monin",
+        "Torani"
+      ]
+    },
+    {
+      "ingredient": "Angostura bitters",
+      "brands": [
+        "Angostura"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Passion fruit puree",
+      "alternatives": [
+        "Mango puree",
+        "Pineapple juice",
+        "Guava nectar"
+      ]
+    },
+    {
+      "original": "Spiced rum",
+      "alternatives": [
+        "Dark rum",
+        "Aged rum",
+        "Overproof rum"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Whiskey Sour",
+    "Daiquiri",
+    "Mai Tai",
+    "Pisco Sour",
+    "Margarita",
+    "Caipirinha"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Cocktail shaker",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    },
+    {
+      "item": "Jigger",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Tart citrus",
+      "Tropical fruit",
+      "Warm spice"
+    ],
+    "secondary_notes": [
+      "Sweetness",
+      "Bitter complexity"
+    ],
+    "mouthfeel": "Smooth with a slight syrupy texture",
+    "finish": "Lingering spicy warmth with refreshing citrus brightness",
+    "balance": "Well balanced between sour, sweet, and spice"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 6,
+    "batch_preparation_notes": "Multiply all ingredients by the number of servings, shake in batches, and strain individually."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Add fresh lemon juice, passion fruit puree, spiced rum, simple syrup, and Angostura bitters into a shaker filled with ice.",
+      "technique_detail": "Use freshly squeezed lemon juice for the best tartness; add ice to the shaker to chill the ingredients evenly.",
+      "visual_cue": "Watch for the frosty appearance on the outside of the shaker as it chills.",
+      "common_mistakes": [
+        "Using bottled lemon juice which lacks freshness",
+        "Not adding enough ice"
+      ],
+      "timing_guidance": "Fill shaker about halfway with ice."
+    },
+    {
+      "step_number": 2,
+      "action": "Shake vigorously until well chilled.",
+      "technique_detail": "Shake for about 15 seconds to ensure proper dilution and chilling.",
+      "visual_cue": "Shaker becomes cold and slightly frosty.",
+      "common_mistakes": [
+        "Shaking too briefly",
+        "Not shaking hard enough to chill"
+      ],
+      "timing_guidance": "Aim for 15 seconds of vigorous shaking."
+    },
+    {
+      "step_number": 3,
+      "action": "Strain into a chilled coupe glass.",
+      "technique_detail": "Use a fine strainer to catch any pulp or ice shards for a smooth texture.",
+      "visual_cue": "Clear, vibrant liquid without ice shards in the glass.",
+      "common_mistakes": [
+        "Not chilling the glass",
+        "Pouring with ice shards"
+      ],
+      "timing_guidance": "Strain immediately after shaking."
+    },
+    {
+      "step_number": 4,
+      "action": "Garnish with a thin lemon wheel and a small sprig of mint.",
+      "technique_detail": "Cut the lemon wheel thinly for elegance and place the mint sprig upright for visual appeal.",
+      "visual_cue": "Fresh, bright garnish enhancing the drink's presentation.",
+      "common_mistakes": [
+        "Using wilted mint",
+        "Thick lemon slices"
+      ],
+      "timing_guidance": "Garnish just before serving."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Spicy Tropical Zest Kick",
+      "changes": [
+        "Add a slice of fresh jalape\u00f1o to the shaker",
+        "Use overproof rum for extra kick"
+      ],
+      "description": "This variation adds a fresh spicy heat that complements the tropical fruit and citrus."
+    },
+    {
+      "name": "Tropical Zest Fizz",
+      "changes": [
+        "Top with club soda",
+        "Serve in a highball glass"
+      ],
+      "description": "A lighter, bubbly version perfect for warm weather sipping."
+    }
+  ],
+  "food_pairings": [
+    "Grilled shrimp skewers",
+    "Mango salsa",
+    "Spicy chicken tacos"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Beginner to intermediate home bartenders",
+  "drink_trivia": [
+    {
+      "fact": "Passion fruit adds a unique tropical twist that enhances the classic sour profile.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "Spiced rum was originally developed in the Caribbean to mask imperfections in early rum batches with warming spices.",
+      "category": "history"
+    },
+    {
+      "fact": "Coupe glasses were popular in the early 20th century and have seen a resurgence as a stylish serving option for cocktails.",
+      "category": "culture"
+    }
+  ]
+}

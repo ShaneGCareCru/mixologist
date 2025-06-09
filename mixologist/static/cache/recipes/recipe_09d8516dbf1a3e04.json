@@ -1,0 +1,206 @@
+{
+  "drink_name": "Mojito",
+  "alcohol_content": 0.15,
+  "serving_glass": "Highball Glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "White Rum",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Fresh Lime Juice",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Mint Leaves",
+      "quantity": "10"
+    },
+    {
+      "name": "Sugar",
+      "quantity": "2 tsp"
+    },
+    {
+      "name": "Soda Water",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Ice Cubes",
+      "quantity": "as needed"
+    }
+  ],
+  "steps": [
+    "Muddle the mint leaves and sugar together in a glass to release the mint's flavor.",
+    "Add fresh lime juice and white rum to the glass.",
+    "Fill the glass with ice cubes.",
+    "Top up with soda water.",
+    "Gently stir to mix all the ingredients without bruising the mint.",
+    "Garnish with a sprig of mint and a lime wedge."
+  ],
+  "garnish": [
+    "Mint Sprig",
+    "Lime Wedge"
+  ],
+  "drink_image_description": "A refreshing mojito served in a tall highball glass with visible mint leaves and lime wedges inside. The glass is filled with crushed ice and topped with soda water, capturing the vibrant green of the mint and the bright lime. The lighting is bright and natural, emphasizing the freshness of the ingredients, with the camera focused closely from an eye-level angle, showcasing the textured mint leaves and condensation on the glass.",
+  "drink_history": "The Mojito is a classic Cuban cocktail with roots tracing back to the 16th century. Originally a medicinal tonic called 'El Draque' named after Sir Francis Drake, it evolved into the refreshing cocktail known today. Its combination of rum, lime, mint, and sweetness makes it a beloved drink worldwide, symbolizing tropical refreshment and Cuban heritage.",
+  "brand_recommendations": [
+    {
+      "ingredient": "White Rum",
+      "brands": [
+        "Bacardi",
+        "Havana Club",
+        "Mount Gay"
+      ]
+    },
+    {
+      "ingredient": "Sugar",
+      "brands": [
+        "Cane Sugar",
+        "Turbinado Sugar"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "White Rum",
+      "alternatives": [
+        "Vodka",
+        "Gin"
+      ]
+    },
+    {
+      "original": "Sugar",
+      "alternatives": [
+        "Honey",
+        "Agave Syrup"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Caipirinha",
+    "Mint Julep",
+    "Daiquiri",
+    "Cuba Libre",
+    "Tom Collins",
+    "Southside"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Muddler",
+      "essential": true
+    },
+    {
+      "item": "Highball Glass",
+      "essential": true
+    },
+    {
+      "item": "Bar Spoon",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Mint",
+      "Lime",
+      "Rum"
+    ],
+    "secondary_notes": [
+      "Sweetness",
+      "Effervescence"
+    ],
+    "mouthfeel": "Light and refreshing with a slight effervescence from the soda water.",
+    "finish": "Clean and crisp with lingering mint and citrus notes.",
+    "balance": "Well-balanced between the acidity of lime, the sweetness of sugar, and the aromatic freshness of mint."
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "When preparing in batches, muddle the mint and sugar separately and mix the lime juice and rum in a large pitcher before combining all ingredients with soda water just before serving."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Muddle the mint leaves and sugar together in a glass to release the mint's flavor.",
+      "technique_detail": "Use a muddler to gently press the mint leaves and sugar, releasing the essential oils without tearing the leaves.",
+      "visual_cue": "Mint leaves should appear bruised but not shredded.",
+      "common_mistakes": [
+        "Over-muddling can make the drink bitter.",
+        "Not muddling enough can result in weak mint flavor."
+      ],
+      "timing_guidance": "Muddle for about 10-15 seconds."
+    },
+    {
+      "step_number": 2,
+      "action": "Add fresh lime juice and white rum to the glass.",
+      "technique_detail": "Measure precise quantities to maintain balance in the cocktail.",
+      "visual_cue": "Juice should be freshly squeezed for optimal flavor."
+    },
+    {
+      "step_number": 3,
+      "action": "Fill the glass with ice cubes.",
+      "technique_detail": "Use enough ice to chill the drink without diluting it too quickly.",
+      "visual_cue": "Glass should be nearly full of ice."
+    },
+    {
+      "step_number": 4,
+      "action": "Top up with soda water.",
+      "technique_detail": "Pour gently to retain carbonation.",
+      "visual_cue": "Bubbles should be visible rising in the glass."
+    },
+    {
+      "step_number": 5,
+      "action": "Gently stir to mix all the ingredients without bruising the mint.",
+      "technique_detail": "Use a bar spoon and stir carefully to combine flavors while preserving mint integrity.",
+      "visual_cue": "Mint leaves should still be intact and floating."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Frozen Mojito",
+      "changes": [
+        "Use crushed ice instead of ice cubes.",
+        "Blend the ingredients briefly before serving."
+      ],
+      "description": "A slushy, icy version of the classic mojito, perfect for hot days."
+    },
+    {
+      "name": "Strawberry Mojito",
+      "changes": [
+        "Add muddled fresh strawberries with the mint.",
+        "Adjust sugar to taste."
+      ],
+      "description": "A fruity twist adding sweetness and color to the traditional mojito."
+    }
+  ],
+  "food_pairings": [
+    "Grilled seafood",
+    "Light salads",
+    "Cuban cuisine"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Beginner to Intermediate",
+  "drink_trivia": [
+    {
+      "fact": "The Mojito was a favorite drink of Ernest Hemingway.",
+      "category": "Celebrity",
+      "source_period": "20th century"
+    },
+    {
+      "fact": "The original version called 'El Draque' was used as a medicinal tonic.",
+      "category": "History",
+      "source_period": "16th century"
+    },
+    {
+      "fact": "Mint is essential for the mojito's signature fresh flavor.",
+      "category": "Ingredients"
+    },
+    {
+      "fact": "Mojitos are especially popular in the Caribbean and summer months.",
+      "category": "Culture"
+    }
+  ]
+}

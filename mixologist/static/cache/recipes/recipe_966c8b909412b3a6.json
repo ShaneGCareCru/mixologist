@@ -1,0 +1,211 @@
+{
+  "drink_name": "Old Fashioned",
+  "alcohol_content": 0.32,
+  "serving_glass": "Old Fashioned Glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Bourbon or Rye Whiskey",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Sugar Cube",
+      "quantity": "1"
+    },
+    {
+      "name": "Angostura Bitters",
+      "quantity": "2 dashes"
+    },
+    {
+      "name": "Water",
+      "quantity": "a splash"
+    },
+    {
+      "name": "Orange Twist",
+      "quantity": "1"
+    },
+    {
+      "name": "Maraschino Cherry",
+      "quantity": "1 (optional)"
+    }
+  ],
+  "steps": [
+    "Place the sugar cube in an Old Fashioned glass.",
+    "Add the Angostura bitters and a splash of water to the glass.",
+    "Muddle the sugar cube and bitters until dissolved.",
+    "Add the bourbon or rye whiskey.",
+    "Fill the glass with a large ice cube or several smaller ones.",
+    "Stir gently to combine and chill the drink.",
+    "Express the oil of an orange twist over the glass, then drop it in.",
+    "Optionally, garnish with a maraschino cherry."
+  ],
+  "garnish": [
+    "Orange Twist",
+    "Maraschino Cherry (optional)"
+  ],
+  "drink_image_description": "A classic Old Fashioned cocktail served in a clear Old Fashioned glass with a large ice cube. The drink is amber in color, garnished with a bright orange twist and a red maraschino cherry. The glass is placed on a wooden bar counter with warm natural lighting from the side, highlighting the rich colors of the drink and the glossy garnish. The background is softly blurred and bright, emphasizing the elegance and simplicity of this iconic cocktail.",
+  "drink_history": "The Old Fashioned is one of the oldest known cocktails, dating back to the early 19th century. It originated in the United States and is considered a cornerstone of classic cocktail culture. The drink was originally called a 'whiskey cocktail' and was popularized in the late 1800s. Its simplicity and balanced flavors have made it a lasting favorite among bartenders and enthusiasts alike.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Bourbon or Rye Whiskey",
+      "brands": [
+        "Buffalo Trace",
+        "Woodford Reserve",
+        "Bulleit Rye"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Bourbon or Rye Whiskey",
+      "alternatives": [
+        "Canadian Whisky",
+        "Irish Whiskey",
+        "Dark Rum"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Manhattan",
+    "Sazerac",
+    "Whiskey Sour",
+    "Boulevardier",
+    "Vieux Carr\u00e9",
+    "Rob Roy"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Old Fashioned Glass",
+      "essential": true
+    },
+    {
+      "item": "Muddler",
+      "essential": true
+    },
+    {
+      "item": "Bar Spoon",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Whiskey",
+      "Bitters",
+      "Sweet"
+    ],
+    "secondary_notes": [
+      "Citrus",
+      "Oak",
+      "Spice"
+    ],
+    "mouthfeel": "Smooth and slightly viscous",
+    "finish": "Long and warming",
+    "balance": "Well balanced between sweetness, bitterness, and spirit strength"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "When making a batch, multiply ingredients accordingly and stir well to combine."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Place the sugar cube in an Old Fashioned glass.",
+      "technique_detail": "Use a large sugar cube for better dissolution.",
+      "visual_cue": "Sugar cube should sit flat at the bottom of the glass.",
+      "common_mistakes": [
+        "Using granulated sugar without muddling properly."
+      ],
+      "timing_guidance": "Muddle until sugar is fully dissolved with bitters."
+    },
+    {
+      "step_number": 2,
+      "action": "Add the Angostura bitters and a splash of water to the glass.",
+      "technique_detail": "The water helps dissolve the sugar and dilute the bitters slightly.",
+      "visual_cue": "Mixture should appear syrupy and well combined."
+    },
+    {
+      "step_number": 3,
+      "action": "Muddle the sugar cube and bitters until dissolved.",
+      "technique_detail": "Use a muddler to press and crush the sugar cube thoroughly.",
+      "common_mistakes": [
+        "Not muddling long enough to dissolve sugar."
+      ],
+      "timing_guidance": "About 20-30 seconds of muddling."
+    },
+    {
+      "step_number": 4,
+      "action": "Add the bourbon or rye whiskey.",
+      "technique_detail": "Pour slowly to avoid splashing and losing aroma."
+    },
+    {
+      "step_number": 5,
+      "action": "Fill the glass with a large ice cube or several smaller ones.",
+      "technique_detail": "A large ice cube melts slower, keeping the drink from diluting too quickly."
+    },
+    {
+      "step_number": 6,
+      "action": "Stir gently to combine and chill the drink.",
+      "technique_detail": "Use a bar spoon to stir gently for about 20 seconds.",
+      "visual_cue": "Drink should look well mixed and chilled."
+    },
+    {
+      "step_number": 7,
+      "action": "Express the oil of an orange twist over the glass, then drop it in.",
+      "technique_detail": "Hold the twist over the glass and give it a firm bend to release the oils.",
+      "visual_cue": "Orange peel should glisten with expressed oils."
+    },
+    {
+      "step_number": 8,
+      "action": "Optionally, garnish with a maraschino cherry.",
+      "technique_detail": "Adds a touch of sweetness and classic look."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Maple Old Fashioned",
+      "changes": [
+        "Replace sugar cube with 1/2 oz maple syrup"
+      ],
+      "description": "Adds a rich, autumnal sweetness with a hint of maple flavor."
+    },
+    {
+      "name": "Spiced Old Fashioned",
+      "changes": [
+        "Add a cinnamon stick during muddling",
+        "Use spiced bitters instead of Angostura"
+      ],
+      "description": "Introduces warm spice notes for a cozy twist."
+    }
+  ],
+  "food_pairings": [
+    "Grilled steak",
+    "Roasted nuts",
+    "Dark chocolate"
+  ],
+  "optimal_serving_temperature": "Chilled but not overly cold",
+  "skill_level_recommendation": "Intermediate - requires proper muddling and stirring technique",
+  "drink_trivia": [
+    {
+      "fact": "The Old Fashioned is often credited as the first true cocktail.",
+      "category": "history"
+    },
+    {
+      "fact": "The drink was popularized by Pendennis Club bartender James E. Pepper in the late 1800s.",
+      "category": "history",
+      "source_period": "late 1800s"
+    },
+    {
+      "fact": "Frank Sinatra was known to favor the Old Fashioned.",
+      "category": "celebrity"
+    },
+    {
+      "fact": "The term 'Old Fashioned' was used to distinguish the drink from newer cocktail styles in the late 19th century.",
+      "category": "history"
+    }
+  ]
+}

@@ -1,0 +1,228 @@
+{
+  "drink_name": "New Orleans Fizz",
+  "alcohol_content": 0.3,
+  "serving_glass": "Highball glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Bourbon",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Fresh lemon juice",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Simple syrup",
+      "quantity": "3/4 oz"
+    },
+    {
+      "name": "Egg white",
+      "quantity": "1"
+    },
+    {
+      "name": "Club soda",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Angostura bitters",
+      "quantity": "2 dashes"
+    }
+  ],
+  "steps": [
+    "Add bourbon, fresh lemon juice, simple syrup, and egg white into a shaker without ice.",
+    "Dry shake (shake without ice) vigorously to emulsify the egg white.",
+    "Add ice and shake again until well-chilled.",
+    "Strain into a highball glass without ice.",
+    "Top with club soda.",
+    "Add 2 dashes of Angostura bitters on top for aroma and garnish."
+  ],
+  "garnish": [
+    "Lemon twist"
+  ],
+  "drink_image_description": "A tall highball glass filled with a frothy light amber cocktail topped with a few dashes of Angostura bitters creating a pretty pattern. The drink is garnished with a bright yellow lemon twist. The image is taken with soft natural lighting from the side, with a bright, airy background that highlights the frothy texture and vibrant colors. The focus is on the drink's creamy foam, the bitters' swirl, and the fresh lemon garnish.",
+  "drink_history": "The New Orleans Fizz is a modern twist on classic American fizzes, inspired by the vibrant cocktail culture of New Orleans. It combines the smooth warmth of bourbon with the bright acidity of lemon and the creamy texture of egg white, balanced by the effervescence of club soda and the aromatic complexity of bitters. This drink pays homage to New Orleans' rich history of cocktail innovation and its love for balanced, refreshing beverages.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Bourbon",
+      "brands": [
+        "Buffalo Trace",
+        "Woodford Reserve",
+        "Maker's Mark"
+      ]
+    },
+    {
+      "ingredient": "Simple syrup",
+      "brands": [
+        "Homemade simple syrup",
+        "Monin",
+        "Torani"
+      ]
+    },
+    {
+      "ingredient": "Angostura bitters",
+      "brands": [
+        "Angostura"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Bourbon",
+      "alternatives": [
+        "Rye whiskey",
+        "Dark rum"
+      ]
+    },
+    {
+      "original": "Simple syrup",
+      "alternatives": [
+        "Honey syrup",
+        "Agave syrup"
+      ]
+    },
+    {
+      "original": "Egg white",
+      "alternatives": [
+        "Aquafaba (chickpea brine)"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Whiskey Sour",
+    "Ramos Gin Fizz",
+    "Tom Collins",
+    "Sazerac",
+    "Mint Julep",
+    "French 75"
+  ],
+  "difficulty_rating": 3,
+  "preparation_time_minutes": 7,
+  "equipment_needed": [
+    {
+      "item": "Cocktail shaker",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    },
+    {
+      "item": "Jigger",
+      "essential": true
+    },
+    {
+      "item": "Bar spoon",
+      "essential": false,
+      "alternative": "Stirring stick"
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Citrus",
+      "Sweet",
+      "Bourbon"
+    ],
+    "secondary_notes": [
+      "Creamy",
+      "Spicy",
+      "Effervescent"
+    ],
+    "mouthfeel": "Smooth and frothy with a lively effervescence",
+    "finish": "Clean and slightly warming with a hint of spice from the bitters",
+    "balance": "Well-balanced between sweet, sour, and bitter elements"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 6,
+    "batch_preparation_notes": "When making a batch, omit the egg white and add freshly whipped egg whites to each glass individually for the best texture."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Add bourbon, fresh lemon juice, simple syrup, and egg white into a shaker without ice.",
+      "technique_detail": "The dry shake emulsifies the egg white to create a frothy texture without diluting the drink with ice too early.",
+      "visual_cue": "The mixture becomes cloudy and frothy before adding ice.",
+      "common_mistakes": [
+        "Not dry shaking long enough to emulsify the egg white properly."
+      ],
+      "timing_guidance": "Shake vigorously for about 15 seconds."
+    },
+    {
+      "step_number": 2,
+      "action": "Add ice and shake again until well-chilled.",
+      "technique_detail": "This chills the mixture and dilutes it slightly to balance the flavors.",
+      "visual_cue": "The shaker becomes cold and frosty outside.",
+      "common_mistakes": [
+        "Over-diluting the drink by shaking too long."
+      ],
+      "timing_guidance": "Shake for about 10-15 seconds."
+    },
+    {
+      "step_number": 3,
+      "action": "Strain into a highball glass without ice.",
+      "technique_detail": "Fine straining ensures a smooth mouthfeel without ice shards.",
+      "visual_cue": "The drink should have a frothy top layer when poured correctly."
+    },
+    {
+      "step_number": 4,
+      "action": "Top with club soda.",
+      "technique_detail": "Pour gently to maintain the frothy head created by the egg white.",
+      "visual_cue": "Bubbles rising through the drink."
+    },
+    {
+      "step_number": 5,
+      "action": "Add 2 dashes of Angostura bitters on top for aroma and garnish.",
+      "technique_detail": "The bitters add aromatic complexity and a decorative touch.",
+      "visual_cue": "Bitters form a pretty pattern on the froth."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "New Orleans Rum Fizz",
+      "changes": [
+        "Substitute bourbon with dark rum."
+      ],
+      "description": "A tropical twist on the classic fizz, bringing rich molasses notes and a Caribbean flair."
+    },
+    {
+      "name": "New Orleans Honey Fizz",
+      "changes": [
+        "Replace simple syrup with honey syrup."
+      ],
+      "description": "A sweeter, floral variation that highlights the honey's natural flavors."
+    }
+  ],
+  "food_pairings": [
+    "Creole cuisine",
+    "Grilled seafood",
+    "Spicy Cajun dishes"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Intermediate home bartenders who enjoy classic cocktails with a twist.",
+  "drink_trivia": [
+    {
+      "fact": "The fizz cocktail style dates back to the late 19th century and was popularized in American soda fountains.",
+      "category": "history",
+      "source_period": "Late 1800s"
+    },
+    {
+      "fact": "New Orleans has a rich cocktail culture that blends French, Caribbean, and Southern American influences.",
+      "category": "culture"
+    },
+    {
+      "fact": "Egg white is often used in fizzes to create a smooth, frothy texture that enhances the drinking experience.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "Angostura bitters were originally created as a medicinal tonic in the 19th century.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "The New Orleans Fizz is a modern homage to the city's historic love for vibrant and balanced cocktails.",
+      "category": "history"
+    }
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "drink_name": "Boulevardier",
+  "alcohol_content": 0.28,
+  "serving_glass": "Old-fashioned glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Bourbon or Rye Whiskey",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Sweet Vermouth",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Campari",
+      "quantity": "1 oz"
+    }
+  ],
+  "steps": [
+    "Add bourbon or rye whiskey, sweet vermouth, and Campari into a mixing glass with ice.",
+    "Stir until well chilled.",
+    "Strain into a chilled old-fashioned glass with a large ice cube.",
+    "Garnish with an orange twist."
+  ],
+  "garnish": [
+    "Orange twist"
+  ],
+  "drink_image_description": "A classic Boulevardier cocktail showcasing its deep amber color, served in a crystal-clear old-fashioned glass. The glass contains a large, perfectly clear ice cube, highlighting the rich blend of bourbon or rye whiskey, sweet vermouth, and Campari. An elegant orange twist rests on the rim, with warm, soft lighting accentuating the drink's amber hues against a bright background, captured from a slightly overhead angle to emphasize the drink's clarity and garnish.",
+  "drink_history": "The Boulevardier is a classic cocktail that dates back to the Prohibition era in the United States. It is believed to have been created in the 1920s by an American expatriate in Paris named Erskine Gwynne, who was the editor of a monthly magazine called \"The Boulevardier.\" The drink shares a similar composition to the Negroni but substitutes gin with bourbon or rye whiskey, giving it a richer, warmer profile.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Bourbon or Rye Whiskey",
+      "brands": [
+        "Buffalo Trace",
+        "Rittenhouse Rye",
+        "Woodford Reserve"
+      ]
+    },
+    {
+      "ingredient": "Sweet Vermouth",
+      "brands": [
+        "Carpano Antica Formula",
+        "Dolin Rouge"
+      ]
+    },
+    {
+      "ingredient": "Campari",
+      "brands": [
+        "Campari"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Bourbon or Rye Whiskey",
+      "alternatives": [
+        "Irish whiskey",
+        "Canadian whisky"
+      ]
+    },
+    {
+      "original": "Sweet Vermouth",
+      "alternatives": [
+        "Dry vermouth with a splash of simple syrup",
+        "Italian red wine"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Negroni",
+    "Manhattan",
+    "Old Fashioned",
+    "Americano",
+    "Sazerac",
+    "Rob Roy",
+    "Martinez"
+  ],
+  "difficulty_rating": 3,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Mixing glass",
+      "essential": true
+    },
+    {
+      "item": "Bar spoon",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    },
+    {
+      "item": "Old-fashioned glass",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Bourbon or Rye Whiskey",
+      "Sweet Vermouth",
+      "Campari"
+    ],
+    "secondary_notes": [
+      "Orange peel bitterness",
+      "Herbal complexity"
+    ],
+    "mouthfeel": "Smooth and warming with a medium body",
+    "finish": "Lingering bittersweet finish with hints of citrus",
+    "balance": "Well balanced between the sweetness of vermouth and the bitterness of Campari"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "Scale ingredients linearly for larger batches, stir well with ice, and strain into individual glasses."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Add bourbon or rye whiskey, sweet vermouth, and Campari into a mixing glass with ice.",
+      "technique_detail": "Use fresh, large ice cubes to chill the drink without over-diluting.",
+      "visual_cue": "The mixture should become frosty on the outside of the glass.",
+      "common_mistakes": [
+        "Using crushed ice which dilutes the drink too quickly",
+        "Not chilling the glass beforehand"
+      ],
+      "timing_guidance": "Stir for about 20-30 seconds."
+    },
+    {
+      "step_number": 2,
+      "action": "Stir until well chilled.",
+      "technique_detail": "Use a bar spoon to stir gently but thoroughly, ensuring the mixture is evenly cooled.",
+      "visual_cue": "The liquid should appear clear and slightly thickened from the chilling process.",
+      "common_mistakes": [
+        "Over-stirring which can overly dilute the drink",
+        "Under-stirring leading to a warm cocktail"
+      ],
+      "timing_guidance": "Aim for 20-30 seconds of stirring."
+    },
+    {
+      "step_number": 3,
+      "action": "Strain into a chilled old-fashioned glass with a large ice cube.",
+      "technique_detail": "Use a julep strainer or Hawthorne strainer to keep any ice shards out of the glass.",
+      "visual_cue": "The cocktail should be clear and free of ice shards.",
+      "common_mistakes": [
+        "Pouring directly without straining",
+        "Using small ice cubes that melt too quickly"
+      ],
+      "timing_guidance": ""
+    },
+    {
+      "step_number": 4,
+      "action": "Garnish with an orange twist.",
+      "technique_detail": "Express the oils from the orange peel over the drink before placing it on the rim.",
+      "visual_cue": "The orange twist should glisten with oils and sit neatly on the glass rim.",
+      "common_mistakes": [
+        "Not expressing the oils which reduces aroma",
+        "Letting the twist fall into the drink too early"
+      ],
+      "timing_guidance": ""
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Boulevardier on the Rocks",
+      "changes": [
+        "Serve over large ice cubes in an old-fashioned glass instead of neat."
+      ],
+      "description": "A more casual, longer version of the Boulevardier that is perfect for sipping slowly."
+    },
+    {
+      "name": "Maple Boulevardier",
+      "changes": [
+        "Add a dash of maple syrup for sweetness."
+      ],
+      "description": "A slightly sweeter twist that adds a rich maple flavor, perfect for fall and winter."
+    }
+  ],
+  "food_pairings": [
+    "Charcuterie board",
+    "Grilled steak",
+    "Dark chocolate desserts"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Intermediate home bartenders",
+  "drink_trivia": [
+    {
+      "fact": "The Boulevardier was created by Erskine Gwynne, an American expat in Paris during the 1920s.",
+      "category": "history",
+      "source_period": "1920s"
+    },
+    {
+      "fact": "It is essentially a whiskey-based Negroni, swapping gin for bourbon or rye whiskey.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "The drink gained popularity during the Prohibition era in the United States.",
+      "category": "history"
+    },
+    {
+      "fact": "The orange twist garnish enhances the aromatic experience of the cocktail.",
+      "category": "preparation"
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "drink_name": "Cosmopolitan",
+  "alcohol_content": 0.25,
+  "serving_glass": "Martini glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Vodka",
+      "quantity": "1.5 oz"
+    },
+    {
+      "name": "Triple Sec (or Cointreau)",
+      "quantity": "1 oz"
+    },
+    {
+      "name": "Fresh Lime Juice",
+      "quantity": "0.5 oz"
+    },
+    {
+      "name": "Cranberry Juice",
+      "quantity": "1 oz"
+    }
+  ],
+  "steps": [
+    "Fill a shaker with ice.",
+    "Add vodka, triple sec, fresh lime juice, and cranberry juice to the shaker.",
+    "Shake well until the mixture is chilled.",
+    "Strain into a chilled martini glass.",
+    "Garnish with a lime wheel or twist of lime peel."
+  ],
+  "garnish": [
+    "Lime wheel"
+  ],
+  "drink_image_description": "A vibrant Cosmopolitan cocktail in a sleek martini glass, garnished with a fresh lime wheel perched on the rim. The background is bright and airy, illuminated with soft natural light that highlights the cocktail's pinkish-red hue. The scene is captured from a slightly elevated angle, emphasizing the cocktail's clarity and smooth texture, with the shaker and ingredients subtly blurred in the background to add context and depth.",
+  "drink_history": "The Cosmopolitan, often simply called the 'Cosmo,' became widely popular in the 1990s, especially among the urban cocktail crowd and was famously associated with the TV show 'Sex and the City.' Its creation is often credited to bartender Cheryl Cook in Miami during the 1980s, who crafted the drink to make vodka more appealing to women by adding a splash of cranberry juice and lime. The drink's balanced sweet and tart flavor profile has made it a lasting favorite in cocktail culture.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Vodka",
+      "brands": [
+        "Ketel One",
+        "Grey Goose",
+        "Tito's Handmade Vodka"
+      ]
+    },
+    {
+      "ingredient": "Triple Sec (or Cointreau)",
+      "brands": [
+        "Cointreau",
+        "Combier",
+        "Pierre Ferrand"
+      ]
+    },
+    {
+      "ingredient": "Cranberry Juice",
+      "brands": [
+        "Ocean Spray",
+        "Lakewood Organic"
+      ]
+    },
+    {
+      "ingredient": "Fresh Lime Juice",
+      "brands": [
+        "Fresh limes or Nellie & Joe's"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Triple Sec (or Cointreau)",
+      "alternatives": [
+        "Grand Marnier",
+        "Limoncello"
+      ]
+    },
+    {
+      "original": "Cranberry Juice",
+      "alternatives": [
+        "Pomegranate Juice",
+        "Raspberry Juice"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Appletini",
+    "French Martini",
+    "Lemon Drop Martini",
+    "Vodka Martini",
+    "Sex on the Beach",
+    "Margarita",
+    "Mai Tai"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Cocktail Shaker",
+      "essential": true
+    },
+    {
+      "item": "Jigger or Measuring Tool",
+      "essential": true
+    },
+    {
+      "item": "Strainer",
+      "essential": true
+    },
+    {
+      "item": "Martini Glass",
+      "essential": true
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Citrus",
+      "Sweet",
+      "Tart"
+    ],
+    "secondary_notes": [
+      "Fruity",
+      "Refreshing"
+    ],
+    "mouthfeel": "Smooth and crisp",
+    "finish": "Clean and slightly tangy",
+    "balance": "Well balanced between sweet and tart"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "Scale ingredients proportionally for larger batches."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Fill a shaker with ice.",
+      "technique_detail": "Use fresh, large ice cubes to chill the shaker quickly without excessive dilution.",
+      "visual_cue": "Shaker becomes frosty on the outside.",
+      "common_mistakes": [
+        "Using too much ice causing dilution",
+        "Not enough ice leading to inadequate chilling"
+      ],
+      "timing_guidance": "Add ice just before shaking."
+    },
+    {
+      "step_number": 2,
+      "action": "Add vodka, triple sec, fresh lime juice, and cranberry juice to the shaker.",
+      "technique_detail": "Measure ingredients accurately using a jigger to maintain balance.",
+      "visual_cue": "Clear separation of liquids before shaking.",
+      "common_mistakes": [
+        "Incorrect measurements leading to overpowering flavors"
+      ],
+      "timing_guidance": "Add ingredients promptly after ice."
+    },
+    {
+      "step_number": 3,
+      "action": "Shake well until the mixture is chilled.",
+      "technique_detail": "Shake vigorously for about 15 seconds to achieve good dilution and chill.",
+      "visual_cue": "Shaker feels cold and firm to the touch.",
+      "common_mistakes": [
+        "Shaking too briefly resulting in warm drink",
+        "Over-shaking causing excess dilution"
+      ],
+      "timing_guidance": "Shake for 15 seconds."
+    },
+    {
+      "step_number": 4,
+      "action": "Strain into a chilled martini glass.",
+      "technique_detail": "Use a fine strainer to ensure smooth texture and remove ice shards.",
+      "visual_cue": "Clear, smooth pour without ice chips.",
+      "common_mistakes": [
+        "Pouring too quickly causing spills",
+        "Not chilling the glass leading to warm drink"
+      ],
+      "timing_guidance": "Pour steadily and strain carefully."
+    },
+    {
+      "step_number": 5,
+      "action": "Garnish with a lime wheel or twist of lime peel.",
+      "technique_detail": "Place garnish delicately on the rim for aesthetic appeal and aroma enhancement.",
+      "visual_cue": "Garnish sits neatly on the rim.",
+      "common_mistakes": [
+        "Overloading garnish",
+        "Ignoring garnish altogether"
+      ],
+      "timing_guidance": "Add garnish just before serving."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "White Cosmopolitan",
+      "changes": [
+        "Use white cranberry juice instead of red cranberry juice"
+      ],
+      "description": "A lighter-colored variation that maintains the classic flavors with a subtle twist."
+    },
+    {
+      "name": "Blood Orange Cosmopolitan",
+      "changes": [
+        "Replace lime juice with blood orange juice",
+        "Use blood orange zest for garnish"
+      ],
+      "description": "Adds a rich citrus flavor and vibrant color for a seasonal twist."
+    }
+  ],
+  "food_pairings": [
+    "Light seafood dishes",
+    "Fresh salads",
+    "Cheese platters"
+  ],
+  "optimal_serving_temperature": "Chilled",
+  "skill_level_recommendation": "Beginner to intermediate bartenders",
+  "drink_trivia": [
+    {
+      "fact": "The Cosmopolitan gained massive popularity in the 1990s due to its frequent mention on 'Sex and the City.'",
+      "category": "culture",
+      "source_period": "1990s"
+    },
+    {
+      "fact": "Cheryl Cook is often credited with inventing the Cosmopolitan in the 1980s in Miami.",
+      "category": "history",
+      "source_period": "1980s"
+    },
+    {
+      "fact": "The cocktail was designed to make vodka more appealing to women by adding cranberry juice and lime.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "A well-made Cosmopolitan is known for its balance of sweet and tart flavors, making it a refreshing choice.",
+      "category": "flavor"
+    },
+    {
+      "fact": "The pink hue of the Cosmopolitan comes from the cranberry juice, making it visually distinctive.",
+      "category": "preparation"
+    }
+  ]
+}

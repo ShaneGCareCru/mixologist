@@ -379,16 +379,22 @@ class _MethodCardState extends State<MethodCard>
                   children: [
                     Icon(Icons.timer, size: 16, color: theme.hintColor),
                     const SizedBox(width: 4),
-                    Text(widget.data.duration,
-                        style: theme.textTheme.bodySmall),
+                    Flexible(
+                      child: Text(widget.data.duration,
+                          style: theme.textTheme.bodySmall,
+                          overflow: TextOverflow.ellipsis),
+                    ),
                     const SizedBox(width: 12),
                     Icon(Icons.speed, size: 16, color: theme.hintColor),
                     const SizedBox(width: 4),
-                    Text(widget.data.difficulty,
-                        style: theme.textTheme.bodySmall),
+                    Flexible(
+                      child: Text(widget.data.difficulty,
+                          style: theme.textTheme.bodySmall,
+                          overflow: TextOverflow.ellipsis),
+                    ),
                     const Spacer(),
                     MenuAnchor(
-                      builder: (context, controller) => IconButton(
+                      builder: (context, controller, child) => IconButton(
                         icon: const Icon(Icons.more_vert),
                         onPressed: () {
                           controller.isOpen ? controller.close() : controller.open();
