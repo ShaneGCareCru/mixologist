@@ -15,6 +15,7 @@ import 'widgets/method_card.dart';
 import 'widgets/loading_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/unified_inventory_page.dart';
+import 'pages/ai_assistant_page.dart';
 
 
 void main() async {
@@ -788,6 +789,17 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('AI Mixologist'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.smart_toy),
+            tooltip: 'AI Assistant',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AIAssistantPage(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.inventory),
             tooltip: 'Inventory',
