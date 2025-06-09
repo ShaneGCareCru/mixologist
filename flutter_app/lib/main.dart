@@ -686,8 +686,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final SearchController _searchController = SearchController();
   final _drinkPreferencesController = TextEditingController();
-  bool _isLoadingRecipe = false;
-  bool _isLoadingCustom = false;
   String? _recipeError;
   String? _customError;
 
@@ -696,13 +694,23 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() { _recipeError = 'Please enter a drink name.'; });
       return;
     }
-    setState(() { _isLoadingRecipe = true; _recipeError = null; });
+    
+    setState(() { _recipeError = null; });
+    
+    // Navigate to loading screen
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const LoadingScreen()),
+    );
+    
     try {
       final response = await http.post(
         Uri.parse('http://127.0.0.1:8081/create'), // Changed port to 8081
         body: {'drink_query': _searchController.text},
       );
-      setState(() { _isLoadingRecipe = false; });
+      
+      // Pop loading screen
+      Navigator.of(context).pop();
+      
       if (response.statusCode == 200) {
         final recipeData = jsonDecode(response.body);
         if (mounted) {
@@ -716,7 +724,9 @@ class _HomeScreenState extends State<HomeScreen> {
         debugPrint('Error fetching recipe: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      setState(() { _isLoadingRecipe = false; _recipeError = 'Failed to connect: $e'; });
+      // Pop loading screen on error
+      Navigator.of(context).pop();
+      setState(() { _recipeError = 'Failed to connect: $e'; });
       debugPrint('Exception fetching recipe: $e');
     }
   }
@@ -726,13 +736,23 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() { _customError = 'Please describe your ideal drink.'; });
       return;
     }
-    setState(() { _isLoadingCustom = true; _customError = null; });
+    
+    setState(() { _customError = null; });
+    
+    // Navigate to loading screen
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const LoadingScreen()),
+    );
+    
     try {
       final response = await http.post(
         Uri.parse('http://127.0.0.1:8081/create_from_description'),
         body: {'drink_description': _drinkPreferencesController.text},
       );
-      setState(() { _isLoadingCustom = false; });
+      
+      // Pop loading screen
+      Navigator.of(context).pop();
+      
       if (response.statusCode == 200) {
         final recipeData = jsonDecode(response.body);
         if (mounted) {
@@ -745,7 +765,9 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() { _customError = 'Error creating drink: ${response.statusCode}'; });
       }
     } catch (e) {
-      setState(() { _isLoadingCustom = false; _customError = 'Failed to connect: $e'; });
+      // Pop loading screen on error
+      Navigator.of(context).pop();
+      setState(() { _customError = 'Failed to connect: $e'; });
     }
   }
 
@@ -947,29 +969,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Get recipe button
                       SizedBox(
                         width: double.infinity,
-                        child: _isLoadingRecipe
-                            ? Container(
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  color: theme.colorScheme.primary.withOpacity( 0.1),
-                                ),
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              )
-                            : ElevatedButton.icon(
-                                onPressed: _getRecipe,
-                                icon: const Icon(Icons.search, size: 20),
-                                label: const Text('Find Recipe'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.primary,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(double.infinity, 56),
-                                ),
-                              ),
+                        child: ElevatedButton.icon(
+                          onPressed: _getRecipe,
+                          icon: const Icon(Icons.search, size: 20),
+                          label: const Text('Find Recipe'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 56),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -1027,29 +1036,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       
                       SizedBox(
                         width: double.infinity,
-                        child: _isLoadingCustom
-                            ? Container(
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  color: theme.colorScheme.secondary.withOpacity( 0.1),
-                                ),
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: theme.colorScheme.secondary,
-                                  ),
-                                ),
-                              )
-                            : ElevatedButton.icon(
-                                onPressed: _createCustomDrink,
-                                icon: const Icon(Icons.auto_awesome, size: 20),
-                                label: const Text('Create Custom Drink'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.secondary,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(double.infinity, 56),
-                                ),
-                              ),
+                        child: ElevatedButton.icon(
+                          onPressed: _createCustomDrink,
+                          icon: const Icon(Icons.auto_awesome, size: 20),
+                          label: const Text('Create Custom Drink'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.secondary,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 56),
+                          ),
+                        ),
                       ),
                     ],
                   ),

@@ -27,11 +27,14 @@ dependencies:
   flutter_audio_capture: ^0.2.7
   just_audio: ^0.9.36
 
+
 flutter:
   uses-material-design: true
   assets:
     - assets/rive/
     - assets/audio/
+    - assets/animations/placeholder.riv
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
