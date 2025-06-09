@@ -6,6 +6,7 @@ import '../services/inventory_service.dart';
 import '../widgets/inventory_item_card.dart';
 import '../widgets/bottle_card.dart';
 import '../widgets/add_item_dialog.dart';
+import '../widgets/inventory_shelf.dart';
 
 class UnifiedInventoryPage extends StatefulWidget {
   const UnifiedInventoryPage({Key? key}) : super(key: key);
@@ -22,7 +23,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
   String? _error;
   String _searchQuery = '';
   String _selectedCategory = 'all';
-  bool _isBackBarView = true; // Toggle between back bar and list view
+  bool _isBackBarView = true; // Toggle between shelf view and list view
 
   final ImagePicker _picker = ImagePicker();
 
@@ -234,6 +235,37 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
     }).toList();
   }
 
+  Map<String, List<InventoryItem>> get _itemsByCategory {
+    final itemsByCategory = <String, List<InventoryItem>>{};
+    
+    for (final item in _filteredItems) {
+      if (!itemsByCategory.containsKey(item.category)) {
+        itemsByCategory[item.category] = [];
+      }
+      itemsByCategory[item.category]!.add(item);
+    }
+
+    // Sort categories by priority: spirits first, then by item count
+    final sortedCategories = itemsByCategory.keys.toList()..sort((a, b) {
+      // Prioritize spirits and liqueurs
+      if (a == IngredientCategory.spirits && b != IngredientCategory.spirits) return -1;
+      if (b == IngredientCategory.spirits && a != IngredientCategory.spirits) return 1;
+      if (a == IngredientCategory.liqueurs && b != IngredientCategory.liqueurs) return -1;
+      if (b == IngredientCategory.liqueurs && a != IngredientCategory.liqueurs) return 1;
+      
+      // Then sort by item count (descending)
+      return itemsByCategory[b]!.length.compareTo(itemsByCategory[a]!.length);
+    });
+
+    // Return ordered map
+    final orderedMap = <String, List<InventoryItem>>{};
+    for (final category in sortedCategories) {
+      orderedMap[category] = itemsByCategory[category]!;
+    }
+
+    return orderedMap;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -247,7 +279,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
                 _isBackBarView = !_isBackBarView;
               });
             },
-            tooltip: _isBackBarView ? 'Switch to List View' : 'Switch to Back Bar View',
+            tooltip: _isBackBarView ? 'Switch to List View' : 'Switch to Shelf View',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -383,7 +415,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
                             ),
                           )
                         : _isBackBarView
-                            ? _buildBackBarView()
+                            ? _buildShelfView()
                             : _buildListView(),
           ),
         ],
@@ -395,24 +427,74 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
     );
   }
 
-  Widget _buildBackBarView() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+  Widget _buildShelfView() {
+    final itemsByCategory = _itemsByCategory;
+    
+    if (itemsByCategory.isEmpty) {
+      return const Center(
+        child: Text(
+          'No items found.\nTap + to add items or use camera to scan ingredients.',
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    return CustomScrollView(
+      slivers: [
+        // Build a shelf for each category
+        ...itemsByCategory.entries.map(
+          (entry) => InventoryShelf(
+            title: IngredientCategory.getDisplayName(entry.key),
+            items: entry.value,
+            onUpdate: _loadInventory,
+            onDelete: _loadInventory,
+            onSeeAll: entry.value.length > 4 ? () {
+              // Navigate to category-specific view
+              _showCategoryView(entry.key, entry.value);
+            } : null,
+          ),
+        ),
+        // Add some bottom padding
+        const SliverPadding(
+          padding: EdgeInsets.only(bottom: 80),
+        ),
+      ],
+    );
+  }
+
+  void _showCategoryView(String category, List<InventoryItem> items) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: Text(IngredientCategory.getDisplayName(category)),
+          ),
+          body: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.8,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return BottleCard(
+                item: item,
+                onUpdate: () {
+                  _loadInventory();
+                  Navigator.of(context).pop(); // Close category view
+                },
+                onDelete: () {
+                  _loadInventory();
+                  Navigator.of(context).pop(); // Close category view
+                },
+              );
+            },
+          ),
+        ),
       ),
-      itemCount: _filteredItems.length,
-      itemBuilder: (context, index) {
-        final item = _filteredItems[index];
-        return BottleCard(
-          item: item,
-          onUpdate: _loadInventory,
-          onDelete: _loadInventory,
-        );
-      },
     );
   }
 
