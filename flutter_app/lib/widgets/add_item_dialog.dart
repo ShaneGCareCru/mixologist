@@ -1,5 +1,6 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/inventory_models.dart';
 import '../services/inventory_service.dart';
 
@@ -8,7 +9,7 @@ class AddItemDialog extends StatefulWidget {
   final String? initialCategory;
   final String? initialBrand;
   final String? initialQuantity;
-  final File? sourceImage;
+  final XFile? sourceImage;
   final VoidCallback onItemAdded;
 
   const AddItemDialog({
@@ -135,9 +136,17 @@ class _AddItemDialogState extends State<AddItemDialog> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        widget.sourceImage!,
-                        fit: BoxFit.cover,
+                      child: FutureBuilder<Uint8List>(
+                        future: widget.sourceImage!.readAsBytes(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return Image.memory(
+                              snapshot.data!,
+                              fit: BoxFit.cover,
+                            );
+                          }
+                          return const CircularProgressIndicator();
+                        },
                       ),
                     ),
                   ),

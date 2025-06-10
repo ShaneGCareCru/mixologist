@@ -788,6 +788,16 @@ async def add_inventory_item(
         logging.error(f"Error adding inventory item: {e}")
         raise HTTPException(status_code=500, detail=f"Error adding item: {str(e)}")
 
+@app.get("/inventory/stats")
+async def get_inventory_stats():
+    """Get inventory statistics."""
+    try:
+        stats = await InventoryService.get_stats()
+        return {"stats": stats.model_dump()}
+    except Exception as e:
+        logging.error(f"Error getting inventory stats: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting stats: {str(e)}")
+
 @app.get("/inventory/{item_id}")
 async def get_inventory_item(item_id: str):
     """Get specific inventory item by ID."""
@@ -851,16 +861,6 @@ async def delete_inventory_item(item_id: str):
     except Exception as e:
         logging.error(f"Error deleting inventory item: {e}")
         raise HTTPException(status_code=500, detail=f"Error deleting item: {str(e)}")
-
-@app.get("/inventory/stats")
-async def get_inventory_stats():
-    """Get inventory statistics."""
-    try:
-        stats = await InventoryService.get_stats()
-        return {"stats": stats.model_dump()}
-    except Exception as e:
-        logging.error(f"Error getting inventory stats: {e}")
-        raise HTTPException(status_code=500, detail=f"Error getting stats: {str(e)}")
 
 @app.post("/inventory/analyze_image")
 async def analyze_inventory_image(file: UploadFile = File(...)):

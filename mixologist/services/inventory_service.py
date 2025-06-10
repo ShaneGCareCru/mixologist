@@ -173,27 +173,56 @@ class InventoryService:
         existing_items_text = ", ".join(request.existing_inventory) if request.existing_inventory else "none"
         
         prompt = f"""
-        Analyze this image and identify any cocktail ingredients, liquor bottles, or bar supplies visible.
+        Analyze this image and identify ANY ingredients, beverages, or supplies that could be used for cocktails, mixed drinks, or bartending.
+        
+        IMPORTANT: Be INCLUSIVE - identify EVERYTHING that could be used in drink making:
+        - ALL alcoholic beverages (spirits, wine, beer, liqueurs, etc.)
+        - ALL non-alcoholic mixers and ingredients (ginger beer, tonic, juices, sodas, etc.)
+        - Food ingredients used in cocktails (eggs, cream, citrus fruits, herbs, spices, etc.)
+        - Bar tools and equipment
+        - Garnishes and aromatics
+        
+        EXAMPLES of what TO include:
+        - Eggs (for cocktails like whiskey sour, pisco sour)
+        - Ginger beer (for Moscow mules, dark & stormy)
+        - Tonic water, club soda, cola
+        - Fresh fruits (limes, lemons, oranges, berries)
+        - Herbs (mint, basil, rosemary)
+        - Dairy (cream, milk)
+        - Condiments that enhance drinks (hot sauce, Worcestershire)
+        - Ice, salt, sugar
         
         For each item you can clearly identify:
-        1. Name the ingredient/item
-        2. Categorize it (spirits, liqueurs, bitters, syrups, juices, fresh_ingredients, garnishes, mixers, equipment, other)
+        1. Name the ingredient/item (be specific - include varietal for wine, type for spirits, brand for mixers)
+        2. Categorize it using EXACTLY these categories:
+           - "spirits" (vodka, gin, rum, whiskey, tequila, brandy, etc.)
+           - "liqueurs" (amaretto, cointreau, kahlua, etc.) 
+           - "wine" (red wine, white wine, champagne, prosecco, etc.)
+           - "beer" (lager, ale, stout, etc.)
+           - "bitters" (angostura, orange bitters, etc.)
+           - "syrups" (simple syrup, grenadine, etc.)
+           - "juices" (lime juice, lemon juice, etc.)
+           - "fresh_ingredients" (herbs, fruits, vegetables, eggs, dairy, etc.)
+           - "garnishes" (olives, cherries, citrus peels, etc.)
+           - "mixers" (tonic, soda, ginger beer, cola, etc.)
+           - "equipment" (shakers, strainers, jiggers, etc.)
+           - "other" (spices, condiments, ice, anything else drink-related)
         3. Estimate confidence (0.0-1.0)
         4. If you can see a brand name, include it
-        5. If you can estimate quantity/fullness, provide it using terms like: empty, almost empty, quarter bottle, half bottle, three quarter bottle, full bottle, multiple bottles, small amount, medium amount, large amount, very large amount
+        5. If you can estimate quantity/fullness, provide it using terms like: empty, almost_empty, quarter_bottle, half_bottle, three_quarter_bottle, full_bottle, multiple_bottles, small_amount, medium_amount, large_amount, very_large_amount
         6. Describe where in the image this item appears
         
         Current inventory already includes: {existing_items_text}
         
-        Focus on items that would be used for cocktail making. Be conservative - only identify items you're confident about.
+        Be VERY inclusive - if it could possibly be used in ANY type of drink preparation, include it! Don't limit to just alcohol.
         
-        Return your response as a JSON object with this structure:
+        Return ONLY a JSON object (no markdown formatting) with this structure:
         {{
             "recognized_ingredients": [
                 {{
-                    "name": "ingredient name",
-                    "category": "category",
-                    "confidence": 0.85,
+                    "name": "specific ingredient name",
+                    "category": "exact category from list above",
+                    "confidence": 0.95,
                     "brand": "brand name or null",
                     "quantity_estimate": "quantity description or null",
                     "location_description": "where in image"
@@ -203,7 +232,29 @@ class InventoryService:
         }}
         """
         
+        # Log the request details for debugging
+        print("=" * 80)
+        print("🔍 INVENTORY IMAGE ANALYSIS DEBUG LOG")
+        print("=" * 80)
+        print(f"📊 Request timestamp: {start_time}")
+        print(f"📦 Existing inventory items: {existing_items_text}")
+        print(f"🖼️  Image size (base64): {len(request.image_base64)} characters")
+        print("\n📝 PROMPT SENT TO OPENAI:")
+        print("-" * 40)
+        print(prompt)
+        print("-" * 40)
+        
+        request_params = {
+            "model": "gpt-4o",
+            "max_tokens": 1500,
+            "temperature": 0.3,
+            "messages_structure": "user message with text + image_url"
+        }
+        print(f"⚙️  Request parameters: {json.dumps(request_params, indent=2)}")
+        print("=" * 80)
+        
         try:
+            print("🚀 Sending request to OpenAI...")
             response = await async_client.chat.completions.create(
                 model="gpt-4o",  # Use GPT-4o for vision capabilities
                 messages=[
@@ -229,30 +280,77 @@ class InventoryService:
             
             content = response.choices[0].message.content
             
-            # Parse the JSON response
+            print("✅ Received response from OpenAI")
+            print(f"💬 RAW OPENAI RESPONSE:")
+            print("-" * 40)
+            print(content)
+            print("-" * 40)
+            
+            # Parse the JSON response (handle markdown code blocks)
             try:
-                result_data = json.loads(content)
+                print("🔄 Parsing JSON response...")
+                
+                # Strip markdown code blocks if present
+                json_content = content.strip()
+                if json_content.startswith('```json'):
+                    json_content = json_content[7:]  # Remove ```json
+                if json_content.startswith('```'):
+                    json_content = json_content[3:]   # Remove ```
+                if json_content.endswith('```'):
+                    json_content = json_content[:-3]  # Remove ending ```
+                json_content = json_content.strip()
+                
+                print(f"📄 Cleaned JSON content: {json_content[:200]}...")
+                result_data = json.loads(json_content)
+                print(f"✅ JSON parsed successfully!")
+                print(f"📋 Parsed data structure: {json.dumps(result_data, indent=2)}")
                 
                 # Convert to our models
                 recognized_ingredients = []
-                for item in result_data.get("recognized_ingredients", []):
+                raw_ingredients = result_data.get("recognized_ingredients", [])
+                print(f"🔍 Found {len(raw_ingredients)} recognized ingredients in response")
+                
+                for i, item in enumerate(raw_ingredients):
+                    print(f"\n🏷️  Processing ingredient {i+1}: {item.get('name', 'unnamed')}")
+                    print(f"   Raw item data: {json.dumps(item, indent=4)}")
+                    
                     # Map category string to enum
                     category_str = item.get("category", "other").lower()
                     category = IngredientCategory.OTHER
                     
+                    print(f"   📂 Mapping category '{category_str}' to enum...")
                     for cat in IngredientCategory:
                         if cat.value == category_str:
                             category = cat
+                            print(f"   ✅ Mapped to: {category.value}")
                             break
+                    else:
+                        print(f"   ⚠️  Category '{category_str}' not found, using OTHER")
                     
                     # Map quantity if provided
                     quantity_estimate = None
                     if item.get("quantity_estimate"):
-                        quantity_str = item["quantity_estimate"].lower().replace(" ", "_")
+                        original_qty = item["quantity_estimate"]
+                        quantity_str = original_qty.lower().replace(" ", "_")
+                        print(f"   📊 Mapping quantity '{original_qty}' -> '{quantity_str}'")
+                        
+                        # Try direct match first
                         for qty in QuantityDescription:
                             if qty.value == quantity_str:
                                 quantity_estimate = qty
+                                print(f"   ✅ Mapped to: {quantity_estimate.value}")
                                 break
+                        
+                        # If no direct match, try the original format (with spaces)
+                        if quantity_estimate is None:
+                            for qty in QuantityDescription:
+                                if qty.value == original_qty.lower():
+                                    quantity_estimate = qty
+                                    print(f"   ✅ Mapped to (legacy format): {quantity_estimate.value}")
+                                    break
+                        
+                        if quantity_estimate is None:
+                            print(f"   ⚠️  Quantity '{quantity_str}' not found in enum")
                     
                     recognized_ingredient = RecognizedIngredient(
                         name=item.get("name", ""),
@@ -263,16 +361,32 @@ class InventoryService:
                         location_description=item.get("location_description")
                     )
                     recognized_ingredients.append(recognized_ingredient)
+                    print(f"   ✅ Created RecognizedIngredient object")
                 
                 processing_time = (datetime.now() - start_time).total_seconds()
                 
+                suggestions = result_data.get("suggestions", [])
+                print(f"\n💡 AI Suggestions: {suggestions}")
+                print(f"⏱️  Total processing time: {processing_time:.2f} seconds")
+                print(f"🎯 Final result: {len(recognized_ingredients)} ingredients recognized")
+                
+                for i, ingredient in enumerate(recognized_ingredients):
+                    print(f"   {i+1}. {ingredient.name} ({ingredient.category.value}) - {ingredient.confidence:.2f} confidence")
+                
+                print("=" * 80)
+                print("✅ IMAGE ANALYSIS COMPLETE")
+                print("=" * 80)
+                
                 return ImageRecognitionResponse(
                     recognized_ingredients=recognized_ingredients,
-                    suggestions=result_data.get("suggestions", []),
+                    suggestions=suggestions,
                     processing_time=processing_time
                 )
                 
             except json.JSONDecodeError as e:
+                print(f"❌ JSON PARSING ERROR: {e}")
+                print(f"🔍 Attempted to parse: {content}")
+                print("=" * 80)
                 logging.error(f"Failed to parse OpenAI vision response: {e}")
                 logging.error(f"Raw response: {content}")
                 
@@ -284,7 +398,12 @@ class InventoryService:
                 )
         
         except Exception as e:
+            print(f"❌ OPENAI API ERROR: {e}")
+            print(f"🔍 Error type: {type(e).__name__}")
+            print("=" * 80)
             logging.error(f"Error during OpenAI vision analysis: {e}")
+            import traceback
+            traceback.print_exc()
             return ImageRecognitionResponse(
                 recognized_ingredients=[],
                 suggestions=[f"Error analyzing image: {str(e)}"],

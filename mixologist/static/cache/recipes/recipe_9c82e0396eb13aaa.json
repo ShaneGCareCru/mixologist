@@ -1,0 +1,209 @@
+{
+  "drink_name": "Cuba Libre",
+  "alcohol_content": 0.2,
+  "serving_glass": "Highball glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "White Rum",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Cola",
+      "quantity": "4 oz"
+    },
+    {
+      "name": "Lime Juice",
+      "quantity": "0.5 oz"
+    }
+  ],
+  "steps": [
+    "Fill a highball glass with ice cubes.",
+    "Pour 2 oz of white rum over the ice.",
+    "Add 0.5 oz of fresh lime juice.",
+    "Top off with 4 oz of cola.",
+    "Gently stir to combine all ingredients.",
+    "Garnish with a lime wedge on the rim of the glass."
+  ],
+  "garnish": [
+    "Lime wedge"
+  ],
+  "drink_image_description": "A classic Cuba Libre cocktail photographed from above with a highball glass filled with ice, dark cola, and a clear layer of white rum mixed with a fresh lime wedge garnish on the rim. The background is bright and airy with natural lighting highlighting the bubbles in the cola and the vibrant green of the lime.",
+  "drink_history": "The Cuba Libre is a cocktail that originated in Cuba around the time of the Spanish-American War in the early 1900s. It combines rum, cola, and lime juice, symbolizing the Cuban independence movement. The name translates to 'Free Cuba' and the drink is a patriotic toast to liberty.",
+  "brand_recommendations": [
+    {
+      "ingredient": "White Rum",
+      "brands": [
+        "Bacardi",
+        "Havana Club",
+        "Mount Gay"
+      ]
+    },
+    {
+      "ingredient": "Cola",
+      "brands": [
+        "Coca-Cola",
+        "Pepsi"
+      ]
+    },
+    {
+      "ingredient": "Lime Juice",
+      "brands": [
+        "Fresh lime"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "White Rum",
+      "alternatives": [
+        "Dark Rum",
+        "Spiced Rum"
+      ]
+    },
+    {
+      "original": "Cola",
+      "alternatives": [
+        "Diet Cola",
+        "Ginger Ale"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Rum and Coke",
+    "Dark 'n' Stormy",
+    "Mojito",
+    "Caipirinha",
+    "Mai Tai",
+    "Daiquiri"
+  ],
+  "difficulty_rating": 1,
+  "preparation_time_minutes": 3,
+  "equipment_needed": [
+    {
+      "item": "Highball glass",
+      "essential": true
+    },
+    {
+      "item": "Bar spoon",
+      "essential": false,
+      "alternative": "Stir stick"
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Sweet",
+      "Citrus",
+      "Caramel"
+    ],
+    "secondary_notes": [
+      "Vanilla",
+      "Spice"
+    ],
+    "mouthfeel": "Light and fizzy with smooth carbonation",
+    "finish": "Clean with a hint of lime zest",
+    "balance": "Sweetness from cola balanced by the acidity of lime and the warmth of rum"
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "Mix rum, lime juice, and cola in a large pitcher for batch serving, add ice before serving."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Fill a highball glass with ice cubes.",
+      "technique_detail": "Use fresh, clear ice cubes for best dilution control.",
+      "visual_cue": "Glass is filled to the brim with ice.",
+      "common_mistakes": [
+        "Using melted or old ice which dilutes the drink too quickly."
+      ]
+    },
+    {
+      "step_number": 2,
+      "action": "Pour 2 oz of white rum over the ice.",
+      "technique_detail": "Measure precisely using a jigger for balanced flavor.",
+      "visual_cue": "Rum layering over the ice cubes.",
+      "common_mistakes": [
+        "Pouring too much or too little rum."
+      ]
+    },
+    {
+      "step_number": 3,
+      "action": "Add 0.5 oz of fresh lime juice.",
+      "technique_detail": "Squeeze fresh lime and strain to avoid pulp.",
+      "visual_cue": "A small stream of lime juice being added.",
+      "common_mistakes": [
+        "Using bottled lime juice which lacks freshness."
+      ]
+    },
+    {
+      "step_number": 4,
+      "action": "Top off with 4 oz of cola.",
+      "technique_detail": "Pour gently to maintain carbonation.",
+      "visual_cue": "Bubbles rising as cola is poured in.",
+      "common_mistakes": [
+        "Pouring too quickly and losing fizz."
+      ]
+    },
+    {
+      "step_number": 5,
+      "action": "Gently stir to combine all ingredients.",
+      "technique_detail": "Use a bar spoon, stir lightly to mix without flattening the carbonation.",
+      "visual_cue": "Light swirl of liquid visible through the glass.",
+      "common_mistakes": [
+        "Over stirring causing loss of fizz."
+      ]
+    },
+    {
+      "step_number": 6,
+      "action": "Garnish with a lime wedge on the rim of the glass.",
+      "technique_detail": "Cut a fresh lime wedge and place it on the rim for aroma and visual appeal.",
+      "visual_cue": "Bright green lime wedge perched on the glass edge.",
+      "common_mistakes": [
+        "Using old or dried out lime wedges."
+      ]
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Dark Cuba Libre",
+      "changes": [
+        "Use dark rum instead of white rum."
+      ],
+      "description": "A richer, deeper flavor profile with the molasses notes of dark rum."
+    },
+    {
+      "name": "Spiced Cuba Libre",
+      "changes": [
+        "Use spiced rum instead of white rum."
+      ],
+      "description": "Adds warm spice notes like cinnamon and clove for a festive twist."
+    }
+  ],
+  "food_pairings": [
+    "Grilled meats",
+    "Spicy tacos",
+    "Cuban sandwiches",
+    "Fried plantains"
+  ],
+  "optimal_serving_temperature": "Cold",
+  "skill_level_recommendation": "Beginner",
+  "drink_trivia": [
+    {
+      "fact": "The Cuba Libre was created around the time Cuba gained independence from Spain, symbolizing freedom.",
+      "category": "history",
+      "source_period": "early 1900s"
+    },
+    {
+      "fact": "The drink is essentially a Rum and Coke with fresh lime juice added, which elevates the flavor.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "Despite its simple ingredients, it's a globally popular cocktail that embodies Cuban culture.",
+      "category": "culture"
+    }
+  ]
+}

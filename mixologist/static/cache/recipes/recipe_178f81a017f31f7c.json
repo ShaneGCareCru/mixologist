@@ -1,0 +1,203 @@
+{
+  "drink_name": "Caipirinha",
+  "alcohol_content": 0.4,
+  "serving_glass": "Old Fashioned glass",
+  "rim": "No salt",
+  "ingredients": [
+    {
+      "name": "Cacha\u00e7a",
+      "quantity": "2 oz"
+    },
+    {
+      "name": "Lime",
+      "quantity": "1 whole, cut into wedges"
+    },
+    {
+      "name": "Sugar",
+      "quantity": "2 tsp"
+    }
+  ],
+  "steps": [
+    "Place the lime wedges in a glass.",
+    "Add the sugar on top of the lime wedges.",
+    "Muddle the lime and sugar together to release the lime juice and dissolve the sugar.",
+    "Fill the glass with ice cubes.",
+    "Pour the cacha\u00e7a over the ice.",
+    "Stir well to mix all the ingredients."
+  ],
+  "garnish": [
+    "Lime wheel"
+  ],
+  "drink_image_description": "A vibrant Caipirinha cocktail in an Old Fashioned glass with visible muddled lime wedges and ice cubes. The glass is rimmed with condensation, showcasing the fresh lime wheel garnish on the side. The photo is taken from a slightly elevated angle with soft natural lighting emphasizing the bright green hues of the lime against a bright, blurred background.",
+  "drink_history": "The Caipirinha is Brazil's national cocktail, originating from the early 20th century. It combines cacha\u00e7a, a distilled spirit made from fermented sugarcane juice, with fresh lime and sugar. The drink symbolizes Brazilian culture and is often enjoyed during celebrations and gatherings.",
+  "brand_recommendations": [
+    {
+      "ingredient": "Cacha\u00e7a",
+      "brands": [
+        "Leblon",
+        "Cacha\u00e7a 51",
+        "Ypi\u00f3ca"
+      ]
+    }
+  ],
+  "ingredient_substitutions": [
+    {
+      "original": "Cacha\u00e7a",
+      "alternatives": [
+        "White rum"
+      ]
+    }
+  ],
+  "related_cocktails": [
+    "Mojito",
+    "Daiquiri",
+    "Margarita",
+    "Pisco Sour",
+    "Caipiroska",
+    "Batida",
+    "Rabo de Galo"
+  ],
+  "difficulty_rating": 2,
+  "preparation_time_minutes": 5,
+  "equipment_needed": [
+    {
+      "item": "Muddler",
+      "essential": true
+    },
+    {
+      "item": "Old Fashioned glass",
+      "essential": true
+    },
+    {
+      "item": "Bar spoon",
+      "essential": false,
+      "alternative": "Stir stick"
+    }
+  ],
+  "flavor_profile": {
+    "primary_flavors": [
+      "Citrus",
+      "Sweet",
+      "Herbal"
+    ],
+    "secondary_notes": [
+      "Fresh",
+      "Fruity"
+    ],
+    "mouthfeel": "Light and refreshing with slight graininess from the sugar.",
+    "finish": "Clean and crisp finish with lingering lime zest.",
+    "balance": "Well balanced between the tartness of lime and sweetness of sugar, complemented by the earthy notes of cacha\u00e7a."
+  },
+  "serving_size_base": {
+    "default_servings": 1,
+    "scalable_ingredients": true,
+    "max_recommended_batch": 8,
+    "batch_preparation_notes": "When making a batch, muddle limes and sugar together before adding cacha\u00e7a and ice."
+  },
+  "phonetic_pronunciations": {},
+  "enhanced_steps": [
+    {
+      "step_number": 1,
+      "action": "Place the lime wedges in the glass.",
+      "technique_detail": "Use fresh limes and cut them into wedges to maximize juice extraction.",
+      "visual_cue": "The glass bottom is covered with lime wedges.",
+      "common_mistakes": [
+        "Using pre-squeezed lime juice instead of fresh lime wedges."
+      ],
+      "timing_guidance": "Do this immediately before muddling."
+    },
+    {
+      "step_number": 2,
+      "action": "Add the sugar on top of the lime wedges.",
+      "technique_detail": "Use granulated sugar for the best texture and sweetness.",
+      "visual_cue": "Sugar covers the lime wedges evenly.",
+      "common_mistakes": [
+        "Using powdered sugar which dissolves too quickly."
+      ],
+      "timing_guidance": "Add sugar right after placing lime wedges."
+    },
+    {
+      "step_number": 3,
+      "action": "Muddle the lime and sugar together to release the lime juice and dissolve the sugar.",
+      "technique_detail": "Press down firmly but avoid over-muddling to prevent bitterness from the lime pith.",
+      "visual_cue": "Lime wedges are crushed but still retain some texture.",
+      "common_mistakes": [
+        "Over-muddling leading to bitter taste.",
+        "Not muddling enough, leaving sugar undissolved."
+      ],
+      "timing_guidance": "Muddle for about 10-15 seconds."
+    },
+    {
+      "step_number": 4,
+      "action": "Fill the glass with ice cubes.",
+      "technique_detail": "Use fresh, clear ice cubes for best dilution control.",
+      "visual_cue": "Glass is filled to the top with ice cubes.",
+      "common_mistakes": [
+        "Using crushed ice which can dilute the drink too quickly."
+      ],
+      "timing_guidance": "Fill immediately after muddling."
+    },
+    {
+      "step_number": 5,
+      "action": "Pour the cacha\u00e7a over the ice.",
+      "technique_detail": "Pour evenly to ensure proper mixing with lime and sugar.",
+      "visual_cue": "Clear liquid poured gently over ice.",
+      "common_mistakes": [
+        "Pouring too quickly causing uneven mixing."
+      ],
+      "timing_guidance": "Pour slowly and steadily."
+    },
+    {
+      "step_number": 6,
+      "action": "Stir well to mix all the ingredients.",
+      "technique_detail": "Use a bar spoon or stir stick to combine the flavors thoroughly.",
+      "visual_cue": "Evenly mixed drink with visible lime pieces.",
+      "common_mistakes": [
+        "Not stirring enough leading to uneven flavor distribution."
+      ],
+      "timing_guidance": "Stir for about 10 seconds."
+    }
+  ],
+  "suggested_variations": [
+    {
+      "name": "Frozen Caipirinha",
+      "changes": [
+        "Use crushed ice instead of ice cubes",
+        "Blend all ingredients together"
+      ],
+      "description": "A slushy, refreshing variation perfect for hot weather."
+    },
+    {
+      "name": "Caipiroska",
+      "changes": [
+        "Substitute cacha\u00e7a with vodka"
+      ],
+      "description": "A vodka-based twist on the classic Caipirinha."
+    }
+  ],
+  "food_pairings": [
+    "Grilled meats",
+    "Spicy Brazilian dishes",
+    "Fresh tropical fruits"
+  ],
+  "optimal_serving_temperature": "Cold",
+  "skill_level_recommendation": "Beginner to intermediate bartenders",
+  "drink_trivia": [
+    {
+      "fact": "Caipirinha is considered the national cocktail of Brazil.",
+      "category": "history"
+    },
+    {
+      "fact": "Cacha\u00e7a is the most popular distilled spirit in Brazil, made from fermented sugarcane juice.",
+      "category": "ingredients"
+    },
+    {
+      "fact": "The drink gained international popularity during the 2016 Rio Olympics.",
+      "category": "culture"
+    },
+    {
+      "fact": "The name 'Caipirinha' roughly translates to 'little rustic' or 'from the countryside' in Portuguese.",
+      "category": "history"
+    }
+  ]
+}

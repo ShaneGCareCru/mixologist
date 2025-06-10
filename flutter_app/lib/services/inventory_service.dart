@@ -4,10 +4,11 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:image_picker/image_picker.dart';
 import '../models/inventory_models.dart';
 
 class InventoryService {
-  static const String baseUrl = 'http://localhost:8000'; // Adjust for your setup
+  static const String baseUrl = 'http://localhost:8081'; // FastAPI server port
   
   // Get all inventory items
   static Future<List<InventoryItem>> getInventory() async {
@@ -31,7 +32,7 @@ class InventoryService {
     required String name,
     required String category,
     required String quantity,
-    File? sourceImage,
+    dynamic sourceImage, // Accept both XFile and File
     String? brand,
     String? notes,
   }) async {
@@ -49,7 +50,10 @@ class InventoryService {
       if (notes != null && notes.isNotEmpty) request.fields['notes'] = notes;
 
       // Generate and store stylized image if source image provided
+      // Note: Stylized image generation temporarily disabled due to missing backend endpoint
       String? imagePath;
+      // TODO: Re-enable when /inventory/generate_stylized_image endpoint is implemented
+      /*
       if (sourceImage != null) {
         imagePath = await _generateAndStoreStylizedImage(
           sourceImage: sourceImage,
@@ -60,6 +64,7 @@ class InventoryService {
           request.fields['image_path'] = imagePath;
         }
       }
+      */
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -155,15 +160,34 @@ class InventoryService {
     }
   }
 
-  // Analyze image for ingredients
-  static Future<ImageRecognitionResponse> analyzeImage(File imageFile) async {
+  // Analyze image for ingredients - Web and mobile compatible
+  static Future<ImageRecognitionResponse> analyzeImage(dynamic imageFile) async {
     try {
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/inventory/analyze_image'),
       );
       
-      request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+      // Handle both XFile (web/cross-platform) and File (mobile)
+      if (imageFile is XFile) {
+        // Web-compatible: use XFile.readAsBytes()
+        final bytes = await imageFile.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: imageFile.name,
+        ));
+      } else if (imageFile is File) {
+        // Mobile: use File.readAsBytes()
+        final bytes = await imageFile.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: imageFile.path.split('/').last,
+        ));
+      } else {
+        throw Exception('Unsupported image file type');
+      }
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -306,7 +330,7 @@ class InventoryService {
 
   // Generate and store a stylized bottle image
   static Future<String?> _generateAndStoreStylizedImage({
-    required File sourceImage,
+    required dynamic sourceImage, // Accept both XFile and File
     required String itemName,
     required String category,
   }) async {
@@ -337,14 +361,24 @@ class InventoryService {
   }
 
   // Generate stylized image using AI API
-  static Future<Uint8List?> _generateStylizedImage(File sourceImage, String itemName, String category) async {
+  static Future<Uint8List?> _generateStylizedImage(dynamic sourceImage, String itemName, String category) async {
     try {
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/inventory/generate_stylized_image'),
       );
       
-      request.files.add(await http.MultipartFile.fromPath('file', sourceImage.path));
+      // Handle both XFile and File
+      if (sourceImage is XFile) {
+        final bytes = await sourceImage.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: sourceImage.name,
+        ));
+      } else if (sourceImage is File) {
+        request.files.add(await http.MultipartFile.fromPath('file', sourceImage.path));
+      }
       request.fields['item_name'] = itemName;
       request.fields['category'] = category;
       request.fields['style'] = 'cartoon bar item in an 8-bit pixel style with transparent background';
@@ -380,7 +414,7 @@ class InventoryService {
 
   // Regenerate stylized image for an existing item
   static Future<String?> regenerateStylizedImage({
-    required File sourceImage,
+    required dynamic sourceImage, // Accept both XFile and File
     required String itemName,
     required String category,
     String? oldImagePath,

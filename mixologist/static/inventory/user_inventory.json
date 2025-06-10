@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "id": "e878265a-66f7-43d5-9df7-0dd3a197bba3",
+      "name": "Yellow Tail Shiraz",
+      "category": "wine",
+      "quantity": "full_bottle",
+      "brand": "Yellow Tail",
+      "notes": null,
+      "added_date": "2025-06-08T22:10:48.633824",
+      "last_updated": "2025-06-08T22:10:48.633828",
+      "expires_soon": false
+    },
+    {
+      "id": "22ac27dc-55b6-483f-b3a9-88a4102d3a54",
+      "name": "Yellow Tail Shiraz",
+      "category": "wine",
+      "quantity": "full_bottle",
+      "brand": "Yellow Tail",
+      "notes": null,
+      "added_date": "2025-06-08T22:12:55.333129",
+      "last_updated": "2025-06-08T22:12:55.333134",
+      "expires_soon": false
+    }
+  ],
+  "user_id": "default_user",
+  "created_date": "2025-06-08T19:18:02.460516",
+  "last_updated": "2025-06-08T22:12:55.333145"
+}

@@ -24,7 +24,7 @@ dependencies:
   # AI Assistant voice interaction dependencies
   rive: ^0.12.4
   web_socket_channel: ^3.0.0
-  flutter_audio_capture: ^0.2.7
+  flutter_audio_capture: ^1.1.11
   just_audio: ^0.9.36
 
 

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/inventory_models.dart';
@@ -66,7 +65,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
       );
 
       if (photo != null) {
-        await _analyzeImage(File(photo.path));
+        await _analyzeImage(photo);
       }
     } catch (e) {
       _showError('Error taking photo: $e');
@@ -83,14 +82,14 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
       );
 
       if (image != null) {
-        await _analyzeImage(File(image.path));
+        await _analyzeImage(image);
       }
     } catch (e) {
       _showError('Error picking image: $e');
     }
   }
 
-  Future<void> _analyzeImage(File imageFile) async {
+  Future<void> _analyzeImage(XFile imageFile) async {
     try {
       setState(() {
         _isAnalyzing = true;
@@ -115,7 +114,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
     }
   }
 
-  Future<void> _showRecognitionResults(ImageRecognitionResponse response, File sourceImage) async {
+  Future<void> _showRecognitionResults(ImageRecognitionResponse response, XFile sourceImage) async {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -184,7 +183,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
     );
   }
 
-  void _addRecognizedItem(RecognizedIngredient ingredient, File sourceImage) {
+  void _addRecognizedItem(RecognizedIngredient ingredient, XFile sourceImage) {
     _showAddItemDialog(
       initialName: ingredient.name,
       initialCategory: ingredient.category,
@@ -199,7 +198,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
     String? initialCategory,
     String? initialBrand,
     String? initialQuantity,
-    File? sourceImage,
+    XFile? sourceImage,
   }) {
     showDialog(
       context: context,

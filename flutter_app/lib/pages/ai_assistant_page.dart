@@ -63,7 +63,7 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
   void _cleanup() {
     _rtChannel?.sink.close();
     _ttsPlayer?.dispose();
-    FlutterAudioCapture.stop();
+    FlutterAudioCapture().stop();
   }
 
   Future<void> _initializeAudio() async {
@@ -78,18 +78,11 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
 
   Future<void> _requestPermissions() async {
     try {
-      // Check microphone permission
-      final hasPermission = await FlutterAudioCapture.hasPermission();
+      // For web, assume permission is granted for now
+      // In a real app, you'd handle platform-specific permission requests
       setState(() {
-        _hasPermission = hasPermission;
+        _hasPermission = true;
       });
-      
-      if (!hasPermission) {
-        final granted = await FlutterAudioCapture.requestPermission();
-        setState(() {
-          _hasPermission = granted;
-        });
-      }
     } catch (e) {
       setState(() {
         _error = 'Permission error: $e';
@@ -164,20 +157,20 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
 
   Future<void> _startAudioCapture() async {
     try {
-      await FlutterAudioCapture.start(
-        listener: (dynamic data) {
-          if (_rtChannel != null && data is Uint8List) {
-            // Send audio data to OpenAI Realtime API using the service
-            _rtChannel!.sink.add(jsonEncode(AIAssistantService.createAudioMessage(data)));
+      await FlutterAudioCapture().start(
+        (Float32List data) {
+          // Handle audio data callback
+          if (_rtChannel != null) {
+            // Convert Float32List to Uint8List for OpenAI API
+            final buffer = data.buffer.asUint8List();
+            _rtChannel!.sink.add(jsonEncode(AIAssistantService.createAudioMessage(buffer)));
           }
         },
-        onError: (Object error) {
+        (error) {
           setState(() {
             _error = 'Audio capture error: $error';
           });
         },
-        sampleRate: 16000,
-        bufferSize: 1024,
       );
 
       setState(() {

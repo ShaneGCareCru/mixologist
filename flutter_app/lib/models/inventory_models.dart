@@ -169,6 +169,8 @@ class InventoryStats {
 class IngredientCategory {
   static const String spirits = 'spirits';
   static const String liqueurs = 'liqueurs';
+  static const String wine = 'wine';
+  static const String beer = 'beer';
   static const String bitters = 'bitters';
   static const String syrups = 'syrups';
   static const String juices = 'juices';
@@ -181,6 +183,8 @@ class IngredientCategory {
   static List<String> get all => [
         spirits,
         liqueurs,
+        wine,
+        beer,
         bitters,
         syrups,
         juices,
@@ -197,6 +201,10 @@ class IngredientCategory {
         return 'Spirits';
       case liqueurs:
         return 'Liqueurs';
+      case wine:
+        return 'Wine';
+      case beer:
+        return 'Beer';
       case bitters:
         return 'Bitters';
       case syrups:

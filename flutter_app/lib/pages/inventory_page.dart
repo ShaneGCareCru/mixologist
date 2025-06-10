@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/inventory_models.dart';
@@ -63,7 +62,7 @@ class _InventoryPageState extends State<InventoryPage> {
       );
 
       if (photo != null) {
-        await _analyzeImage(File(photo.path));
+        await _analyzeImage(photo);
       }
     } catch (e) {
       _showError('Error taking photo: $e');
@@ -80,14 +79,14 @@ class _InventoryPageState extends State<InventoryPage> {
       );
 
       if (image != null) {
-        await _analyzeImage(File(image.path));
+        await _analyzeImage(image);
       }
     } catch (e) {
       _showError('Error picking image: $e');
     }
   }
 
-  Future<void> _analyzeImage(File imageFile) async {
+  Future<void> _analyzeImage(XFile imageFile) async {
     try {
       setState(() {
         _isAnalyzing = true;
