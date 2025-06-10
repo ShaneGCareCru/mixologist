@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_audio_capture/flutter_audio_capture.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rive/rive.dart';
 import '../main.dart'; // For RecipeScreen
 import '../services/ai_assistant_service.dart';
+import '../theme/ios_theme.dart';
+import '../widgets/ios_card.dart';
 
 class AIAssistantPage extends StatefulWidget {
   const AIAssistantPage({super.key});
@@ -404,13 +407,13 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text('AI Mixologist'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+    return CupertinoPageScaffold(
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('AI Mixologist'),
+        backgroundColor: CupertinoColors.systemBackground,
+        border: Border(),
       ),
+      backgroundColor: CupertinoColors.systemGroupedBackground,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
