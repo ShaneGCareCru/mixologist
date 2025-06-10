@@ -41,6 +41,8 @@ class InventoryItem(BaseModel):
     name: str = Field(..., description="Name of the ingredient")
     category: IngredientCategory = Field(..., description="Category of the ingredient")
     quantity: QuantityDescription = Field(..., description="User-friendly quantity description")
+    fullness: float = Field(default=1.0, description="Fullness level from 0.0 to 1.0")
+    image_path: Optional[str] = Field(None, description="Path to stylized image")
     brand: Optional[str] = Field(None, description="Brand name if applicable")
     notes: Optional[str] = Field(None, description="Additional user notes")
     added_date: datetime = Field(default_factory=datetime.now, description="When item was added")
@@ -50,7 +52,25 @@ class InventoryItem(BaseModel):
     def update_quantity(self, new_quantity: QuantityDescription):
         """Update quantity and timestamp."""
         self.quantity = new_quantity
+        self.fullness = self._calculate_fullness_from_quantity(new_quantity)
         self.last_updated = datetime.now()
+    
+    def _calculate_fullness_from_quantity(self, quantity: QuantityDescription) -> float:
+        """Calculate fullness from quantity description."""
+        quantity_to_fullness = {
+            QuantityDescription.EMPTY: 0.0,
+            QuantityDescription.ALMOST_EMPTY: 0.1,
+            QuantityDescription.QUARTER_BOTTLE: 0.25,
+            QuantityDescription.HALF_BOTTLE: 0.5,
+            QuantityDescription.THREE_QUARTER_BOTTLE: 0.75,
+            QuantityDescription.FULL_BOTTLE: 1.0,
+            QuantityDescription.MULTIPLE_BOTTLES: 1.0,
+            QuantityDescription.SMALL_AMOUNT: 0.2,
+            QuantityDescription.MEDIUM_AMOUNT: 0.5,
+            QuantityDescription.LARGE_AMOUNT: 0.8,
+            QuantityDescription.VERY_LARGE_AMOUNT: 1.0,
+        }
+        return quantity_to_fullness.get(quantity, 1.0)
 
 
 class InventoryAddRequest(BaseModel):
