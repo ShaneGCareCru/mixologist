@@ -41,6 +41,14 @@ class MixologistApp extends StatelessWidget {
         title: 'Mixologist',
         theme: _buildCupertinoTheme(),
         home: const LoginScreen(),
+        localizationsDelegates: const [
+          DefaultMaterialLocalizations.delegate,
+          DefaultCupertinoLocalizations.delegate,
+          DefaultWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en', 'US'),
+        ],
       ),
     );
   }
@@ -710,7 +718,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final SearchController _searchController = SearchController();
+  final TextEditingController _searchController = TextEditingController();
   final _drinkPreferencesController = TextEditingController();
   String? _recipeError;
   String? _customError;
@@ -860,7 +868,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       backgroundColor: CupertinoColors.systemGroupedBackground,
-      body: MixologistBackground(
+      child: MixologistBackground(
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -883,8 +891,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
                               colors: [
-                                theme.colorScheme.primary,
-                                theme.colorScheme.secondary,
+                                Theme.of(context).colorScheme.primary,
+                                Theme.of(context).colorScheme.secondary,
                               ],
                             ),
                           ),
@@ -901,7 +909,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Text(
                                 'Welcome Back!',
-                                style: theme.textTheme.titleMedium?.copyWith(
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -909,8 +917,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 user.isAnonymous
                                     ? 'Guest User (${user.uid.substring(0,6)}...)'
                                     : user.displayName ?? user.email ?? 'User',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withOpacity( 0.7),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity( 0.7),
                                 ),
                               ),
                             ],
@@ -930,15 +938,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Icon(
                             Icons.local_bar,
-                            color: theme.colorScheme.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             size: 28,
                           ),
                           const SizedBox(width: 12),
                           Text(
                             'Create Your Perfect Drink',
-                            style: theme.textTheme.headlineSmall?.copyWith(
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: theme.colorScheme.primary,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                         ],
@@ -946,36 +954,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Find a classic recipe or describe your ideal cocktail',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity( 0.7),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity( 0.7),
                         ),
                       ),
                       const SizedBox(height: 24),
                       
-                      // Search by name field using SearchAnchor
-                      SearchAnchor.bar(
-                        searchController: _searchController,
-                        barHintText: 'Search by Drink Name',
-                        suggestionsBuilder: (context, controller) {
-                          final query = controller.text.toLowerCase();
-                          final suggestions = [
-                            'Margarita',
-                            'Old Fashioned',
-                            'Mojito',
-                            'Manhattan'
-                          ].where((drink) => drink.toLowerCase().contains(query));
-                          return suggestions
-                              .map((drink) => ListTile(
-                                    title: Text(drink),
-                                    onTap: () {
-                                      _searchController.text = drink;
-                                      _searchController.closeView(drink);
-                                      _getRecipe();
-                                    },
-                                  ))
-                              .toList();
-                        },
+                      // Search by name field
+                      CupertinoTextField(
+                        controller: _searchController,
+                        placeholder: 'Search by Drink Name',
                         onSubmitted: (_) => _getRecipe(),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: CupertinoColors.systemGrey4),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        suffix: CupertinoButton(
+                          padding: const EdgeInsets.all(4),
+                          onPressed: _getRecipe,
+                          child: const Icon(CupertinoIcons.search, size: 20),
+                        ),
                       ),
                       
                       const SizedBox(height: 20),
@@ -997,14 +996,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Get recipe button
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
+                        child: CupertinoButton(
                           onPressed: _getRecipe,
-                          icon: const Icon(Icons.search, size: 20),
-                          label: const Text('Find Recipe'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(double.infinity, 56),
+                          color: CupertinoColors.systemBlue,
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(CupertinoIcons.search, size: 20),
+                              SizedBox(width: 8),
+                              Text('Find Recipe'),
+                            ],
                           ),
                         ),
                       ),
@@ -1024,15 +1025,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Icon(
                             Icons.auto_awesome,
-                            color: theme.colorScheme.secondary,
+                            color: Theme.of(context).colorScheme.secondary,
                             size: 28,
                           ),
                           const SizedBox(width: 12),
                           Text(
                             'AI Custom Creation',
-                            style: theme.textTheme.headlineSmall?.copyWith(
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: theme.colorScheme.secondary,
+                              color: Theme.of(context).colorScheme.secondary,
                             ),
                           ),
                         ],
@@ -1040,38 +1041,49 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Describe your perfect drink and let AI create a custom recipe',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity( 0.7),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity( 0.7),
                         ),
                       ),
                       const SizedBox(height: 24),
                       
-                      TextField(
+                      CupertinoTextField(
                         controller: _drinkPreferencesController,
                         maxLines: 4,
-                        decoration: InputDecoration(
-                          labelText: 'Describe Your Ideal Drink',
-                          hintText: 'I want something fruity and bubbly with rum, maybe with tropical flavors...',
-                          prefixIcon: Padding(
-                            padding: const EdgeInsets.only(bottom: 60),
-                            child: Icon(Icons.edit, color: theme.colorScheme.secondary),
-                          ),
-                          errorText: _customError,
+                        placeholder: 'I want something fruity and bubbly with rum, maybe with tropical flavors...',
+                        decoration: BoxDecoration(
+                          border: Border.all(color: CupertinoColors.systemGrey4),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 8, bottom: 60),
+                          child: Icon(CupertinoIcons.pencil, color: CupertinoColors.systemBlue),
                         ),
                       ),
+                      if (_customError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            _customError!,
+                            style: const TextStyle(color: CupertinoColors.systemRed, fontSize: 12),
+                          ),
+                        ),
                       
                       const SizedBox(height: 24),
                       
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
+                        child: CupertinoButton(
                           onPressed: _createCustomDrink,
-                          icon: const Icon(Icons.auto_awesome, size: 20),
-                          label: const Text('Create Custom Drink'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.secondary,
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(double.infinity, 56),
+                          color: CupertinoColors.systemPurple,
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(CupertinoIcons.sparkles, size: 20),
+                              SizedBox(width: 8),
+                              Text('Create Custom Drink'),
+                            ],
                           ),
                         ),
                       ),
@@ -1089,21 +1101,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   
   Widget _buildQuickSearchChip(BuildContext context, String drinkName) {
-    final theme = Theme.of(context);
-    return ActionChip(
-      label: Text(drinkName),
+    return CupertinoButton(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: CupertinoColors.systemBlue.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(20),
       onPressed: () {
         _searchController.text = drinkName;
         _getRecipe();
       },
-      backgroundColor: theme.colorScheme.primaryContainer,
-      labelStyle: TextStyle(
-        color: theme.colorScheme.onPrimaryContainer,
-        fontWeight: FontWeight.w500,
-      ),
-      side: BorderSide.none,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+      child: Text(
+        drinkName,
+        style: const TextStyle(
+          color: CupertinoColors.systemBlue,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }

@@ -392,18 +392,6 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
     });
   }
 
-  void _onRiveInit(Artboard artboard) {
-    final controller = StateMachineController.fromArtboard(
-      artboard,
-      'State Machine 1', // Default state machine name
-    );
-    
-    if (controller != null) {
-      artboard.addController(controller);
-      _isTalkingInput = controller.findInput<bool>('isTalking');
-      _talkController = controller;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -414,7 +402,7 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
         border: Border(),
       ),
       backgroundColor: CupertinoColors.systemGroupedBackground,
-      body: SafeArea(
+      child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -437,10 +425,18 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: RiveAnimation.asset(
-                      'assets/rive/avatar_placeholder.riv',
-                      onInit: _onRiveInit,
-                      fit: BoxFit.cover,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.systemBlue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          CupertinoIcons.person_circle,
+                          size: 80,
+                          color: CupertinoColors.systemBlue,
+                        ),
+                      ),
                     ),
                   ),
                 ),

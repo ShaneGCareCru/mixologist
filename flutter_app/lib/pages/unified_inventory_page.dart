@@ -307,7 +307,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
         ),
       ),
       backgroundColor: CupertinoColors.systemGroupedBackground,
-      body: Column(
+      child: Column(
         children: [
           // Stats Card
           if (_stats != null)

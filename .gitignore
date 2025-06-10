@@ -1,4 +1,65 @@
 /mixologist/static/img/
+# Cache files
+/mixologist/static/cache/
+
+# Flutter/Dart specific
+**/build/
+**/.dart_tool/
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/pubspec.lock  # Uncomment if you want to include pubspec.lock
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+
+# Flutter generated files
+**/flutter/generated_plugin_registrant.dart
+**/flutter/generated_plugin_registrant.cc
+**/flutter/generated_plugin_registrant.h
+**/flutter/generated_plugin_registrant.m
+**/flutter/GeneratedPluginRegistrant.swift
+**/flutter/generated_plugins.cmake
+**/flutter/ephemeral/
+**/Generated.xcconfig
+**/flutter_export_environment.sh
+
+# iOS specific
+**/ios/build/
+**/ios/Pods/
+**/ios/Podfile.lock
+**/ios/.symlinks/
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Runner.xcworkspace/xcshareddata/
+
+# Android specific
+**/android/build/
+**/android/.gradle/
+**/android/local.properties
+**/android/app/build/
+**/android/gradle/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/key.properties
+
+# macOS specific
+**/macos/build/
+**/macos/Pods/
+**/macos/Podfile.lock
+
+# Windows specific
+**/windows/build/
+
+# Linux specific
+**/linux/build/
+
+# IDE/Editor specific
+**/.vscode/
+**/.idea/
+*.iml
+*.ipr
+*.iws
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
