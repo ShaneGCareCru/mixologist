@@ -54,6 +54,30 @@ class InventoryService:
                 async with aiofiles.open(INVENTORY_FILE, 'r') as f:
                     data = await f.read()
                     inventory_dict = json.loads(data)
+                    
+                    # Add default values for new fields if missing
+                    for item in inventory_dict.get('items', []):
+                        if 'fullness' not in item:
+                            # Calculate fullness from quantity for existing items
+                            quantity_value = item.get('quantity', 'full_bottle')
+                            fullness_map = {
+                                'empty': 0.0,
+                                'almost_empty': 0.1,
+                                'quarter_bottle': 0.25,
+                                'half_bottle': 0.5,
+                                'three_quarter_bottle': 0.75,
+                                'full_bottle': 1.0,
+                                'multiple_bottles': 1.0,
+                                'small_amount': 0.2,
+                                'medium_amount': 0.5,
+                                'large_amount': 0.8,
+                                'very_large_amount': 1.0,
+                            }
+                            item['fullness'] = fullness_map.get(quantity_value, 1.0)
+                        
+                        if 'image_path' not in item:
+                            item['image_path'] = None
+                    
                     return Inventory(**inventory_dict)
             except Exception as e:
                 logging.error(f"Error loading inventory: {e}")
@@ -102,6 +126,9 @@ class InventoryService:
             brand=request.brand,
             notes=request.notes
         )
+        
+        # Set fullness based on quantity
+        new_item.fullness = new_item._calculate_fullness_from_quantity(request.quantity)
         
         inventory.add_item(new_item)
         await InventoryService.save_inventory(inventory)

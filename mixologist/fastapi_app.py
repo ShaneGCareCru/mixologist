@@ -763,6 +763,8 @@ async def add_inventory_item(
     name: str = Form(...),
     category: str = Form(...),
     quantity: str = Form(...),
+    fullness: float = Form(None),
+    image_path: str = Form(None),
     brand: str = Form(None),
     notes: str = Form(None)
 ):
@@ -781,6 +783,15 @@ async def add_inventory_item(
         )
         
         item = await InventoryService.add_item(request)
+        
+        # Override fullness if provided
+        if fullness is not None:
+            item.fullness = fullness
+            
+        # Set image path if provided
+        if image_path is not None:
+            item.image_path = image_path
+            
         return {"message": "Item added successfully", "item": item.model_dump()}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid category or quantity: {str(e)}")
@@ -816,6 +827,8 @@ async def get_inventory_item(item_id: str):
 async def update_inventory_item(
     item_id: str,
     quantity: str = Form(None),
+    fullness: float = Form(None),
+    image_path: str = Form(None),
     brand: str = Form(None),
     notes: str = Form(None),
     expires_soon: bool = Form(None)
@@ -837,6 +850,14 @@ async def update_inventory_item(
         item = await InventoryService.update_item(item_id, request)
         if not item:
             raise HTTPException(status_code=404, detail="Item not found")
+        
+        # Update fullness if provided (overriding quantity-based calculation)
+        if fullness is not None:
+            item.fullness = fullness
+            
+        # Update image path if provided
+        if image_path is not None:
+            item.image_path = image_path
         
         return {"message": "Item updated successfully", "item": item.model_dump()}
     except ValueError as e:
