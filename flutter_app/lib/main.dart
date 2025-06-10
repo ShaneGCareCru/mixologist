@@ -1829,6 +1829,21 @@ class _RecipeScreenState extends State<RecipeScreen> {
     final servingGlass = widget.recipeData['serving_glass'] ?? '';
     final ingredients = widget.recipeData['ingredients'];
 
+    // Get device screen information for optimal image sizing
+    final screenSize = MediaQuery.of(context).size;
+    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final isPortrait = screenSize.height > screenSize.width;
+    
+    // Calculate optimal image dimensions for iOS
+    String preferredImageSize;
+    if (isPortrait) {
+      // For portrait mode, prefer vertical images (1024x1536)
+      preferredImageSize = '1024x1536';
+    } else {
+      // For landscape mode, prefer horizontal images (1536x1024)
+      preferredImageSize = '1536x1024';
+    }
+
     _imageStreamSubscription?.cancel(); // Cancel previous subscription
 
     final request = http.Request('POST', Uri.parse('http://127.0.0.1:8081/generate_image')); // Changed port to 8081
@@ -1841,6 +1856,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
         'steps': jsonEncode(widget.recipeData['steps'] ?? []),
         'garnish': jsonEncode(widget.recipeData['garnish'] ?? []),
         'equipment_needed': jsonEncode(widget.recipeData['equipment_needed'] ?? []),
+        // Device-aware image sizing for better iOS screen utilization
+        'image_size': preferredImageSize,
+        'screen_width': screenSize.width.toString(),
+        'screen_height': screenSize.height.toString(),
+        'pixel_ratio': pixelRatio.toString(),
+        'platform': 'ios', // Specify platform for backend optimizations
     };
 
     try {
@@ -2001,53 +2022,61 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget _buildOverviewSection() {
     return Column(
       children: [
-        // Main Hero Image - Full Width
-        Card(
-          elevation: 8,
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            height: 600, // Increased height for full screen effect
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.grey[100]!,
-                  Colors.grey[200]!,
-                ],
-              ),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                if (_currentImageBytes != null)
-                  Image.memory(
-                    _currentImageBytes!,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
-                  ),
-                if (_currentImageBytes == null && _imageStreamError == null)
-                  const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Creating your cocktail image...'),
-                    ],
-                  ),
+        // Main Hero Image - Edge to Edge, Dynamic Height
+        Container(
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height * 0.6, // 60% of screen height
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.grey[100]!,
+                Colors.grey[200]!,
               ],
             ),
           ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (_currentImageBytes != null)
+                Image.memory(
+                  _currentImageBytes!,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover, // Changed to cover for better screen utilization
+                  filterQuality: FilterQuality.high,
+                ),
+              if (_currentImageBytes == null && _imageStreamError == null)
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Column(
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text(
+                            'Creating your cocktail image...',
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
         
-        const SizedBox(height: 16),
-        
-        // Details Section Below Image
+        // Details Section Below Image with iOS-style padding
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -3169,7 +3198,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
           // Section Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: _selectedSection == 'overview' 
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.all(16.0),
               child: _getCurrentSectionContent(),
             ),
           ),
