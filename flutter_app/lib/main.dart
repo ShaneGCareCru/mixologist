@@ -2001,175 +2001,107 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget _buildOverviewSection() {
     return Column(
       children: [
-        // Main layout: Image left, Details right
-        SizedBox(
-          height: 500,
-          child: Row(
+        // Main Hero Image - Full Width
+        Card(
+          elevation: 8,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            height: 600, // Increased height for full screen effect
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.grey[100]!,
+                  Colors.grey[200]!,
+                ],
+              ),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (_currentImageBytes != null)
+                  Image.memory(
+                    _currentImageBytes!,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
+                if (_currentImageBytes == null && _imageStreamError == null)
+                  const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Creating your cocktail image...'),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // Details Section Below Image
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left: Hero Image
-              Expanded(
-                flex: 7,
-                child: Card(
-                  elevation: 8,
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Container(
-                    height: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.grey[100]!,
-                          Colors.grey[200]!,
-                        ],
+              // Quick Stats Cards Row
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            Icon(Icons.local_bar, color: Theme.of(context).colorScheme.secondary),
+                            const SizedBox(height: 4),
+                            Text('${(widget.recipeData['alcohol_content'] * 100).toStringAsFixed(1)}% ABV'),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (_currentImageBytes != null)
-                          Image.memory(
-                            _currentImageBytes!,
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
-                          ),
-                        if (_currentImageBytes == null && _imageStreamError == null)
-                          const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 16),
-                              Text('Creating your cocktail image...'),
-                            ],
-                          ),
-                        // Time Overlay - Top Right
-                        if (_currentImageBytes != null)
-                          Positioned(
-                            top: 16,
-                            right: 16,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity( 0.7),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '${widget.recipeData['preparation_time_minutes'] ?? 5} min',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                        // Alcohol Overlay - Bottom Right  
-                        if (_currentImageBytes != null)
-                          Positioned(
-                            bottom: 80, // Above the generate button
-                            right: 16,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity( 0.7),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '${(widget.recipeData['alcohol_content'] * 100).toStringAsFixed(1)}% ABV',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                        // Generate Visuals Button
-                        Positioned(
-                          bottom: 16,
-                          right: 16,
-                          child: FloatingActionButton.extended(
-                            onPressed: _isGeneratingVisuals ? null : _generateRecipeVisuals,
-                            icon: _isGeneratingVisuals 
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.auto_awesome),
-                            label: Text(_isGeneratingVisuals ? 'Generating All Images...' : 'Generate All Visuals'),
-                            backgroundColor: Theme.of(context).colorScheme.secondary,
-                            foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                          ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            Icon(Icons.timer, color: Theme.of(context).colorScheme.secondary),
+                            const SizedBox(height: 4),
+                            Text('${widget.recipeData['preparation_time_minutes'] ?? 5} min'),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
+              const SizedBox(height: 16),
               
-              // Right: Details Sidebar
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: SingleChildScrollView(
+              // Variations Section
+              if (widget.recipeData['suggested_variations'] is List && 
+                  (widget.recipeData['suggested_variations'] as List).isNotEmpty) ...[
+                Text('Variations', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                      // Quick Stats Cards
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  children: [
-                                    Icon(Icons.local_bar, color: Theme.of(context).colorScheme.secondary),
-                                    const SizedBox(height: 4),
-                                    Text('${(widget.recipeData['alcohol_content'] * 100).toStringAsFixed(1)}% ABV'),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  children: [
-                                    Icon(Icons.timer, color: Theme.of(context).colorScheme.secondary),
-                                    const SizedBox(height: 4),
-                                    Text('${widget.recipeData['preparation_time_minutes'] ?? 5} min'),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      // Variations Section
-                      if (widget.recipeData['suggested_variations'] is List && 
-                          (widget.recipeData['suggested_variations'] as List).isNotEmpty) ...[
-                        Text('Variations', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
                         ...((widget.recipeData['suggested_variations'] as List).take(2).map((v) {
                           final name = v['name'] ?? '';
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.only(bottom: 4),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -2191,79 +2123,76 @@ class _RecipeScreenState extends State<RecipeScreen> {
                             ),
                           );
                         })),
-                        const SizedBox(height: 16),
-                      ],
-                      
-                      // History Section
-                      if (widget.recipeData['drink_history'] != null && 
-                          widget.recipeData['drink_history'].toString().isNotEmpty) ...[
-                        Text('History', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Text(
-                              widget.recipeData['drink_history'].toString(),
-                              style: Theme.of(context).textTheme.bodySmall,
-                              maxLines: 4,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      
-                      
-                      // Trivia Section
-                      if (widget.recipeData['drink_trivia'] is List && 
-                          (widget.recipeData['drink_trivia'] as List).isNotEmpty) ...[
-                        Text('Trivia', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        ...((widget.recipeData['drink_trivia'] as List).take(3).map((trivia) {
-                          final fact = trivia['fact'] ?? trivia.toString();
-                          final category = trivia['category'] ?? '';
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (category.isNotEmpty)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        margin: const EdgeInsets.only(bottom: 6),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.primaryContainer,
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          category.toUpperCase(),
-                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    Text(
-                                      fact,
-                                      style: Theme.of(context).textTheme.bodySmall,
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        })),
-                      ],
                       ],
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+              ],
+              
+              // History Section
+              if (widget.recipeData['drink_history'] != null && 
+                  widget.recipeData['drink_history'].toString().isNotEmpty) ...[
+                Text('History', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      widget.recipeData['drink_history'].toString(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              
+              // Trivia Section
+              if (widget.recipeData['drink_trivia'] is List && 
+                  (widget.recipeData['drink_trivia'] as List).isNotEmpty) ...[
+                Text('Trivia', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                ...((widget.recipeData['drink_trivia'] as List).take(3).map((trivia) {
+                  final fact = trivia['fact'] ?? trivia.toString();
+                  final category = trivia['category'] ?? '';
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (category.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                margin: const EdgeInsets.only(bottom: 6),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  category.toUpperCase(),
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            Text(
+                              fact,
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                })),
+              ],
             ],
           ),
         ),
@@ -2786,6 +2715,31 @@ class _RecipeScreenState extends State<RecipeScreen> {
                             Text(
                               _getProgressText(),
                               style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: 12),
+                            // Small Generate Visuals Button
+                            CupertinoButton(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              minSize: 0,
+                              color: Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+                              onPressed: _isGeneratingVisuals ? null : _generateRecipeVisuals,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _isGeneratingVisuals 
+                                      ? const SizedBox(
+                                          width: 12,
+                                          height: 12,
+                                          child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white),
+                                        )
+                                      : const Icon(CupertinoIcons.sparkles, size: 14, color: Colors.white),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _isGeneratingVisuals ? 'Generating...' : 'Generate Visuals', 
+                                    style: const TextStyle(fontSize: 12, color: Colors.white)
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
