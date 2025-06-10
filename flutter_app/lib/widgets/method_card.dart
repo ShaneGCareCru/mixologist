@@ -355,24 +355,44 @@ class _MethodCardState extends State<MethodCard>
         children: [
           AspectRatio(
             aspectRatio: 2.0, // Wide aspect ratio for action images
-            child: _buildImageWidget(theme),
+            child: Stack(
+              children: [
+                _buildImageWidget(theme),
+                // Step number overlay in top left
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Step ${widget.data.stepNumber}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(12.0), // Reduced padding
               child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // Prevent overflow
               children: [
-                Text(
-                  'Step ${widget.data.stepNumber}',
-                  style: theme.textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
                 Flexible(
                   child: Text(
                     widget.data.description,
                     style: theme.textTheme.bodyMedium,
-                    maxLines: 3,
+                    maxLines: 2, // Reduced from 3 to 2 lines
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

@@ -1258,12 +1258,20 @@ class _RecipeScreenState extends State<RecipeScreen> {
   @override
   void initState() {
     super.initState();
-    _connectToImageStream();
     _initializeIngredientChecklist();
     _initializeSpecializedImages();
     _initializeStepConnections();
     _loadCachedImages(); // Check for existing cached images
     WidgetsBinding.instance.addPostFrameCallback((_) => _restoreExpandedFromHash());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Call _connectToImageStream here where MediaQuery is available
+    if (!_isImageStreamComplete && _currentImageBytes == null && _imageStreamError == null) {
+      _connectToImageStream();
+    }
   }
 
   void _restoreExpandedFromHash() {
@@ -1832,17 +1840,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
     // Get device screen information for optimal image sizing
     final screenSize = MediaQuery.of(context).size;
     final pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final isPortrait = screenSize.height > screenSize.width;
     
-    // Calculate optimal image dimensions for iOS
-    String preferredImageSize;
-    if (isPortrait) {
-      // For portrait mode, prefer vertical images (1024x1536)
-      preferredImageSize = '1024x1536';
-    } else {
-      // For landscape mode, prefer horizontal images (1536x1024)
-      preferredImageSize = '1536x1024';
-    }
+    // Always use phone portrait size regardless of device orientation
+    String preferredImageSize = '1024x1536'; // Phone portrait only
 
     _imageStreamSubscription?.cancel(); // Cancel previous subscription
 
@@ -2044,7 +2044,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   _currentImageBytes!,
                   width: double.infinity,
                   height: double.infinity,
-                  fit: BoxFit.cover, // Changed to cover for better screen utilization
+                  fit: BoxFit.contain, // Show entire image without cropping
                   filterQuality: FilterQuality.high,
                 ),
               if (_currentImageBytes == null && _imageStreamError == null)
@@ -2176,6 +2176,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+              ],
               
               // Trivia Section
               if (widget.recipeData['drink_trivia'] is List && 
@@ -2790,7 +2791,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                              MediaQuery.of(context).size.width > 800 ? 2 : 1,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.2, // Slightly taller to accommodate content
+              childAspectRatio: 1.0, // More height to prevent overflow
             ),
             itemCount: widget.recipeData['steps'].length,
             itemBuilder: (context, i) {

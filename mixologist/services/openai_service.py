@@ -606,11 +606,11 @@ async def generate_method_image_stream(
 async def generate_image_stream( # Renamed to indicate streaming and generator
     prompt: str,
     drink_name: str,
-    ingredients: Optional[List[Dict[str, str]]] = None,
+    ingredients: Optional[List] = None,  # Accept both List[str] and List[Dict[str, str]]
     serving_glass: Optional[str] = None,
     steps: Optional[List[str]] = None,
     garnish: Optional[List[str]] = None,
-    equipment_needed: Optional[List[Dict[str, str]]] = None,
+    equipment_needed: Optional[List] = None,  # Accept both formats
     preparation_time_minutes: Optional[int] = None,
     alcohol_content: Optional[float] = None,
 ) -> AsyncGenerator[str, None]: # Changed return type to AsyncGenerator yielding strings (b64_json)
@@ -619,8 +619,42 @@ async def generate_image_stream( # Renamed to indicate streaming and generator
     if async_client is None:
         raise Exception("OpenAI async client not initialized. Please set OPENAI_API_KEY environment variable.")
 
+    # Convert ingredients from list of strings to list of dicts if needed
+    normalized_ingredients = []
+    if ingredients:
+        for ingredient in ingredients:
+            if isinstance(ingredient, str):
+                # Parse string format like "2 oz Cognac" into {"quantity": "2 oz", "name": "Cognac"}
+                parts = ingredient.strip().split(' ', 2)  # Split into max 3 parts
+                if len(parts) >= 3:
+                    quantity = f"{parts[0]} {parts[1]}"
+                    name = ' '.join(parts[2:])
+                elif len(parts) == 2:
+                    quantity = parts[0]
+                    name = parts[1]
+                else:
+                    quantity = ""
+                    name = ingredient
+                normalized_ingredients.append({"quantity": quantity, "name": name})
+            elif isinstance(ingredient, dict):
+                normalized_ingredients.append(ingredient)
+            else:
+                # Fallback for unexpected types
+                normalized_ingredients.append({"quantity": "", "name": str(ingredient)})
+    
+    # Convert equipment_needed from list of strings to list of dicts if needed
+    normalized_equipment = []
+    if equipment_needed:
+        for equipment in equipment_needed:
+            if isinstance(equipment, str):
+                normalized_equipment.append({"item": equipment})
+            elif isinstance(equipment, dict):
+                normalized_equipment.append(equipment)
+            else:
+                normalized_equipment.append({"item": str(equipment)})
+
     # Generate cache key for this image request
-    cache_key = generate_cache_key(prompt, drink_name, ingredients, serving_glass)
+    cache_key = generate_cache_key(prompt, drink_name, normalized_ingredients, serving_glass)
     print(f"--- Generated cache key: {cache_key} ---")
     
     # Check for cached image first
@@ -633,14 +667,14 @@ async def generate_image_stream( # Renamed to indicate streaming and generator
     print(f"--- No cached image found for {drink_name}, generating new image ---")
 
     # Build infographic-style prompt instead of simple cocktail image
-    if ingredients and len(ingredients) > 0:
+    if normalized_ingredients and len(normalized_ingredients) > 0:
         main_input_prompt = build_cocktail_infographic_prompt(
             drink_name=drink_name,
-            ingredients=ingredients,
+            ingredients=normalized_ingredients,
             steps=steps or [],
             serving_glass=serving_glass or "cocktail glass",
             garnish=garnish,
-            equipment_needed=equipment_needed
+            equipment_needed=normalized_equipment
         )
     else:
         # Fallback to simple cocktail image if no ingredients data
@@ -662,7 +696,7 @@ async def generate_image_stream( # Renamed to indicate streaming and generator
             tools=[{
                 "type": "image_generation",
                 "quality": "auto",  # Auto quality for better infographic details
-                "size": "1536x1024",  # Largest supported landscape size for infographic
+                "size": "1024x1536",  # Phone portrait size only
                 "background": "transparent",  # Transparent background
                 "partial_images": 2, 
             }],
