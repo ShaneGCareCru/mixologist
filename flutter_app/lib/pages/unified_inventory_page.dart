@@ -348,22 +348,24 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                DropdownButton<String>(
-                  value: _selectedCategory,
-                  items: [
-                    const DropdownMenuItem(value: 'all', child: Text('All Categories')),
-                    ...IngredientCategory.all.map(
-                      (category) => DropdownMenuItem(
-                        value: category,
-                        child: Text(IngredientCategory.getDisplayName(category)),
+                Material(
+                  child: DropdownButton<String>(
+                    value: _selectedCategory,
+                    items: [
+                      const DropdownMenuItem(value: 'all', child: Text('All Categories')),
+                      ...IngredientCategory.all.map(
+                        (category) => DropdownMenuItem(
+                          value: category,
+                          child: Text(IngredientCategory.getDisplayName(category)),
+                        ),
                       ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCategory = value ?? 'all';
-                    });
-                  },
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value ?? 'all';
+                      });
+                    },
+                  ),
                 ),
               ],
             ),
