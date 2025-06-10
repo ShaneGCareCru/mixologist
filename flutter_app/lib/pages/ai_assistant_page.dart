@@ -338,12 +338,15 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
         final controller = TextEditingController();
         return AlertDialog(
           title: const Text('What would you like to drink?'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              hintText: 'Describe your cocktail preferences...',
+          content: Material(
+            color: Colors.transparent,
+            child: TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'Describe your cocktail preferences...',
+              ),
+              maxLines: 3,
             ),
-            maxLines: 3,
           ),
           actions: [
             TextButton(

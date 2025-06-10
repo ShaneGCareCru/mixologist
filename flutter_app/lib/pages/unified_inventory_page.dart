@@ -334,21 +334,25 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Search inventory...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        hintText: 'Search inventory...',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
                   ),
                 ),
                 const SizedBox(width: 16),
                 Material(
+                  color: Colors.transparent,
                   child: DropdownButton<String>(
                     value: _selectedCategory,
                     items: [

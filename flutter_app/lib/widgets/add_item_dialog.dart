@@ -167,26 +167,30 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 ],
 
                 // Name Field
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Item Name *',
-                    hintText: 'e.g., Vodka, Simple Syrup, Lime',
-                    border: OutlineInputBorder(),
+                Material(
+                  color: Colors.transparent,
+                  child: TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Item Name *',
+                      hintText: 'e.g., Vodka, Simple Syrup, Lime',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter an item name';
+                      }
+                      return null;
+                    },
+                    textCapitalization: TextCapitalization.words,
                   ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter an item name';
-                    }
-                    return null;
-                  },
-                  textCapitalization: TextCapitalization.words,
                 ),
 
                 const SizedBox(height: 16),
 
                 // Category Dropdown
                 Material(
+                  color: Colors.transparent,
                   child: DropdownButtonFormField<String>(
                     value: _selectedCategory,
                     decoration: const InputDecoration(
@@ -217,6 +221,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
 
                 // Quantity Dropdown
                 Material(
+                  color: Colors.transparent,
                   child: DropdownButtonFormField<String>(
                     value: _selectedQuantity,
                     decoration: const InputDecoration(
@@ -246,28 +251,34 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 const SizedBox(height: 16),
 
                 // Brand Field
-                TextFormField(
-                  controller: _brandController,
-                  decoration: const InputDecoration(
-                    labelText: 'Brand (Optional)',
-                    hintText: 'e.g., Grey Goose, Monin',
-                    border: OutlineInputBorder(),
+                Material(
+                  color: Colors.transparent,
+                  child: TextFormField(
+                    controller: _brandController,
+                    decoration: const InputDecoration(
+                      labelText: 'Brand (Optional)',
+                      hintText: 'e.g., Grey Goose, Monin',
+                      border: OutlineInputBorder(),
+                    ),
+                    textCapitalization: TextCapitalization.words,
                   ),
-                  textCapitalization: TextCapitalization.words,
                 ),
 
                 const SizedBox(height: 16),
 
                 // Notes Field
-                TextFormField(
-                  controller: _notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes (Optional)',
-                    hintText: 'Any additional information',
-                    border: OutlineInputBorder(),
+                Material(
+                  color: Colors.transparent,
+                  child: TextFormField(
+                    controller: _notesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes (Optional)',
+                      hintText: 'Any additional information',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
+                    textCapitalization: TextCapitalization.sentences,
                   ),
-                  maxLines: 2,
-                  textCapitalization: TextCapitalization.sentences,
                 ),
 
                 if (widget.sourceImage == null) ...[

@@ -227,147 +227,160 @@ class _InventoryPageState extends State<InventoryPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Stats Card
-          if (_stats != null)
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _StatItem(label: 'Total', value: _stats!.totalItems.toString()),
-                  _StatItem(label: 'Categories', value: _stats!.byCategory.length.toString()),
-                  _StatItem(label: 'Expiring', value: _stats!.expiringSoon.toString()),
-                ],
-              ),
-            ),
-
-          // Search and Filter
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Search inventory...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Stats Card
+              if (_stats != null)
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _StatItem(label: 'Total', value: _stats!.totalItems.toString()),
+                      _StatItem(label: 'Categories', value: _stats!.byCategory.length.toString()),
+                      _StatItem(label: 'Expiring', value: _stats!.expiringSoon.toString()),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                DropdownButton<String>(
-                  value: _selectedCategory,
-                  items: [
-                    const DropdownMenuItem(value: 'all', child: Text('All Categories')),
-                    ...IngredientCategory.all.map(
-                      (category) => DropdownMenuItem(
-                        value: category,
-                        child: Text(IngredientCategory.getDisplayName(category)),
+
+              // Search and Filter
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            hintText: 'Search inventory...',
+                            prefixIcon: Icon(Icons.search),
+                            border: OutlineInputBorder(),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Material(
+                      color: Colors.transparent,
+                      child: DropdownButton<String>(
+                        value: _selectedCategory,
+                        items: [
+                          const DropdownMenuItem(value: 'all', child: Text('All Categories')),
+                          ...IngredientCategory.all.map(
+                            (category) => DropdownMenuItem(
+                              value: category,
+                              child: Text(IngredientCategory.getDisplayName(category)),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedCategory = value ?? 'all';
+                          });
+                        },
                       ),
                     ),
                   ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCategory = value ?? 'all';
-                    });
-                  },
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Camera Actions
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isAnalyzing ? null : _takePhoto,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Scan with Camera'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isAnalyzing ? null : _pickFromGallery,
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Pick from Gallery'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          if (_isAnalyzing)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 16),
-                  Text('Analyzing image with AI...'),
-                ],
               ),
-            ),
 
-          const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-          // Items List
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Error: $_error'),
-                            ElevatedButton(
-                              onPressed: _loadInventory,
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _filteredItems.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No items found.\nTap + to add items or use camera to scan ingredients.',
-                              textAlign: TextAlign.center,
+              // Camera Actions
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _isAnalyzing ? null : _takePhoto,
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Scan with Camera'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _isAnalyzing ? null : _pickFromGallery,
+                        icon: const Icon(Icons.photo_library),
+                        label: const Text('Pick from Gallery'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              if (_isAnalyzing)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(width: 16),
+                      Text('Analyzing image with AI...'),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 16),
+
+              // Items List
+              SizedBox(
+                height: 400, // Fixed height to prevent overflow
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Error: $_error'),
+                                ElevatedButton(
+                                  onPressed: _loadInventory,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
                             ),
                           )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: _filteredItems.length,
-                            itemBuilder: (context, index) {
-                              final item = _filteredItems[index];
-                              return InventoryItemCard(
-                                item: item,
-                                onUpdate: () => _loadInventory(),
-                                onDelete: () => _loadInventory(),
-                              );
-                            },
-                          ),
+                        : _filteredItems.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No items found.\nTap + to add items or use camera to scan ingredients.',
+                                  textAlign: TextAlign.center,
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                itemCount: _filteredItems.length,
+                                itemBuilder: (context, index) {
+                                  final item = _filteredItems[index];
+                                  return InventoryItemCard(
+                                    item: item,
+                                    onUpdate: () => _loadInventory(),
+                                    onDelete: () => _loadInventory(),
+                                  );
+                                },
+                              ),
+              ),
+              const SizedBox(height: 80), // Space for floating action button
+            ],
           ),
-        ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
