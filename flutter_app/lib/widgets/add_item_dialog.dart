@@ -186,57 +186,61 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 const SizedBox(height: 16),
 
                 // Category Dropdown
-                DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  decoration: const InputDecoration(
-                    labelText: 'Category *',
-                    border: OutlineInputBorder(),
+                Material(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Category *',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: IngredientCategory.all.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(IngredientCategory.getDisplayName(category)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value!;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a category';
+                      }
+                      return null;
+                    },
                   ),
-                  items: IngredientCategory.all.map((category) {
-                    return DropdownMenuItem(
-                      value: category,
-                      child: Text(IngredientCategory.getDisplayName(category)),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCategory = value!;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a category';
-                    }
-                    return null;
-                  },
                 ),
 
                 const SizedBox(height: 16),
 
                 // Quantity Dropdown
-                DropdownButtonFormField<String>(
-                  value: _selectedQuantity,
-                  decoration: const InputDecoration(
-                    labelText: 'Quantity *',
-                    border: OutlineInputBorder(),
+                Material(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedQuantity,
+                    decoration: const InputDecoration(
+                      labelText: 'Quantity *',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: QuantityDescription.all.map((quantity) {
+                      return DropdownMenuItem(
+                        value: quantity,
+                        child: Text(QuantityDescription.getDisplayName(quantity)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedQuantity = value!;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a quantity';
+                      }
+                      return null;
+                    },
                   ),
-                  items: QuantityDescription.all.map((quantity) {
-                    return DropdownMenuItem(
-                      value: quantity,
-                      child: Text(QuantityDescription.getDisplayName(quantity)),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedQuantity = value!;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a quantity';
-                    }
-                    return null;
-                  },
                 ),
 
                 const SizedBox(height: 16),
