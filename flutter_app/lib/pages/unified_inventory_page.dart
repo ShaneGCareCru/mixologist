@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/inventory_models.dart';
 import '../services/inventory_service.dart';
@@ -6,6 +7,8 @@ import '../widgets/inventory_item_card.dart';
 import '../widgets/bottle_card.dart';
 import '../widgets/add_item_dialog.dart';
 import '../widgets/inventory_shelf.dart';
+import '../theme/ios_theme.dart';
+import '../widgets/ios_card.dart';
 
 class UnifiedInventoryPage extends StatefulWidget {
   const UnifiedInventoryPage({Key? key}) : super(key: key);
@@ -267,25 +270,43 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bar Inventory'),
-        actions: [
-          IconButton(
-            icon: Icon(_isBackBarView ? Icons.list : Icons.view_module),
-            onPressed: () {
-              setState(() {
-                _isBackBarView = !_isBackBarView;
-              });
-            },
-            tooltip: _isBackBarView ? 'Switch to List View' : 'Switch to Shelf View',
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadInventory,
-          ),
-        ],
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('Bar Inventory'),
+        backgroundColor: CupertinoColors.systemBackground,
+        border: const Border(),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: iOSTheme.minimumTouchTarget,
+              child: Icon(
+                _isBackBarView ? CupertinoIcons.list_bullet : CupertinoIcons.square_grid_2x2,
+                size: 20,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isBackBarView = !_isBackBarView;
+                });
+              },
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: iOSTheme.minimumTouchTarget,
+              child: const Icon(CupertinoIcons.refresh, size: 20),
+              onPressed: _loadInventory,
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: iOSTheme.minimumTouchTarget,
+              child: const Icon(CupertinoIcons.add, size: 20),
+              onPressed: () => _showAddItemDialog(),
+            ),
+          ],
+        ),
       ),
+      backgroundColor: CupertinoColors.systemGroupedBackground,
       body: Column(
         children: [
           // Stats Card
@@ -418,10 +439,6 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
                             : _buildListView(),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddItemDialog(),
-        child: const Icon(Icons.add),
       ),
     );
   }
