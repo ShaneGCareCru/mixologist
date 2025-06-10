@@ -2,6 +2,7 @@ import 'dart:async'; // For StreamSubscription
 import 'dart:convert'; // For jsonDecode, base64Decode, utf8, LineSplitter
 import 'dart:typed_data'; // For Uint8List
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http; // HTTP package
@@ -13,9 +14,12 @@ import 'widgets/connection_line.dart';
 import 'widgets/drink_progress_glass.dart';
 import 'widgets/method_card.dart';
 import 'widgets/loading_screen.dart';
+import 'widgets/ios_card.dart';
+import 'widgets/ios_search_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/unified_inventory_page.dart';
 import 'pages/ai_assistant_page.dart';
+import 'theme/ios_theme.dart';
 
 
 void main() async {
@@ -33,12 +37,27 @@ class MixologistApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScrollConfiguration(
       behavior: _SmoothScrollBehavior(),
-      child: MaterialApp(
+      child: CupertinoApp(
         title: 'Mixologist',
-        theme: _buildLightTheme(),
-        darkTheme: _buildDarkTheme(),
-        themeMode: ThemeMode.system,
+        theme: _buildCupertinoTheme(),
         home: const LoginScreen(),
+      ),
+    );
+  }
+  
+  CupertinoThemeData _buildCupertinoTheme() {
+    return const CupertinoThemeData(
+      primaryColor: iOSTheme.whiskey,
+      primaryContrastingColor: CupertinoColors.white,
+      barBackgroundColor: CupertinoColors.systemBackground,
+      scaffoldBackgroundColor: CupertinoColors.systemGroupedBackground,
+      textTheme: CupertinoTextThemeData(
+        primaryColor: iOSTheme.whiskey,
+        textStyle: iOSTheme.body,
+        actionTextStyle: iOSTheme.headline,
+        tabLabelTextStyle: iOSTheme.caption1,
+        navTitleTextStyle: iOSTheme.headline,
+        navLargeTitleTextStyle: iOSTheme.largeTitle,
       ),
     );
   }
@@ -489,164 +508,164 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text('AI Mixologist'),
-        centerTitle: true,
+    return CupertinoPageScaffold(
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('AI Mixologist'),
+        backgroundColor: CupertinoColors.systemBackground,
+        border: Border(),
       ),
-      body: MixologistBackground(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // App logo/icon area with cocktail glass icon
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.secondary,
-                        ],
+      backgroundColor: CupertinoColors.systemGroupedBackground,
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: iOSTheme.screenPadding,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // App logo/icon area with cocktail glass icon
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        iOSTheme.whiskey,
+                        iOSTheme.amber,
+                      ],
+                    ),
+                    boxShadow: iOSTheme.cardShadow,
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.star_fill,
+                    size: 60,
+                    color: CupertinoColors.white,
+                  ),
+                ),
+                const SizedBox(height: iOSTheme.extraLargePadding),
+                
+                // Welcome text with iOS styling
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: iOSTheme.cardDecoration(context),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Welcome to',
+                        style: iOSTheme.title3.copyWith(
+                          color: iOSTheme.adaptiveColor(
+                            context, 
+                            iOSTheme.whiskey.withOpacity(0.8), 
+                            CupertinoColors.white.withOpacity(0.8)
+                          ),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.colorScheme.primary.withOpacity( 0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
+                      Text(
+                        'AI Mixologist',
+                        style: iOSTheme.largeTitle.copyWith(
+                          color: iOSTheme.adaptiveColor(
+                            context, 
+                            iOSTheme.whiskey, 
+                            CupertinoColors.white
+                          ),
                         ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.local_bar,
-                      size: 60,
-                      color: Colors.white,
-                    ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: iOSTheme.mediumPadding),
+                      Text(
+                        'Craft perfect cocktails with AI-powered recipes and step-by-step guidance',
+                        style: iOSTheme.body.copyWith(
+                          color: iOSTheme.adaptiveColor(
+                            context, 
+                            CupertinoColors.secondaryLabel, 
+                            CupertinoColors.secondaryLabel
+                          ),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                  
-                  // Welcome text with enhanced styling
-                  GlassmorphicCard(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Welcome to',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            color: theme.colorScheme.primary.withOpacity( 0.8),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          'AI Mixologist',
-                          style: theme.textTheme.displayMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Craft perfect cocktails with AI-powered recipes and step-by-step guidance',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity( 0.7),
-                            height: 1.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Enhanced sign-in button
-                  Container(
-                    width: double.infinity,
-                    constraints: const BoxConstraints(maxWidth: 300),
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        try {
-                          await FirebaseAuth.instance.signInAnonymously();
-                          if (context.mounted) {
-                            Navigator.pushReplacement(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                  return FadeTransition(opacity: animation, child: child);
-                                },
-                                transitionDuration: const Duration(milliseconds: 500),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error signing in: $e'),
-                                backgroundColor: theme.colorScheme.error,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            );
-                          }
+                ),
+                
+                const SizedBox(height: 40),
+                
+                // iOS-style sign-in button
+                Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: CupertinoButton.filled(
+                    onPressed: () async {
+                      try {
+                        await FirebaseAuth.instance.signInAnonymously();
+                        if (context.mounted) {
+                          Navigator.pushReplacement(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (context) => const HomeScreen(),
+                            ),
+                          );
                         }
-                      },
-                      icon: const Icon(Icons.login, size: 20),
-                      label: const Text('Start Mixing'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(double.infinity, 56),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Subtle feature highlights
-                  GlassmorphicCard(
-                    padding: const EdgeInsets.all(20),
+                      } catch (e) {
+                        if (context.mounted) {
+                          showCupertinoDialog(
+                            context: context,
+                            builder: (context) => CupertinoAlertDialog(
+                              title: const Text('Error'),
+                              content: Text('Error signing in: $e'),
+                              actions: [
+                                CupertinoDialogAction(
+                                  child: const Text('OK'),
+                                  onPressed: () => Navigator.pop(context),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(iOSTheme.largeRadius),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildFeatureIcon(
-                          context,
-                          Icons.auto_awesome,
-                          'AI Recipes',
-                        ),
-                        _buildFeatureIcon(
-                          context,
-                          Icons.check_circle_outline,
-                          'Step Guide',
-                        ),
-                        _buildFeatureIcon(
-                          context,
-                          Icons.palette,
-                          'Visual Aid',
-                        ),
+                        const Icon(CupertinoIcons.play_fill, size: 18),
+                        const SizedBox(width: 8),
+                        Text('Start Mixing', style: iOSTheme.headline.copyWith(color: CupertinoColors.white)),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                
+                const SizedBox(height: iOSTheme.extraLargePadding),
+                
+                // iOS-style feature highlights
+                Container(
+                  padding: iOSTheme.cardPadding,
+                  decoration: iOSTheme.cardDecoration(context),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildFeatureIcon(
+                        context,
+                        CupertinoIcons.star,
+                        'AI Recipes',
+                      ),
+                      _buildFeatureIcon(
+                        context,
+                        CupertinoIcons.checkmark_circle,
+                        'Step Guide',
+                      ),
+                      _buildFeatureIcon(
+                        context,
+                        CupertinoIcons.paintbrush,
+                        'Visual Aid',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -655,20 +674,27 @@ class LoginScreen extends StatelessWidget {
   }
   
   Widget _buildFeatureIcon(BuildContext context, IconData icon, String label) {
-    final theme = Theme.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
           size: 24,
-          color: theme.colorScheme.primary.withOpacity( 0.7),
+          color: iOSTheme.adaptiveColor(
+            context, 
+            iOSTheme.whiskey.withOpacity(0.7), 
+            CupertinoColors.white.withOpacity(0.7)
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity( 0.6),
+          style: iOSTheme.caption1.copyWith(
+            color: iOSTheme.adaptiveColor(
+              context, 
+              CupertinoColors.secondaryLabel, 
+              CupertinoColors.secondaryLabel
+            ),
           ),
         ),
       ],
@@ -781,57 +807,59 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
-    final theme = Theme.of(context);
     
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text('AI Mixologist'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.smart_toy),
-            tooltip: 'AI Assistant',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AIAssistantPage(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.inventory),
-            tooltip: 'Inventory',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const UnifiedInventoryPage(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              await FirebaseAuth.instance.signOut();
-              if (mounted) {
-                navigator.pushReplacement(
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      return FadeTransition(opacity: animation, child: child);
-                    },
-                    transitionDuration: const Duration(milliseconds: 500),
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('AI Mixologist'),
+        backgroundColor: CupertinoColors.systemBackground,
+        border: const Border(),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: iOSTheme.minimumTouchTarget,
+              child: const Icon(CupertinoIcons.chat_bubble_text, size: 20),
+              onPressed: () {
+                Navigator.of(context).push(
+                  CupertinoPageRoute(
+                    builder: (context) => const AIAssistantPage(),
                   ),
                 );
-              }
-            },
-          ),
-        ],
+              },
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: iOSTheme.minimumTouchTarget,
+              child: const Icon(CupertinoIcons.cube_box, size: 20),
+              onPressed: () {
+                Navigator.of(context).push(
+                  CupertinoPageRoute(
+                    builder: (context) => const UnifiedInventoryPage(),
+                  ),
+                );
+              },
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: iOSTheme.minimumTouchTarget,
+              child: const Icon(CupertinoIcons.square_arrow_right, size: 20),
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                await FirebaseAuth.instance.signOut();
+                if (mounted) {
+                  navigator.pushReplacement(
+                    CupertinoPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
       ),
+      backgroundColor: CupertinoColors.systemGroupedBackground,
       body: MixologistBackground(
         child: SafeArea(
           child: SingleChildScrollView(
