@@ -918,7 +918,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ? 'Guest User (${user.uid.substring(0,6)}...)'
                                     : user.displayName ?? user.email ?? 'User',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity( 0.7),
+                                  color: const Color(0xFF5D4E42),
                                 ),
                               ),
                             ],
@@ -942,11 +942,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             size: 28,
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            'Create Your Perfect Drink',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: Theme.of(context).colorScheme.primary,
+                          Expanded(
+                            child: Text(
+                              'Create Your Perfect Drink',
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF4A3728),
+                              ),
                             ),
                           ),
                         ],
@@ -955,7 +957,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Find a classic recipe or describe your ideal cocktail',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity( 0.7),
+                          color: const Color(0xFF5D4E42),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -1013,7 +1015,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 
                 // Custom drink section
                 GlassmorphicCard(
@@ -1029,11 +1031,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             size: 28,
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            'AI Custom Creation',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: Theme.of(context).colorScheme.secondary,
+                          Expanded(
+                            child: Text(
+                              'AI Custom Creation',
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF8B6914),
+                              ),
                             ),
                           ),
                         ],
@@ -1042,7 +1046,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Describe your perfect drink and let AI create a custom recipe',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity( 0.7),
+                          color: const Color(0xFF5D4E42),
                         ),
                       ),
                       const SizedBox(height: 24),
