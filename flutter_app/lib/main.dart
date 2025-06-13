@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http; // HTTP package
+import 'package:fuzzy/fuzzy.dart';
 // No longer importing flutter_client_sse
 import 'firebase_options.dart';
 // HTML functionality removed - using SharedPreferences for storage instead
@@ -718,18 +719,33 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final _drinkPreferencesController = TextEditingController();
-  String? _recipeError;
-  String? _customError;
+  final TextEditingController _unifiedSearchController = TextEditingController();
+  String? _searchError;
+  bool _isLoading = false;
+  
+  // List of known cocktail names for fuzzy matching
+  final List<String> _knownCocktails = [
+    'Mojito', 'Margarita', 'Old Fashioned', 'Manhattan', 'Martini', 'Negroni',
+    'Daiquiri', 'Whiskey Sour', 'Moscow Mule', 'Cosmopolitan', 'Bloody Mary',
+    'Piña Colada', 'Mai Tai', 'Tom Collins', 'Gimlet', 'Sazerac', 'Sidecar',
+    'Aviation', 'Last Word', 'Paper Plane', 'Ramos Gin Fizz', 'Mint Julep',
+    'Dark and Stormy', 'Aperol Spritz', 'Americano', 'Boulevardier', 'Vieux Carré',
+    'Corpse Reviver #2', 'Bee\'s Knees', 'Southside', 'French 75', 'Caipirinha',
+    'Espresso Martini', 'White Russian', 'Black Russian', 'Cuba Libre', 'Sex on the Beach',
+    'Long Island Iced Tea', 'Blue Lagoon', 'Tequila Sunrise', 'Screwdriver', 'Mudslide'
+  ];
 
-  Future<void> _getRecipe() async {
-    if (_searchController.text.isEmpty) {
-      setState(() { _recipeError = 'Please enter a drink name.'; });
+  Future<void> _handleUnifiedSearch() async {
+    final query = _unifiedSearchController.text.trim();
+    if (query.isEmpty) {
+      setState(() { _searchError = 'Please enter a drink name or describe what you\'re craving.'; });
       return;
     }
     
-    setState(() { _recipeError = null; });
+    setState(() { 
+      _searchError = null; 
+      _isLoading = true;
+    });
     
     // Navigate to loading screen
     Navigator.of(context).push(
@@ -737,13 +753,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     
     try {
+      // First, try fuzzy matching against known cocktails
+      final fuzzy = Fuzzy(_knownCocktails);
+      final results = fuzzy.search(query);
+      
+      bool isKnownCocktail = false;
+      String endpoint = 'http://127.0.0.1:8081/create_from_description';
+      Map<String, String> body = {'drink_description': query};
+      
+      // If we find a good fuzzy match (score above threshold), treat it as a cocktail name
+      if (results.isNotEmpty && results.first.score <= 0.3) {
+        // Lower score means better match in fuzzy package
+        isKnownCocktail = true;
+        endpoint = 'http://127.0.0.1:8081/create';
+        body = {'drink_query': results.first.item};
+        debugPrint('Fuzzy match found: ${results.first.item} (score: ${results.first.score})');
+      } else {
+        debugPrint('No fuzzy match found, treating as description: $query');
+      }
+      
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8081/create'), // Changed port to 8081
-        body: {'drink_query': _searchController.text},
+        Uri.parse(endpoint),
+        body: body,
       );
       
       // Pop loading screen
       Navigator.of(context).pop();
+      
+      setState(() { _isLoading = false; });
       
       if (response.statusCode == 200) {
         final recipeData = jsonDecode(response.body);
@@ -754,61 +791,23 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
       } else {
-        setState(() { _recipeError = 'Error fetching recipe: ${response.statusCode}'; });
-        debugPrint('Error fetching recipe: ${response.statusCode} - ${response.body}');
+        setState(() { _searchError = 'Error creating recipe: ${response.statusCode}'; });
+        debugPrint('Error creating recipe: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       // Pop loading screen on error
       Navigator.of(context).pop();
-      setState(() { _recipeError = 'Failed to connect: $e'; });
-      debugPrint('Exception fetching recipe: $e');
-    }
-  }
-
-  Future<void> _createCustomDrink() async {
-    if (_drinkPreferencesController.text.isEmpty) {
-      setState(() { _customError = 'Please describe your ideal drink.'; });
-      return;
-    }
-    
-    setState(() { _customError = null; });
-    
-    // Navigate to loading screen
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const LoadingScreen()),
-    );
-    
-    try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8081/create_from_description'),
-        body: {'drink_description': _drinkPreferencesController.text},
-      );
-      
-      // Pop loading screen
-      Navigator.of(context).pop();
-      
-      if (response.statusCode == 200) {
-        final recipeData = jsonDecode(response.body);
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => RecipeScreen(recipeData: recipeData)),
-          );
-        }
-      } else {
-        setState(() { _customError = 'Error creating drink: ${response.statusCode}'; });
-      }
-    } catch (e) {
-      // Pop loading screen on error
-      Navigator.of(context).pop();
-      setState(() { _customError = 'Failed to connect: $e'; });
+      setState(() { 
+        _searchError = 'Failed to connect: $e';
+        _isLoading = false;
+      });
+      debugPrint('Exception creating recipe: $e');
     }
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
-    _drinkPreferencesController.dispose();
+    _unifiedSearchController.dispose();
     super.dispose();
   }
 
@@ -875,227 +874,135 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                const SizedBox(height: 20),
+                const SizedBox(height: 60),
                 
-                // Welcome section with user info
-                if (user != null)
-                  GlassmorphicCard(
-                    margin: const EdgeInsets.only(bottom: 32),
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                Theme.of(context).colorScheme.primary,
-                                Theme.of(context).colorScheme.secondary,
-                              ],
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Welcome Back!',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                user.isAnonymous
-                                    ? 'Guest User (${user.uid.substring(0,6)}...)'
-                                    : user.displayName ?? user.email ?? 'User',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: const Color(0xFF5D4E42),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                // Main heading inspired by the image
+                Text(
+                  'Let curiosity\nguide you.',
+                  style: iOSTheme.largeTitle.copyWith(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w800,
+                    color: iOSTheme.adaptiveColor(
+                      context, 
+                      CupertinoColors.label, 
+                      CupertinoColors.white
                     ),
+                    height: 1.1,
                   ),
-                
-                // Quick actions section
-                GlassmorphicCard(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.local_bar,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 28,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Create Your Perfect Drink',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF4A3728),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Find a classic recipe or describe your ideal cocktail',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF5D4E42),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      // Search by name field
-                      CupertinoTextField(
-                        controller: _searchController,
-                        placeholder: 'Search by Drink Name',
-                        onSubmitted: (_) => _getRecipe(),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: CupertinoColors.systemGrey4),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        suffix: CupertinoButton(
-                          padding: const EdgeInsets.all(4),
-                          onPressed: _getRecipe,
-                          child: const Icon(CupertinoIcons.search, size: 20),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Quick search buttons
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _buildQuickSearchChip(context, 'Margarita'),
-                          _buildQuickSearchChip(context, 'Old Fashioned'),
-                          _buildQuickSearchChip(context, 'Mojito'),
-                          _buildQuickSearchChip(context, 'Manhattan'),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Get recipe button
-                      SizedBox(
-                        width: double.infinity,
-                        child: CupertinoButton(
-                          onPressed: _getRecipe,
-                          color: CupertinoColors.systemBlue,
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(CupertinoIcons.search, size: 20),
-                              SizedBox(width: 8),
-                              Text('Find Recipe'),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  textAlign: TextAlign.center,
                 ),
                 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 
-                // Custom drink section
-                GlassmorphicCard(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.auto_awesome,
-                            color: Theme.of(context).colorScheme.secondary,
-                            size: 28,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'AI Custom Creation',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF8B6914),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Describe your perfect drink and let AI create a custom recipe',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF5D4E42),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      CupertinoTextField(
-                        controller: _drinkPreferencesController,
-                        maxLines: 4,
-                        placeholder: 'I want something fruity and bubbly with rum, maybe with tropical flavors...',
-                        decoration: BoxDecoration(
-                          border: Border.all(color: CupertinoColors.systemGrey4),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        prefix: const Padding(
-                          padding: EdgeInsets.only(left: 8, bottom: 60),
-                          child: Icon(CupertinoIcons.pencil, color: CupertinoColors.systemBlue),
-                        ),
-                      ),
-                      if (_customError != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            _customError!,
-                            style: const TextStyle(color: CupertinoColors.systemRed, fontSize: 12),
-                          ),
-                        ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      SizedBox(
-                        width: double.infinity,
-                        child: CupertinoButton(
-                          onPressed: _createCustomDrink,
-                          color: CupertinoColors.systemPurple,
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(CupertinoIcons.sparkles, size: 20),
-                              SizedBox(width: 8),
-                              Text('Create Custom Drink'),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                // Subheading text
+                Text(
+                  'Your first sip begins with a word.\nJust type what you crave—tell how it\'s\nfeeling a moment—and we\'ll handle the rest.',
+                  style: iOSTheme.body.copyWith(
+                    color: iOSTheme.adaptiveColor(
+                      context, 
+                      CupertinoColors.secondaryLabel, 
+                      CupertinoColors.secondaryLabel
+                    ),
+                    height: 1.4,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 
                 const SizedBox(height: 40),
+                
+                // Unified search field
+                Container(
+                  decoration: BoxDecoration(
+                    color: iOSTheme.adaptiveColor(
+                      context, 
+                      CupertinoColors.tertiarySystemFill, 
+                      iOSTheme.darkTertiaryBackground
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: CupertinoTextField(
+                    controller: _unifiedSearchController,
+                    placeholder: 'aperol spritz',
+                    onSubmitted: (_) => _handleUnifiedSearch(),
+                    decoration: const BoxDecoration(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    prefix: const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Icon(
+                        CupertinoIcons.search,
+                        color: CupertinoColors.placeholderText,
+                        size: 20,
+                      ),
+                    ),
+                    suffix: _unifiedSearchController.text.isNotEmpty
+                        ? CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            minSize: 20,
+                            child: const Icon(
+                              CupertinoIcons.clear_circled_solid,
+                              color: CupertinoColors.placeholderText,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              _unifiedSearchController.clear();
+                              setState(() {});
+                            },
+                          )
+                        : null,
+                    style: iOSTheme.body.copyWith(
+                      color: iOSTheme.adaptiveColor(context, CupertinoColors.label, CupertinoColors.label),
+                    ),
+                    placeholderStyle: iOSTheme.body.copyWith(
+                      color: CupertinoColors.placeholderText,
+                    ),
+                  ),
+                ),
+                
+                if (_searchError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      _searchError!,
+                      style: iOSTheme.caption1.copyWith(
+                        color: CupertinoColors.systemRed,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                
+                const SizedBox(height: 30),
+                
+                // Bottom inspirational text
+                Text(
+                  'The future of mixology starts\nwith your imagination.',
+                  style: iOSTheme.body.copyWith(
+                    color: iOSTheme.adaptiveColor(
+                      context, 
+                      CupertinoColors.secondaryLabel, 
+                      CupertinoColors.secondaryLabel
+                    ),
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                
+                const SizedBox(height: 40),
+                
+                // Quick suggestion chips
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _buildQuickSearchChip(context, 'Margarita'),
+                    _buildQuickSearchChip(context, 'Old Fashioned'),
+                    _buildQuickSearchChip(context, 'Mojito'),
+                    _buildQuickSearchChip(context, 'something fruity'),
+                    _buildQuickSearchChip(context, 'spicy and bold'),
+                  ],
+                ),
+                
+                const SizedBox(height: 60),
               ],
             ),
           ),
@@ -1104,19 +1011,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
   
-  Widget _buildQuickSearchChip(BuildContext context, String drinkName) {
+  Widget _buildQuickSearchChip(BuildContext context, String query) {
     return CupertinoButton(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: CupertinoColors.systemBlue.withOpacity(0.1),
+      color: iOSTheme.adaptiveColor(
+        context, 
+        CupertinoColors.tertiarySystemFill, 
+        iOSTheme.darkTertiaryBackground
+      ),
       borderRadius: BorderRadius.circular(20),
       onPressed: () {
-        _searchController.text = drinkName;
-        _getRecipe();
+        _unifiedSearchController.text = query;
+        _handleUnifiedSearch();
       },
       child: Text(
-        drinkName,
-        style: const TextStyle(
-          color: CupertinoColors.systemBlue,
+        query,
+        style: iOSTheme.caption1.copyWith(
+          color: iOSTheme.adaptiveColor(
+            context, 
+            CupertinoColors.label, 
+            CupertinoColors.label
+          ),
           fontWeight: FontWeight.w500,
         ),
       ),
