@@ -13,6 +13,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from ..models import GetRecipeParams
+# Database imports
+from ..database.config import get_db_session, get_mongo_collection
+from ..database.service import DatabaseService
 
 load_dotenv()
 
@@ -339,50 +342,102 @@ def generate_recipe_cache_key(drink_query: str) -> str:
     return f"recipe_{cache_hash}"
 
 async def get_cached_recipe(cache_key: str) -> Optional[dict]:
-    """Check if cached recipe exists and return recipe data."""
-    cache_file = RECIPE_CACHE_DIR / f"{cache_key}.json"
-    if cache_file.exists():
-        try:
-            async with aiofiles.open(cache_file, 'r') as f:
-                cached_json = await f.read()
-                return json.loads(cached_json)
-        except Exception as e:
-            print(f"Error reading cached recipe {cache_key}: {e}")
+    """Check if cached recipe exists and return recipe data from database."""
+    try:
+        async with get_db_session() as session:
+            db_service = DatabaseService(session)
+            recipe_data = await db_service.get_recipe_by_cache_key(cache_key)
+            if recipe_data:
+                print(f"Retrieved recipe from database: {cache_key}")
+                return recipe_data
+            
+            # Fallback to file-based cache for backward compatibility during transition
+            cache_file = RECIPE_CACHE_DIR / f"recipe_{cache_key}.json"
+            if cache_file.exists():
+                try:
+                    async with aiofiles.open(cache_file, 'r') as f:
+                        cached_json = await f.read()
+                        recipe_data = json.loads(cached_json)
+                        print(f"Retrieved recipe from file cache: {cache_key}")
+                        # Migrate to database
+                        await db_service.save_recipe(cache_key, recipe_data)
+                        print(f"Migrated recipe to database: {cache_key}")
+                        return recipe_data
+                except Exception as e:
+                    print(f"Error reading cached recipe file {cache_key}: {e}")
+            
             return None
-    return None
+    except Exception as e:
+        print(f"Error getting cached recipe {cache_key}: {e}")
+        return None
 
 async def save_recipe_to_cache(cache_key: str, recipe_data: dict) -> None:
-    """Save recipe data to cache."""
-    cache_file = RECIPE_CACHE_DIR / f"{cache_key}.json"
+    """Save recipe data to database."""
     try:
-        async with aiofiles.open(cache_file, 'w') as f:
-            await f.write(json.dumps(recipe_data, indent=2))
-        print(f"Saved recipe to cache: {cache_key}")
+        async with get_db_session() as session:
+            db_service = DatabaseService(session)
+            success = await db_service.save_recipe(cache_key, recipe_data)
+            if success:
+                print(f"Saved recipe to database: {cache_key}")
+            else:
+                print(f"Failed to save recipe to database: {cache_key}")
+                
+                # Fallback to file-based cache
+                cache_file = RECIPE_CACHE_DIR / f"recipe_{cache_key}.json"
+                try:
+                    async with aiofiles.open(cache_file, 'w') as f:
+                        await f.write(json.dumps(recipe_data, indent=2))
+                    print(f"Saved recipe to file cache as fallback: {cache_key}")
+                except Exception as e:
+                    print(f"Error saving recipe to file cache {cache_key}: {e}")
     except Exception as e:
         print(f"Error saving recipe to cache {cache_key}: {e}")
 
 async def get_cached_image(cache_key: str) -> Optional[str]:
-    """Check if cached image exists and return base64 data."""
+    """Check if cached image exists and return base64 data from MongoDB."""
+    # Try MongoDB first
+    image_data = await MongoDBImageService.get_image(cache_key)
+    if image_data:
+        print(f"Retrieved image from MongoDB: {cache_key}")
+        return image_data
+    # Fallback to file-based cache for legacy support
     cache_file = IMAGE_CACHE_DIR / f"{cache_key}.txt"
     if cache_file.exists():
         try:
             async with aiofiles.open(cache_file, 'r') as f:
                 cached_b64 = await f.read()
-                return cached_b64.strip()
+                image_data = cached_b64.strip()
+                print(f"Retrieved image from file cache: {cache_key}")
+                # Migrate to MongoDB
+                category = cache_key.split("_")[0] if "_" in cache_key else "unknown"
+                await MongoDBImageService.save_image(cache_key, category, image_data)
+                print(f"Migrated image to MongoDB: {cache_key}")
+                return image_data
         except Exception as e:
-            print(f"Error reading cached image {cache_key}: {e}")
-            return None
+            print(f"Error reading cached image file {cache_key}: {e}")
     return None
 
 async def save_image_to_cache(cache_key: str, b64_data: str) -> None:
-    """Save base64 image data to cache."""
-    cache_file = IMAGE_CACHE_DIR / f"{cache_key}.txt"
+    """Save base64 image data to MongoDB (and optionally file for legacy support)."""
     try:
-        async with aiofiles.open(cache_file, 'w') as f:
-            await f.write(b64_data)
-        print(f"Saved image to cache: {cache_key}")
+        # Save to MongoDB
+        category = cache_key.split("_")[0] if "_" in cache_key else "unknown"
+        success = await MongoDBImageService.save_image(cache_key, category, b64_data)
+        if success:
+            print(f"Saved image to MongoDB: {cache_key}")
+        else:
+            print(f"Failed to save image to MongoDB: {cache_key}")
+        # Optionally, keep file-based cache for legacy support
+        cache_file = IMAGE_CACHE_DIR / f"{cache_key}.txt"
+        try:
+            async with aiofiles.open(cache_file, 'w') as f:
+                await f.write(b64_data)
+            print(f"Saved image to file cache: {cache_key}")
+        except Exception as e:
+            print(f"Error saving image to file cache {cache_key}: {e}")
     except Exception as e:
         print(f"Error saving image to cache {cache_key}: {e}")
+
 Recipe = namedtuple("Recipe", [
     # Original fields
     "ingredients", "alcohol_content", "steps", "rim", "garnish", "serving_glass", 
@@ -835,3 +890,46 @@ def get_completion_from_messages(messages,
         logging.error(f"JSON decode error: {e}")
         logging.error(f"Raw arguments: {function_call.arguments}")
         raise Exception(f"Invalid JSON response from OpenAI: {e}")
+
+class MongoDBImageService:
+    """Service for storing and retrieving images in MongoDB."""
+    @staticmethod
+    async def save_image(cache_key: str, category: str, b64_data: str, **metadata) -> bool:
+        async with get_mongo_collection() as collection:
+            doc = {
+                "cache_key": cache_key,
+                "category": category,
+                "b64_data": b64_data,
+                **metadata
+            }
+            # Upsert by cache_key
+            result = await collection.update_one(
+                {"cache_key": cache_key},
+                {"$set": doc},
+                upsert=True
+            )
+            return result.acknowledged
+
+    @staticmethod
+    async def get_image(cache_key: str) -> str | None:
+        async with get_mongo_collection() as collection:
+            doc = await collection.find_one({"cache_key": cache_key})
+            if doc:
+                return doc.get("b64_data")
+            return None
+
+    @staticmethod
+    async def get_images_by_category(category: str) -> list[dict]:
+        async with get_mongo_collection() as collection:
+            if category == "all":
+                cursor = collection.find({})
+            else:
+                cursor = collection.find({"category": category})
+            images = []
+            async for doc in cursor:
+                images.append({
+                    "cache_key": doc.get("cache_key"),
+                    "category": doc.get("category"),
+                    "b64_data": doc.get("b64_data"),
+                })
+            return images

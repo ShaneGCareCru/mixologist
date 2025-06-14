@@ -15,12 +15,17 @@ from .services.openai_service import (
     save_recipe_to_cache,
     parse_ingredient_name,
     normalize_glass_name,
+    MongoDBImageService,
 )
 from .services.inventory_service import InventoryService
 from .models.inventory_models import (
     InventoryAddRequest, InventoryUpdateRequest, ImageRecognitionRequest,
     InventoryFilterRequest, QuantityDescription, IngredientCategory
 )
+# Database imports
+from .database.config import get_db_session
+from .database.service import DatabaseService
+from .database.init_db import initialize_app_database
 
 app = FastAPI(title="Mixologist API")
 
@@ -33,9 +38,118 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on application startup."""
+    logging.info("Starting Mixologist API...")
+    try:
+        success = await initialize_app_database()
+        if success:
+            logging.info("Database initialization completed successfully")
+        else:
+            logging.warning("Database initialization completed with warnings")
+    except Exception as e:
+        logging.error(f"Database initialization failed: {e}")
+        
+        # Don't prevent startup, just log the error
+        logging.warning("Application starting without database - falling back to file-based caching")
+
 @app.get("/")
 async def home():
     return {"message": "Welcome to the Mixologist API"}
+
+# New database-powered endpoints
+@app.get("/recipes/search")
+async def search_recipes(
+    q: Optional[str] = None,
+    difficulty_max: Optional[int] = None,
+    prep_time_max: Optional[int] = None,
+    ingredients: Optional[str] = None,
+    limit: int = 20,
+    offset: int = 0
+):
+    """Enhanced recipe search with filters."""
+    try:
+        async with get_db_session() as session:
+            db_service = DatabaseService(session)
+            
+            has_ingredients = None
+            if ingredients:
+                has_ingredients = [ing.strip() for ing in ingredients.split(",")]
+            
+            recipes = await db_service.search_recipes(
+                query=q,
+                difficulty_max=difficulty_max,
+                prep_time_max=prep_time_max,
+                has_ingredients=has_ingredients,
+                limit=limit,
+                offset=offset
+            )
+            
+            return {
+                "recipes": recipes,
+                "total": len(recipes),
+                "limit": limit,
+                "offset": offset
+            }
+    except Exception as e:
+        logging.error(f"Error searching recipes: {e}")
+        raise HTTPException(status_code=500, detail=f"Error searching recipes: {str(e)}")
+
+@app.get("/recipes/all")
+async def get_all_recipes(limit: int = 50, offset: int = 0):
+    """Get all recipes with pagination."""
+    try:
+        async with get_db_session() as session:
+            db_service = DatabaseService(session)
+            recipes = await db_service.get_all_recipes(limit=limit, offset=offset)
+            
+            return {
+                "recipes": recipes,
+                "total": len(recipes),
+                "limit": limit,
+                "offset": offset
+            }
+    except Exception as e:
+        logging.error(f"Error getting all recipes: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting recipes: {str(e)}")
+
+@app.get("/recipes/stats")
+async def get_recipe_stats():
+    """Get recipe statistics."""
+    try:
+        async with get_db_session() as session:
+            db_service = DatabaseService(session)
+            recipe_count = await db_service.get_recipe_count()
+            image_count = await db_service.get_image_count()
+            
+            return {
+                "total_recipes": recipe_count,
+                "total_images": image_count,
+                "database_status": "connected"
+            }
+    except Exception as e:
+        logging.error(f"Error getting recipe stats: {e}")
+        return {
+            "total_recipes": 0,
+            "total_images": 0,
+            "database_status": "error",
+            "error": str(e)
+        }
+
+@app.get("/images/by_category/{category}")
+async def get_images_by_category(category: str):
+    """Get all images by category from MongoDB."""
+    try:
+        images = await MongoDBImageService.get_images_by_category(category)
+        return {
+            "category": category,
+            "images": images,
+            "total": len(images)
+        }
+    except Exception as e:
+        logging.error(f"Error getting images by category: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting images: {str(e)}")
 
 @app.post("/create")
 async def create_drink(drink_query: str = Form(...)):

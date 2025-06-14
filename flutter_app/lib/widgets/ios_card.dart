@@ -10,13 +10,13 @@ class iOSCard extends StatelessWidget {
   final double? borderRadius;
 
   const iOSCard({
-    Key? key,
+    super.key,
     required this.child,
     this.padding,
     this.margin,
     this.backgroundColor,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,7 @@ class iOSButton extends StatelessWidget {
   final double? minHeight;
 
   const iOSButton({
-    Key? key,
+    super.key,
     required this.child,
     this.onPressed,
     this.backgroundColor,
@@ -56,11 +56,11 @@ class iOSButton extends StatelessWidget {
     this.padding,
     this.borderRadius,
     this.minHeight,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: minHeight ?? iOSTheme.minimumTouchTarget,
       width: double.infinity,
       child: CupertinoButton.filled(
@@ -84,14 +84,14 @@ class iOSTextField extends StatelessWidget {
   final Widget? prefixIcon;
 
   const iOSTextField({
-    Key? key,
+    super.key,
     this.controller,
     this.placeholder,
     this.prefix,
     this.maxLines = 1,
     this.errorText,
     this.prefixIcon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

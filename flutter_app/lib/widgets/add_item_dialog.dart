@@ -13,14 +13,14 @@ class AddItemDialog extends StatefulWidget {
   final VoidCallback onItemAdded;
 
   const AddItemDialog({
-    Key? key,
+    super.key,
     this.initialName,
     this.initialCategory,
     this.initialBrand,
     this.initialQuantity,
     this.sourceImage,
     required this.onItemAdded,
-  }) : super(key: key);
+  });
 
   @override
   State<AddItemDialog> createState() => _AddItemDialogState();

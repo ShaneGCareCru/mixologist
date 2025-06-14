@@ -11,7 +11,7 @@ import '../theme/ios_theme.dart';
 import '../widgets/ios_card.dart';
 
 class UnifiedInventoryPage extends StatefulWidget {
-  const UnifiedInventoryPage({Key? key}) : super(key: key);
+  const UnifiedInventoryPage({super.key});
 
   @override
   State<UnifiedInventoryPage> createState() => _UnifiedInventoryPageState();
@@ -280,7 +280,6 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
           children: [
             CupertinoButton(
               padding: EdgeInsets.zero,
-              minSize: iOSTheme.minimumTouchTarget,
               child: Icon(
                 _isBackBarView ? CupertinoIcons.list_bullet : CupertinoIcons.square_grid_2x2,
                 size: 20,
@@ -289,19 +288,17 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
                 setState(() {
                   _isBackBarView = !_isBackBarView;
                 });
-              },
+              }, minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
-              minSize: iOSTheme.minimumTouchTarget,
+              onPressed: _loadInventory, minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
               child: const Icon(CupertinoIcons.refresh, size: 20),
-              onPressed: _loadInventory,
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
-              minSize: iOSTheme.minimumTouchTarget,
               child: const Icon(CupertinoIcons.add, size: 20),
-              onPressed: () => _showAddItemDialog(),
+              onPressed: () => _showAddItemDialog(), minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
             ),
           ],
         ),
