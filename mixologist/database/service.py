@@ -16,15 +16,21 @@ class DatabaseService:
     
     def __init__(self, session: AsyncSession):
         self.session = session
+        logger.debug("DatabaseService session initialized.")
     
     # Recipe operations
     async def get_recipe_by_cache_key(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Get recipe by cache key (maintains current API compatibility)."""
         try:
+            logger.debug(f"Querying recipe by cache_key: {cache_key}")
             result = await self.session.execute(
                 select(Recipe).where(Recipe.cache_key == cache_key)
             )
             recipe = result.scalar_one_or_none()
+            if recipe:
+                logger.debug(f"Recipe found for cache_key: {cache_key}")
+            else:
+                logger.debug(f"No recipe found for cache_key: {cache_key}")
             return recipe.recipe_data if recipe else None
         except Exception as e:
             logger.error(f"Error getting recipe by cache key {cache_key}: {e}")
@@ -33,6 +39,7 @@ class DatabaseService:
     async def save_recipe(self, cache_key: str, recipe_data: Dict[str, Any]) -> bool:
         """Save recipe to database (maintains current API compatibility)."""
         try:
+            logger.debug(f"Saving recipe with cache_key: {cache_key}")
             # Check if recipe already exists
             existing = await self.session.execute(
                 select(Recipe).where(Recipe.cache_key == cache_key)
@@ -40,6 +47,7 @@ class DatabaseService:
             existing_recipe = existing.scalar_one_or_none()
             
             if existing_recipe:
+                logger.debug(f"Updating existing recipe for cache_key: {cache_key}")
                 # Update existing recipe
                 existing_recipe.recipe_data = recipe_data
                 existing_recipe.drink_name = recipe_data.get("drink_name", "")
@@ -49,6 +57,7 @@ class DatabaseService:
                 existing_recipe.serving_glass = recipe_data.get("serving_glass")
                 existing_recipe.updated_at = func.now()
             else:
+                logger.debug(f"Creating new recipe for cache_key: {cache_key}")
                 # Create new recipe
                 recipe = Recipe(
                     cache_key=cache_key,
@@ -97,6 +106,7 @@ class DatabaseService:
                 )
             
             await self.session.commit()
+            logger.info(f"Recipe saved successfully for cache_key: {cache_key}")
             return True
             
         except Exception as e:
@@ -152,9 +162,11 @@ class DatabaseService:
     async def get_all_recipes(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
         """Get all recipes with pagination."""
         try:
+            logger.debug(f"Querying all recipes with limit={limit}, offset={offset}")
             stmt = select(Recipe).order_by(Recipe.created_at.desc()).limit(limit).offset(offset)
             result = await self.session.execute(stmt)
             recipes = result.scalars().all()
+            logger.debug(f"Fetched {len(recipes)} recipes.")
             return [recipe.recipe_data for recipe in recipes]
         except Exception as e:
             logger.error(f"Error getting all recipes: {e}")
@@ -164,15 +176,18 @@ class DatabaseService:
     async def get_image_by_cache_key(self, cache_key: str) -> Optional[str]:
         """Get image file content by cache key (maintains current API compatibility)."""
         try:
+            logger.debug(f"Querying image by cache_key: {cache_key}")
             result = await self.session.execute(
                 select(Image).where(Image.cache_key == cache_key)
             )
             image = result.scalar_one_or_none()
             
             if image and Path(image.file_path).exists():
+                logger.debug(f"Image file found for cache_key: {cache_key}, reading file.")
                 # Read and return base64 content (maintain current API)
                 with open(image.file_path, 'r') as f:
                     return f.read().strip()
+            logger.debug(f"No image file found for cache_key: {cache_key}")
             return None
             
         except Exception as e:
@@ -189,6 +204,7 @@ class DatabaseService:
     ) -> bool:
         """Save image metadata to database."""
         try:
+            logger.debug(f"Saving image metadata for cache_key: {cache_key}")
             # Check if image already exists
             existing = await self.session.execute(
                 select(Image).where(Image.cache_key == cache_key)
@@ -196,6 +212,7 @@ class DatabaseService:
             existing_image = existing.scalar_one_or_none()
             
             if existing_image:
+                logger.debug(f"Updating existing image metadata for cache_key: {cache_key}")
                 # Update existing image metadata
                 existing_image.category = category
                 existing_image.file_path = file_path
@@ -205,6 +222,7 @@ class DatabaseService:
                 existing_image.related_technique = metadata.get('related_technique')
                 existing_image.related_drink = metadata.get('related_drink')
             else:
+                logger.debug(f"Creating new image metadata for cache_key: {cache_key}")
                 # Create new image metadata
                 image = Image(
                     cache_key=cache_key,
@@ -219,6 +237,7 @@ class DatabaseService:
                 self.session.add(image)
             
             await self.session.commit()
+            logger.info(f"Image metadata saved successfully for cache_key: {cache_key}")
             return True
             
         except Exception as e:
@@ -229,11 +248,12 @@ class DatabaseService:
     async def get_images_by_category(self, category: str) -> List[Dict[str, Any]]:
         """Get all images by category."""
         try:
+            logger.debug(f"Querying images by category: {category}")
             result = await self.session.execute(
                 select(Image).where(Image.category == category).order_by(Image.created_at.desc())
             )
             images = result.scalars().all()
-            
+            logger.debug(f"Fetched {len(images)} images for category: {category}")
             return [{
                 'cache_key': img.cache_key,
                 'category': img.category,
@@ -254,8 +274,11 @@ class DatabaseService:
     async def get_recipe_count(self) -> int:
         """Get total number of recipes."""
         try:
+            logger.debug("Counting total recipes in database.")
             result = await self.session.execute(select(func.count(Recipe.id)))
-            return result.scalar()
+            count = result.scalar()
+            logger.info(f"Total recipes in database: {count}")
+            return count
         except Exception as e:
             logger.error(f"Error getting recipe count: {e}")
             return 0
@@ -263,8 +286,11 @@ class DatabaseService:
     async def get_image_count(self) -> int:
         """Get total number of images."""
         try:
+            logger.debug("Counting total images in database.")
             result = await self.session.execute(select(func.count(Image.id)))
-            return result.scalar()
+            count = result.scalar()
+            logger.info(f"Total images in database: {count}")
+            return count
         except Exception as e:
             logger.error(f"Error getting image count: {e}")
             return 0 

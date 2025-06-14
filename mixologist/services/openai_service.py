@@ -21,17 +21,12 @@ load_dotenv()
 
 # Initialize cache directories with absolute paths
 BASE_DIR = Path(__file__).parent.parent  # Go up to mixologist/ directory
-IMAGE_CACHE_DIR = BASE_DIR / "static" / "img" / "cache"
-RECIPE_CACHE_DIR = BASE_DIR / "static" / "cache" / "recipes"
-IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-RECIPE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-
-# Index file mapping canonicalized method steps to cached image keys
-STEP_IMAGE_INDEX_FILE = BASE_DIR / "static" / "cache" / "step_image_index.json"
-STEP_IMAGE_INDEX_FILE.parent.mkdir(parents=True, exist_ok=True)
-
-print(f"Recipe cache directory: {RECIPE_CACHE_DIR}")
-print(f"Image cache directory: {IMAGE_CACHE_DIR}")
+# IMAGE_CACHE_DIR = BASE_DIR / "static" / "img" / "cache"
+# RECIPE_CACHE_DIR = BASE_DIR / "static" / "cache" / "recipes"
+# IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+# RECIPE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+# print(f"Recipe cache directory: {RECIPE_CACHE_DIR}")
+# print(f"Image cache directory: {IMAGE_CACHE_DIR}")
 
 # Style constants for consistent image generation
 STYLE_CONSTANTS = {
@@ -118,33 +113,16 @@ def canonicalize_step(step_text: str) -> str:
     """Alias for canonicalize_step_text to maintain test compatibility."""
     return canonicalize_step_text(step_text)
 
-async def load_step_image_index() -> Dict[str, str]:
-    if STEP_IMAGE_INDEX_FILE.exists():
-        try:
-            async with aiofiles.open(STEP_IMAGE_INDEX_FILE, "r") as f:
-                data = await f.read()
-                return json.loads(data) if data else {}
-        except Exception:
-            return {}
-    return {}
-
-async def save_step_image_index(index: Dict[str, str]) -> None:
-    async with aiofiles.open(STEP_IMAGE_INDEX_FILE, "w") as f:
-        await f.write(json.dumps(index))
-
 async def get_cached_step_image(step_text: str) -> Optional[str]:
     step_hash = hashlib.sha256(canonicalize_step_text(step_text).encode()).hexdigest()[:16]
-    index = await load_step_image_index()
-    cache_key = index.get(step_hash)
+    cache_key = await get_step_image_mapping(step_hash)
     if cache_key:
         return await get_cached_image(cache_key)
     return None
 
 async def save_step_image_mapping(step_text: str, cache_key: str) -> None:
     step_hash = hashlib.sha256(canonicalize_step_text(step_text).encode()).hexdigest()[:16]
-    index = await load_step_image_index()
-    index[step_hash] = cache_key
-    await save_step_image_index(index)
+    await set_step_image_mapping(step_hash, cache_key)
 
 # Ingredient categorization for appropriate image generation
 INGREDIENT_CATEGORIES = {
@@ -342,7 +320,7 @@ def generate_recipe_cache_key(drink_query: str) -> str:
     return f"recipe_{cache_hash}"
 
 async def get_cached_recipe(cache_key: str) -> Optional[dict]:
-    """Check if cached recipe exists and return recipe data from database."""
+    """Check if cached recipe exists and return recipe data from database only."""
     try:
         async with get_db_session() as session:
             db_service = DatabaseService(session)
@@ -350,29 +328,13 @@ async def get_cached_recipe(cache_key: str) -> Optional[dict]:
             if recipe_data:
                 print(f"Retrieved recipe from database: {cache_key}")
                 return recipe_data
-            
-            # Fallback to file-based cache for backward compatibility during transition
-            cache_file = RECIPE_CACHE_DIR / f"recipe_{cache_key}.json"
-            if cache_file.exists():
-                try:
-                    async with aiofiles.open(cache_file, 'r') as f:
-                        cached_json = await f.read()
-                        recipe_data = json.loads(cached_json)
-                        print(f"Retrieved recipe from file cache: {cache_key}")
-                        # Migrate to database
-                        await db_service.save_recipe(cache_key, recipe_data)
-                        print(f"Migrated recipe to database: {cache_key}")
-                        return recipe_data
-                except Exception as e:
-                    print(f"Error reading cached recipe file {cache_key}: {e}")
-            
             return None
     except Exception as e:
         print(f"Error getting cached recipe {cache_key}: {e}")
         return None
 
 async def save_recipe_to_cache(cache_key: str, recipe_data: dict) -> None:
-    """Save recipe data to database."""
+    """Save recipe data to database only."""
     try:
         async with get_db_session() as session:
             db_service = DatabaseService(session)
@@ -381,60 +343,26 @@ async def save_recipe_to_cache(cache_key: str, recipe_data: dict) -> None:
                 print(f"Saved recipe to database: {cache_key}")
             else:
                 print(f"Failed to save recipe to database: {cache_key}")
-                
-                # Fallback to file-based cache
-                cache_file = RECIPE_CACHE_DIR / f"recipe_{cache_key}.json"
-                try:
-                    async with aiofiles.open(cache_file, 'w') as f:
-                        await f.write(json.dumps(recipe_data, indent=2))
-                    print(f"Saved recipe to file cache as fallback: {cache_key}")
-                except Exception as e:
-                    print(f"Error saving recipe to file cache {cache_key}: {e}")
     except Exception as e:
         print(f"Error saving recipe to cache {cache_key}: {e}")
 
 async def get_cached_image(cache_key: str) -> Optional[str]:
-    """Check if cached image exists and return base64 data from MongoDB."""
-    # Try MongoDB first
+    """Check if cached image exists and return base64 data from MongoDB only."""
     image_data = await MongoDBImageService.get_image(cache_key)
     if image_data:
         print(f"Retrieved image from MongoDB: {cache_key}")
         return image_data
-    # Fallback to file-based cache for legacy support
-    cache_file = IMAGE_CACHE_DIR / f"{cache_key}.txt"
-    if cache_file.exists():
-        try:
-            async with aiofiles.open(cache_file, 'r') as f:
-                cached_b64 = await f.read()
-                image_data = cached_b64.strip()
-                print(f"Retrieved image from file cache: {cache_key}")
-                # Migrate to MongoDB
-                category = cache_key.split("_")[0] if "_" in cache_key else "unknown"
-                await MongoDBImageService.save_image(cache_key, category, image_data)
-                print(f"Migrated image to MongoDB: {cache_key}")
-                return image_data
-        except Exception as e:
-            print(f"Error reading cached image file {cache_key}: {e}")
     return None
 
 async def save_image_to_cache(cache_key: str, b64_data: str) -> None:
-    """Save base64 image data to MongoDB (and optionally file for legacy support)."""
+    """Save base64 image data to MongoDB only."""
     try:
-        # Save to MongoDB
         category = cache_key.split("_")[0] if "_" in cache_key else "unknown"
         success = await MongoDBImageService.save_image(cache_key, category, b64_data)
         if success:
             print(f"Saved image to MongoDB: {cache_key}")
         else:
             print(f"Failed to save image to MongoDB: {cache_key}")
-        # Optionally, keep file-based cache for legacy support
-        cache_file = IMAGE_CACHE_DIR / f"{cache_key}.txt"
-        try:
-            async with aiofiles.open(cache_file, 'w') as f:
-                await f.write(b64_data)
-            print(f"Saved image to file cache: {cache_key}")
-        except Exception as e:
-            print(f"Error saving image to file cache {cache_key}: {e}")
     except Exception as e:
         print(f"Error saving image to cache {cache_key}: {e}")
 
@@ -450,7 +378,8 @@ Recipe = namedtuple("Recipe", [
     "optimal_serving_temperature", "skill_level_recommendation", "drink_trivia"
 ])
 
-logging.basicConfig(filename='app.log', level=logging.INFO)
+logging.basicConfig(filename='app.log', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 async def generate_specialized_image_stream(
     subject: str,
@@ -895,41 +824,91 @@ class MongoDBImageService:
     """Service for storing and retrieving images in MongoDB."""
     @staticmethod
     async def save_image(cache_key: str, category: str, b64_data: str, **metadata) -> bool:
-        async with get_mongo_collection() as collection:
-            doc = {
-                "cache_key": cache_key,
-                "category": category,
-                "b64_data": b64_data,
-                **metadata
-            }
-            # Upsert by cache_key
-            result = await collection.update_one(
-                {"cache_key": cache_key},
-                {"$set": doc},
-                upsert=True
-            )
-            return result.acknowledged
+        try:
+            async with get_mongo_collection() as collection:
+                doc = {
+                    "cache_key": cache_key,
+                    "category": category,
+                    "b64_data": b64_data,
+                    **metadata
+                }
+                logger.debug(f"Saving image to MongoDB: {cache_key}, category: {category}")
+                result = await collection.update_one(
+                    {"cache_key": cache_key},
+                    {"$set": doc},
+                    upsert=True
+                )
+                if result.acknowledged:
+                    logger.info(f"Image saved to MongoDB: {cache_key}")
+                else:
+                    logger.error(f"Image save to MongoDB not acknowledged: {cache_key}")
+                return result.acknowledged
+        except Exception as e:
+            logger.error(f"Error saving image to MongoDB: {cache_key}: {e}")
+            return False
 
     @staticmethod
     async def get_image(cache_key: str) -> str | None:
-        async with get_mongo_collection() as collection:
-            doc = await collection.find_one({"cache_key": cache_key})
-            if doc:
-                return doc.get("b64_data")
+        try:
+            async with get_mongo_collection() as collection:
+                logger.debug(f"Fetching image from MongoDB: {cache_key}")
+                doc = await collection.find_one({"cache_key": cache_key})
+                if doc:
+                    logger.debug(f"Image found in MongoDB: {cache_key}")
+                    return doc.get("b64_data")
+                logger.debug(f"Image not found in MongoDB: {cache_key}")
+                return None
+        except Exception as e:
+            logger.error(f"Error fetching image from MongoDB: {cache_key}: {e}")
             return None
 
     @staticmethod
     async def get_images_by_category(category: str) -> list[dict]:
-        async with get_mongo_collection() as collection:
-            if category == "all":
-                cursor = collection.find({})
-            else:
-                cursor = collection.find({"category": category})
-            images = []
-            async for doc in cursor:
-                images.append({
-                    "cache_key": doc.get("cache_key"),
-                    "category": doc.get("category"),
-                    "b64_data": doc.get("b64_data"),
-                })
-            return images
+        try:
+            async with get_mongo_collection() as collection:
+                logger.debug(f"Fetching images by category from MongoDB: {category}")
+                if category == "all":
+                    cursor = collection.find({})
+                else:
+                    cursor = collection.find({"category": category})
+                images = []
+                async for doc in cursor:
+                    images.append({
+                        "cache_key": doc.get("cache_key"),
+                        "category": doc.get("category"),
+                        "b64_data": doc.get("b64_data"),
+                    })
+                logger.debug(f"Fetched {len(images)} images from MongoDB for category: {category}")
+                return images
+        except Exception as e:
+            logger.error(f"Error fetching images by category from MongoDB: {category}: {e}")
+            return []
+
+STEP_IMAGE_INDEX_COLLECTION = "step_image_index"
+
+async def get_step_image_mapping(step_hash: str) -> str | None:
+    try:
+        async with get_mongo_collection(STEP_IMAGE_INDEX_COLLECTION) as collection:
+            logger.debug(f"Fetching step image mapping from MongoDB: {step_hash}")
+            doc = await collection.find_one({"step_hash": step_hash})
+            if doc:
+                logger.debug(f"Step image mapping found in MongoDB: {step_hash}")
+                return doc.get("cache_key")
+            logger.debug(f"Step image mapping not found in MongoDB: {step_hash}")
+            return None
+    except Exception as e:
+        logger.error(f"Error fetching step image mapping from MongoDB: {step_hash}: {e}")
+        return None
+
+async def set_step_image_mapping(step_hash: str, cache_key: str) -> None:
+    try:
+        async with get_mongo_collection(STEP_IMAGE_INDEX_COLLECTION) as collection:
+            logger.debug(f"Saving step image mapping to MongoDB: {step_hash} -> {cache_key}")
+            await collection.update_one(
+                {"step_hash": step_hash},
+                {"$set": {"step_hash": step_hash, "cache_key": cache_key}},
+                upsert=True
+            )
+            logger.info(f"Step image mapping saved to MongoDB: {step_hash} -> {cache_key}")
+    except Exception as e:
+        logger.error(f"Error saving step image mapping to MongoDB: {step_hash} -> {cache_key}: {e}")

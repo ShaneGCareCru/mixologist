@@ -72,14 +72,6 @@ def _register_routes():
         }
         return jsonify(recipe_data)
 
-    @_blueprint.route('/images') # This route might be obsolete if images are always generated on demand
-    def images():
-        img_dir = 'mixologist/static/img/'
-        # Ensure directory exists to prevent error if it's deleted or not yet created
-        if not os.path.exists(img_dir):
-            os.makedirs(img_dir)
-        return jsonify(os.listdir(img_dir))
-
     @_blueprint.route('/generate_image', methods=['POST']) # This will now be our streaming endpoint
     def generate_image_route():
         print("--- generate_image_route (streaming) called ---")

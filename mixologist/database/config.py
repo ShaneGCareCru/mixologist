@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 import motor.motor_asyncio
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)  # Set to DEBUG for detailed logs
 logger = logging.getLogger(__name__)
 
 # Database URL - default for development
@@ -25,22 +25,24 @@ MONGODB_IMAGES_COLLECTION = os.getenv("MONGODB_IMAGES_COLLECTION", "images")
 def get_database_url():
     """Get the appropriate database URL, with fallback to SQLite for testing."""
     url = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
-    # If no DATABASE_URL is set and we want to test without PostgreSQL
     if os.getenv("USE_SQLITE_FALLBACK", "false").lower() == "true":
+        logger.info("Using SQLite fallback for database URL.")
         return FALLBACK_DATABASE_URL
     return url
 
 # Create async engine
 try:
     DATABASE_URL = get_database_url()
+    logger.info(f"Creating async DB engine with URL: {DATABASE_URL}")
     engine = create_async_engine(
         DATABASE_URL, 
         echo=False,  # Set to True for SQL logging
         pool_size=10,
         max_overflow=20
     )
+    logger.debug(f"Async engine created: {engine}")
 except Exception as e:
-    logger.warning(f"Failed to create database engine with URL {DATABASE_URL}: {e}")
+    logger.error(f"Failed to create database engine with URL {DATABASE_URL}: {e}")
     logger.info("Falling back to SQLite for testing")
     DATABASE_URL = FALLBACK_DATABASE_URL
     engine = create_async_engine(
@@ -49,6 +51,7 @@ except Exception as e:
         pool_size=10,
         max_overflow=20
     )
+    logger.debug(f"Fallback async engine created: {engine}")
 
 # Create async session factory
 async_session_factory = sessionmaker(
@@ -56,15 +59,18 @@ async_session_factory = sessionmaker(
     class_=AsyncSession, 
     expire_on_commit=False
 )
+logger.debug("Async session factory created.")
 
 # Create a single Motor client instance (reuse for all requests)
 mongo_client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URI)
+logger.info(f"MongoDB client created for URI: {MONGODB_URI}")
 
 @asynccontextmanager
 async def get_mongo_collection(collection_name=None):
     """Async context manager for MongoDB collection."""
     db = mongo_client[MONGODB_DB]
     collection = db[collection_name or MONGODB_IMAGES_COLLECTION]
+    logger.debug(f"Accessing MongoDB collection: {collection.name}")
     try:
         yield collection
     finally:
