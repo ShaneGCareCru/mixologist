@@ -20,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/unified_inventory_page.dart';
 import 'pages/ai_assistant_page.dart';
 import 'theme/ios_theme.dart';
+import 'package:fuzzy/fuzzy.dart';
 
 
 void main() async {
@@ -718,60 +719,38 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final _drinkPreferencesController = TextEditingController();
-  String? _recipeError;
-  String? _customError;
-
-  Future<void> _getRecipe() async {
-    if (_searchController.text.isEmpty) {
-      setState(() { _recipeError = 'Please enter a drink name.'; });
-      return;
-    }
-    
-    setState(() { _recipeError = null; });
-    
-    // Navigate to loading screen
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const LoadingScreen()),
-    );
-    
-    try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8081/create'), // Changed port to 8081
-        body: {'drink_query': _searchController.text},
-      );
-      
-      // Pop loading screen
-      Navigator.of(context).pop();
-      
-      if (response.statusCode == 200) {
-        final recipeData = jsonDecode(response.body);
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => RecipeScreen(recipeData: recipeData)),
-          );
-        }
-      } else {
-        setState(() { _recipeError = 'Error fetching recipe: ${response.statusCode}'; });
-        debugPrint('Error fetching recipe: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      // Pop loading screen on error
-      Navigator.of(context).pop();
-      setState(() { _recipeError = 'Failed to connect: $e'; });
-      debugPrint('Exception fetching recipe: $e');
-    }
+  final TextEditingController _unifiedSearchController = TextEditingController();
+  String? _searchError;
+  
+  // Known cocktail names for fuzzy matching
+  static const List<String> _knownCocktails = [
+    'Margarita', 'Old Fashioned', 'Mojito', 'Manhattan', 'Martini', 'Cosmopolitan',
+    'Daiquiri', 'Whiskey Sour', 'Piña Colada', 'Mai Tai', 'Negroni', 'Aperol Spritz',
+    'Bloody Mary', 'Moscow Mule', 'Tom Collins', 'Gin and Tonic', 'Dark and Stormy',
+    'Caipirinha', 'Mint Julep', 'Sazerac', 'Ramos Gin Fizz', 'Aviation', 'Sidecar',
+    'Bee\'s Knees', 'Bramble', 'Corpse Reviver', 'Last Word', 'Paper Plane', 'Penicillin',
+    'Vieux Carré', 'Boulevardier', 'Rusty Nail', 'Godfather', 'Amaretto Sour', 'Paloma',
+    'Cuban Libre', 'Tequila Sunrise', 'Blue Hawaiian', 'Long Island Iced Tea', 'Mudslide',
+    'White Russian', 'Black Russian', 'Screwdriver', 'Cape Codder', 'Greyhound'
+  ];
+  
+  late final Fuzzy<String> _fuzzyMatcher;
+  
+  @override
+  void initState() {
+    super.initState();
+    _fuzzyMatcher = Fuzzy<String>(_knownCocktails);
   }
 
-  Future<void> _createCustomDrink() async {
-    if (_drinkPreferencesController.text.isEmpty) {
-      setState(() { _customError = 'Please describe your ideal drink.'; });
+  Future<void> _performUnifiedSearch() async {
+    final query = _unifiedSearchController.text.trim();
+    
+    if (query.isEmpty) {
+      setState(() { _searchError = 'Please enter something to search for.'; });
       return;
     }
     
-    setState(() { _customError = null; });
+    setState(() { _searchError = null; });
     
     // Navigate to loading screen
     Navigator.of(context).push(
@@ -779,10 +758,26 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     
     try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8081/create_from_description'),
-        body: {'drink_description': _drinkPreferencesController.text},
-      );
+      // Try fuzzy matching against known cocktails first
+      final fuzzyResults = _fuzzyMatcher.search(query);
+      final bestMatch = fuzzyResults.isNotEmpty && fuzzyResults.first.score > 0.3 
+          ? fuzzyResults.first : null;
+      
+      http.Response response;
+      
+      if (bestMatch != null) {
+        // Fuzzy match found - treat as cocktail name
+        response = await http.post(
+          Uri.parse('http://127.0.0.1:8081/create'),
+          body: {'drink_query': bestMatch.item},
+        );
+      } else {
+        // No fuzzy match - treat as description
+        response = await http.post(
+          Uri.parse('http://127.0.0.1:8081/create_from_description'),
+          body: {'drink_description': query},
+        );
+      }
       
       // Pop loading screen
       Navigator.of(context).pop();
@@ -796,37 +791,40 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
       } else {
-        setState(() { _customError = 'Error creating drink: ${response.statusCode}'; });
+        setState(() { _searchError = 'Error creating drink: ${response.statusCode}'; });
+        debugPrint('Error creating drink: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       // Pop loading screen on error
-      Navigator.of(context).pop();
-      setState(() { _customError = 'Failed to connect: $e'; });
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+      setState(() { _searchError = 'Failed to connect: $e'; });
+      debugPrint('Exception creating drink: $e');
     }
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
-    _drinkPreferencesController.dispose();
+    _unifiedSearchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final User? user = FirebaseAuth.instance.currentUser;
-    
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('AI Mixologist'),
-        backgroundColor: CupertinoColors.systemBackground,
+        middle: const Text('AI Mixologist', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF1C1C1E),
         border: const Border(),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             CupertinoButton(
               padding: EdgeInsets.zero,
-              child: const Icon(CupertinoIcons.chat_bubble_text, size: 20),
+              minSize: iOSTheme.minimumTouchTarget,
+              child: const Icon(CupertinoIcons.chat_bubble_text, size: 20, color: Colors.white),
+
               onPressed: () {
                 Navigator.of(context).push(
                   CupertinoPageRoute(
@@ -837,7 +835,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
-              child: const Icon(CupertinoIcons.cube_box, size: 20),
+              minSize: iOSTheme.minimumTouchTarget,
+              child: const Icon(CupertinoIcons.cube_box, size: 20, color: Colors.white),
+
               onPressed: () {
                 Navigator.of(context).push(
                   CupertinoPageRoute(
@@ -848,7 +848,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
-              child: const Icon(CupertinoIcons.square_arrow_right, size: 20),
+              minSize: iOSTheme.minimumTouchTarget,
+              child: const Icon(CupertinoIcons.square_arrow_right, size: 20, color: Colors.white),
+
               onPressed: () async {
                 final navigator = Navigator.of(context);
                 await FirebaseAuth.instance.signOut();
@@ -864,256 +866,155 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      backgroundColor: CupertinoColors.systemGroupedBackground,
-      child: MixologistBackground(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                const SizedBox(height: 20),
-                
-                // Welcome section with user info
-                if (user != null)
-                  GlassmorphicCard(
-                    margin: const EdgeInsets.only(bottom: 32),
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                Theme.of(context).colorScheme.primary,
-                                Theme.of(context).colorScheme.secondary,
-                              ],
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 24,
-                          ),
+      backgroundColor: const Color(0xFF1C1C1E),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(flex: 2),
+              
+              // Main heading
+              const Text(
+                'Let curiosity\nguide you.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white,
+                  height: 1.1,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              
+              const SizedBox(height: 32),
+              
+              // Subtitle
+              const Text(
+                'Your first sip begins with a word.\nJust type what you crave—a flavor, a\nfeeling, a moment—and we\'ll handle the\nrest.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF8E8E93),
+                  height: 1.5,
+                ),
+              ),
+              
+              const SizedBox(height: 48),
+              
+              // Search input
+              Container(
+                width: double.infinity,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C2C2E),
+                  borderRadius: BorderRadius.circular(27),
+                  border: Border.all(
+                    color: const Color(0xFF3A3A3C),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: CupertinoTextField(
+                        controller: _unifiedSearchController,
+                        placeholder: 'aperol spritz',
+                        placeholderStyle: const TextStyle(
+                          color: Color(0xFF8E8E93),
+                          fontSize: 16,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Welcome Back!',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                user.isAnonymous
-                                    ? 'Guest User (${user.uid.substring(0,6)}...)'
-                                    : user.displayName ?? user.email ?? 'User',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: const Color(0xFF5D4E42),
-                                ),
-                              ),
-                            ],
-                          ),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
                         ),
-                      ],
+                        decoration: const BoxDecoration(),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        onSubmitted: (_) => _performUnifiedSearch(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: CupertinoButton(
+                        padding: const EdgeInsets.all(8),
+                        onPressed: _performUnifiedSearch,
+                        child: const Icon(
+                          CupertinoIcons.search,
+                          color: Color(0xFF8E8E93),
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Error message
+              if (_searchError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Text(
+                    _searchError!,
+                    style: const TextStyle(
+                      color: Color(0xFFFF3B30),
+                      fontSize: 14,
                     ),
                   ),
-                
-                // Quick actions section
-                GlassmorphicCard(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.local_bar,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 28,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Create Your Perfect Drink',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF4A3728),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Find a classic recipe or describe your ideal cocktail',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF5D4E42),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      // Search by name field
-                      CupertinoTextField(
-                        controller: _searchController,
-                        placeholder: 'Search by Drink Name',
-                        onSubmitted: (_) => _getRecipe(),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: CupertinoColors.systemGrey4),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        suffix: CupertinoButton(
-                          padding: const EdgeInsets.all(4),
-                          onPressed: _getRecipe,
-                          child: const Icon(CupertinoIcons.search, size: 20),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Quick search buttons
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _buildQuickSearchChip(context, 'Margarita'),
-                          _buildQuickSearchChip(context, 'Old Fashioned'),
-                          _buildQuickSearchChip(context, 'Mojito'),
-                          _buildQuickSearchChip(context, 'Manhattan'),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Get recipe button
-                      SizedBox(
-                        width: double.infinity,
-                        child: CupertinoButton(
-                          onPressed: _getRecipe,
-                          color: CupertinoColors.systemBlue,
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(CupertinoIcons.search, size: 20),
-                              SizedBox(width: 8),
-                              Text('Find Recipe'),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
-                
-                const SizedBox(height: 16),
-                
-                // Custom drink section
-                GlassmorphicCard(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.auto_awesome,
-                            color: Theme.of(context).colorScheme.secondary,
-                            size: 28,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'AI Custom Creation',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF8B6914),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Describe your perfect drink and let AI create a custom recipe',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF5D4E42),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      CupertinoTextField(
-                        controller: _drinkPreferencesController,
-                        maxLines: 4,
-                        placeholder: 'I want something fruity and bubbly with rum, maybe with tropical flavors...',
-                        decoration: BoxDecoration(
-                          border: Border.all(color: CupertinoColors.systemGrey4),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        prefix: const Padding(
-                          padding: EdgeInsets.only(left: 8, bottom: 60),
-                          child: Icon(CupertinoIcons.pencil, color: CupertinoColors.systemBlue),
-                        ),
-                      ),
-                      if (_customError != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            _customError!,
-                            style: const TextStyle(color: CupertinoColors.systemRed, fontSize: 12),
-                          ),
-                        ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      SizedBox(
-                        width: double.infinity,
-                        child: CupertinoButton(
-                          onPressed: _createCustomDrink,
-                          color: CupertinoColors.systemPurple,
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(CupertinoIcons.sparkles, size: 20),
-                              SizedBox(width: 8),
-                              Text('Create Custom Drink'),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              
+              const SizedBox(height: 48),
+              
+              // Suggestion chips
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _buildSuggestionChip('Margarita'),
+                  _buildSuggestionChip('something fruity'),
+                  _buildSuggestionChip('Mojito'),
+                  _buildSuggestionChip('warm and spicy'),
+                ],
+              ),
+              
+              const Spacer(flex: 2),
+              
+              // Bottom inspiration text
+              const Text(
+                'The future of mixology starts\nwith your imagination.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF8E8E93),
+                  height: 1.5,
                 ),
-                
-                const SizedBox(height: 40),
-              ],
-            ),
+              ),
+              
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),
     );
   }
   
-  Widget _buildQuickSearchChip(BuildContext context, String drinkName) {
+  Widget _buildSuggestionChip(String text) {
     return CupertinoButton(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: CupertinoColors.systemBlue.withOpacity(0.1),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      color: const Color(0xFF2C2C2E),
       borderRadius: BorderRadius.circular(20),
       onPressed: () {
-        _searchController.text = drinkName;
-        _getRecipe();
+        _unifiedSearchController.text = text;
+        _performUnifiedSearch();
       },
       child: Text(
-        drinkName,
+        text,
         style: const TextStyle(
-          color: CupertinoColors.systemBlue,
+          color: Color(0xFF8E8E93),
+          fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
       ),
