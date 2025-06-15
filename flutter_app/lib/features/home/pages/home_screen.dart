@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fuzzy/fuzzy.dart';
 import '../../../theme/ios_theme.dart';
-import '../../../widgets/loading_screen.dart';
+import '../../../shared/widgets/loading_screen.dart';
 import '../../../pages/unified_inventory_page.dart';
 import '../../../pages/ai_assistant_page.dart';
 import '../../recipe/pages/recipe_screen.dart';
