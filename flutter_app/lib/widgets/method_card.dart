@@ -379,7 +379,8 @@ class _MethodCardState extends State<MethodCard>
               ],
             ),
           ),
-          Expanded(
+          Flexible(
+            fit: FlexFit.loose,
             child: Padding(
               padding: const EdgeInsets.all(12.0), // Reduced padding
               child: Column(
