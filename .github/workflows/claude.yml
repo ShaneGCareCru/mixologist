@@ -1,5 +1,4 @@
 name: Claude Code
-
 on:
   issue_comment:
     types: [created]
@@ -9,7 +8,6 @@ on:
     types: [opened, assigned]
   pull_request_review:
     types: [submitted]
-
 jobs:
   claude:
     if: |
@@ -19,19 +17,40 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write
+      pull-requests: write
+      issues: write
       id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
-
+          fetch-depth: 0
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+          cache: true
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-
+          allowed_tools: |
+            Bash(flutter test)
+            Bash(flutter:*)
+            Bash(dart:*)
+            Bash(git:*)
+            Bash(npm:*)
+            Bash(yarn:*)
+            Edit
+            View
+            GlobTool
+            GrepTool
+            BatchTool
+            mcp__github__create_pull_request
+          claude_env: |
+            FLUTTER_TEST: true
+            CI: true
+            FLUTTER_WEB: true
+            NODE_ENV: test
