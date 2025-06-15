@@ -10,13 +10,13 @@ class iOSSearchBar extends StatefulWidget {
   final Function(String)? onSuggestionTapped;
 
   const iOSSearchBar({
-    Key? key,
+    super.key,
     required this.controller,
     required this.placeholder,
     this.suggestions = const [],
     this.onSubmitted,
     this.onSuggestionTapped,
-  }) : super(key: key);
+  });
 
   @override
   State<iOSSearchBar> createState() => _iOSSearchBarState();
@@ -85,7 +85,6 @@ class _iOSSearchBarState extends State<iOSSearchBar> {
             suffix: widget.controller.text.isNotEmpty
                 ? CupertinoButton(
                     padding: EdgeInsets.zero,
-                    minSize: 20,
                     child: const Icon(
                       CupertinoIcons.clear_circled_solid,
                       color: CupertinoColors.placeholderText,
@@ -96,7 +95,7 @@ class _iOSSearchBarState extends State<iOSSearchBar> {
                       setState(() {
                         _showSuggestions = false;
                       });
-                    },
+                    }, minimumSize: Size(20, 20),
                   )
                 : null,
             style: iOSTheme.body.copyWith(
@@ -172,11 +171,11 @@ class iOSChip extends StatelessWidget {
   final bool isSelected;
 
   const iOSChip({
-    Key? key,
+    super.key,
     required this.label,
     this.onPressed,
     this.isSelected = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

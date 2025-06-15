@@ -8,11 +8,11 @@ class InventoryItemCard extends StatefulWidget {
   final VoidCallback onDelete;
 
   const InventoryItemCard({
-    Key? key,
+    super.key,
     required this.item,
     required this.onUpdate,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   State<InventoryItemCard> createState() => _InventoryItemCardState();
@@ -162,7 +162,7 @@ class _InventoryItemCardState extends State<InventoryItemCard> {
                   }
                 },
               );
-            }).toList(),
+            }),
           ],
         ),
         actions: [

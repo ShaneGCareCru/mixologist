@@ -223,3 +223,25 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# Local database and persistent data
+mixologist.db
+postgres_data/
+mongo_data/
+
+# Database backups/dumps
+*.sql
+
+# Server runtime and log files
+server.pid
+app.log
+server.log
+logfile
+*.log
+
+# Local scripts and test artifacts (if not needed in repo)
+setup_database.py
+test_database_implementation.py
+
+# Python cache
+mixologist/database/__pycache__/

@@ -824,30 +824,33 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: EdgeInsets.zero,
               minSize: iOSTheme.minimumTouchTarget,
               child: const Icon(CupertinoIcons.chat_bubble_text, size: 20, color: Colors.white),
+
               onPressed: () {
                 Navigator.of(context).push(
                   CupertinoPageRoute(
                     builder: (context) => const AIAssistantPage(),
                   ),
                 );
-              },
+              }, minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
               minSize: iOSTheme.minimumTouchTarget,
               child: const Icon(CupertinoIcons.cube_box, size: 20, color: Colors.white),
+
               onPressed: () {
                 Navigator.of(context).push(
                   CupertinoPageRoute(
                     builder: (context) => const UnifiedInventoryPage(),
                   ),
                 );
-              },
+              }, minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
               minSize: iOSTheme.minimumTouchTarget,
               child: const Icon(CupertinoIcons.square_arrow_right, size: 20, color: Colors.white),
+
               onPressed: () async {
                 final navigator = Navigator.of(context);
                 await FirebaseAuth.instance.signOut();
@@ -858,7 +861,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 }
-              },
+              }, minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
             ),
           ],
         ),
@@ -1037,7 +1040,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
   // Epic 2: Interactive Recipe Components
   int _servingSize = 1;
   bool _isMetric = false; // false = oz, true = ml
-  Map<String, bool> _ingredientChecklist = {};
+  final Map<String, bool> _ingredientChecklist = {};
   
   // Epic 3: Visual Recipe Steps
   final Map<int, bool> _stepCompletion = {};
@@ -2649,7 +2652,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
                             // Small Generate Visuals Button
                             CupertinoButton(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              minSize: 0,
                               color: Theme.of(context).colorScheme.secondary.withOpacity(0.8),
                               onPressed: _isGeneratingVisuals ? null : _generateRecipeVisuals,
                               child: Row(
@@ -2668,7 +2670,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                                     style: const TextStyle(fontSize: 12, color: Colors.white)
                                   ),
                                 ],
-                              ),
+                              ), minimumSize: Size(0, 0),
                             ),
                           ],
                         ),

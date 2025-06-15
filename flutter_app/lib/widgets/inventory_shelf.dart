@@ -9,6 +9,7 @@
 /// 6. PageStorageKey for scroll position preservation
 /// 7. Optional snap-to-start functionality
 /// 8. Enhanced features: liquid levels, low-stock glow, hover effects
+library;
 
 import 'dart:io';
 import 'dart:typed_data';
@@ -27,14 +28,14 @@ class InventoryShelf extends StatefulWidget {
   final bool enableSnapToStart;
 
   const InventoryShelf({
-    Key? key,
+    super.key,
     required this.title,
     required this.items,
     required this.onUpdate,
     required this.onDelete,
     this.onSeeAll,
     this.enableSnapToStart = false,
-  }) : super(key: key);
+  });
 
   @override
   State<InventoryShelf> createState() => _InventoryShelfState();
@@ -160,11 +161,11 @@ class EnhancedBottleCard extends StatefulWidget {
   final VoidCallback onDelete;
 
   const EnhancedBottleCard({
-    Key? key,
+    super.key,
     required this.item,
     required this.onUpdate,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   State<EnhancedBottleCard> createState() => _EnhancedBottleCardState();

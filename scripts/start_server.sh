@@ -20,6 +20,27 @@ if [ -f "$PID_FILE" ]; then
     fi
 fi
 
+# Load environment variables
+if [ -f .env ]; then
+    echo "Sourcing .env file..."
+    set -a
+    source .env
+    set +a
+fi
+
+# Print the active DATABASE_URL
+if [ -z "$DATABASE_URL" ]; then
+    echo "Warning: DATABASE_URL is not set!"
+else
+    echo "Using DATABASE_URL: $DATABASE_URL"
+fi
+
+# Check PostgreSQL on port 15432
+if ! nc -z localhost 15432; then
+    echo "❌ PostgreSQL is not running on port 15432. Please start it first."
+    exit 1
+fi
+
 # Load API key and start server
 cd "$PROJECT_DIR"
 
@@ -32,7 +53,7 @@ echo "Project directory: $PROJECT_DIR"
 echo "Log file: $LOG_FILE"
 
 # Start server in background with logging
-OPENAI_API_KEY=$(cat ~/.apikeys/openai) nohup python -m hypercorn mixologist.fastapi_app:app --bind 0.0.0.0:8081 > "$LOG_FILE" 2>&1 &
+OPENAI_API_KEY=$(cat ~/.apikeys/openai) DATABASE_URL="$DATABASE_URL" nohup python -m hypercorn mixologist.fastapi_app:app --bind 0.0.0.0:8081 > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 
 # Save PID

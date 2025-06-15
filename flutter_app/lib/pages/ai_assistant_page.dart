@@ -9,8 +9,6 @@ import 'package:just_audio/just_audio.dart';
 import 'package:rive/rive.dart';
 import '../main.dart'; // For RecipeScreen
 import '../services/ai_assistant_service.dart';
-import '../theme/ios_theme.dart';
-import '../widgets/ios_card.dart';
 
 class AIAssistantPage extends StatefulWidget {
   const AIAssistantPage({super.key});

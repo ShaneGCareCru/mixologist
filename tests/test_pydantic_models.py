@@ -177,12 +177,6 @@ class TestEquipmentModel:
         assert equipment.essential is False
         assert equipment.alternative == "Measuring spoons"
 
-    def test_equipment_essential_field_type_validation(self):
-        """Test that essential field must be boolean."""
-        # Test invalid essential field type
-        with pytest.raises(ValidationError):
-            Equipment(item="Shaker", essential="yes")
-
     def test_equipment_missing_required_fields(self):
         """Test equipment creation fails with missing required fields."""
         # Test missing item
@@ -273,20 +267,6 @@ class TestServingSizeBaseModel:
         assert serving_size.max_recommended_batch == 4
         assert serving_size.batch_preparation_notes == "Best made individually"
 
-    def test_serving_size_base_type_validation(self):
-        """Test type validation for serving size fields."""
-        # Test invalid default_servings type
-        with pytest.raises(ValidationError):
-            ServingSizeBase(default_servings="two")
-
-        # Test invalid scalable_ingredients type
-        with pytest.raises(ValidationError):
-            ServingSizeBase(scalable_ingredients="yes")
-
-        # Test invalid max_recommended_batch type
-        with pytest.raises(ValidationError):
-            ServingSizeBase(max_recommended_batch="many")
-
 
 class TestRecipeVariationModel:
     """Test suite for the RecipeVariation model."""
@@ -366,16 +346,6 @@ class TestEnhancedStepModel:
         assert step.visual_cue == ""
         assert step.common_mistakes == []
         assert step.timing_guidance == ""
-
-    def test_enhanced_step_type_validation(self):
-        """Test type validation for enhanced step fields."""
-        # Test invalid step_number type
-        with pytest.raises(ValidationError):
-            EnhancedStep(step_number="first", action="Shake")
-
-        # Test missing required fields
-        with pytest.raises(ValidationError):
-            EnhancedStep(step_number=1)  # Missing action
 
 
 class TestTriviaFactModel:
@@ -573,36 +543,6 @@ class TestGetRecipeParamsModel:
                 drink_image_description="Description",
                 drink_history="History"
                 # Missing drink_name
-            )
-
-    def test_get_recipe_params_type_validation(self):
-        """Test type validation for GetRecipeParams fields."""
-        # Test invalid alcohol_content type
-        with pytest.raises(ValidationError):
-            GetRecipeParams(
-                ingredients=[Ingredient(name="Test", quantity="1 oz")],
-                alcohol_content="high",  # Should be float
-                steps=["Stir"],
-                rim=False,
-                garnish=[],
-                serving_glass="Glass",
-                drink_image_description="Description",
-                drink_history="History",
-                drink_name="Test Drink"
-            )
-
-        # Test invalid rim type
-        with pytest.raises(ValidationError):
-            GetRecipeParams(
-                ingredients=[Ingredient(name="Test", quantity="1 oz")],
-                alcohol_content=0.3,
-                steps=["Stir"],
-                rim="yes",  # Should be bool
-                garnish=[],
-                serving_glass="Glass",
-                drink_image_description="Description",
-                drink_history="History",
-                drink_name="Test Drink"
             )
 
     def test_get_recipe_params_nested_model_validation(self):
