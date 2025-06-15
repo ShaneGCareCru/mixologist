@@ -10,6 +10,33 @@ LOG_FILE="$PROJECT_DIR/server.log"
 echo "=== Mixologist FastAPI Server Status ==="
 echo
 
+# Load environment variables
+if [ -f .env ]; then
+    set -a
+    source .env
+    set +a
+fi
+
+# Print the active DATABASE_URL
+if [ -z "$DATABASE_URL" ]; then
+    echo "Warning: DATABASE_URL is not set!"
+else
+    echo "Using DATABASE_URL: $DATABASE_URL"
+fi
+
+# DB health check (PostgreSQL only)
+if [[ "$DATABASE_URL" == postgresql* ]]; then
+    echo
+    echo "=== Database Health Check ==="
+    PGPORT=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/[a-zA-Z0-9_]*:[^@]*@[^:]*:\([0-9]*\)\/.*/\1/p')
+    PGPORT=${PGPORT:-5432}
+    if psql "$DATABASE_URL" -c '\l' > /dev/null 2>&1; then
+        echo "✅ PostgreSQL is reachable on port $PGPORT"
+    else
+        echo "❌ PostgreSQL is NOT reachable on port $PGPORT"
+    fi
+fi
+
 # Check PID file
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")

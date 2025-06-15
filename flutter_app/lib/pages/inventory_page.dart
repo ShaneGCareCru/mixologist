@@ -6,7 +6,7 @@ import 'add_inventory_item_page.dart';
 import '../widgets/inventory_item_card.dart';
 
 class InventoryPage extends StatefulWidget {
-  const InventoryPage({Key? key}) : super(key: key);
+  const InventoryPage({super.key});
 
   @override
   State<InventoryPage> createState() => _InventoryPageState();

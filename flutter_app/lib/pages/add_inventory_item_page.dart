@@ -10,13 +10,13 @@ class AddInventoryItemPage extends StatefulWidget {
   final VoidCallback onItemAdded;
 
   const AddInventoryItemPage({
-    Key? key,
+    super.key,
     this.initialName,
     this.initialCategory,
     this.initialBrand,
     this.initialQuantity,
     required this.onItemAdded,
-  }) : super(key: key);
+  });
 
   @override
   State<AddInventoryItemPage> createState() => _AddInventoryItemPageState();

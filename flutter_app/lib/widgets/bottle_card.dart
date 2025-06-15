@@ -9,11 +9,11 @@ class BottleCard extends StatefulWidget {
   final VoidCallback onDelete;
 
   const BottleCard({
-    Key? key,
+    super.key,
     required this.item,
     required this.onUpdate,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   State<BottleCard> createState() => _BottleCardState();
