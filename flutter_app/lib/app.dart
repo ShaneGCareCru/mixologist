@@ -7,9 +7,9 @@ import 'theme/app_text_styles.dart';
 import 'theme/app_constants.dart';
 import 'theme/ios_theme.dart';
 
-// Import screens - will be updated once feature folders are created
-import 'pages/unified_inventory_page.dart';
-import 'pages/ai_assistant_page.dart';
+// Import screens from feature folders
+import 'features/inventory/screens/unified_inventory_page.dart';
+import 'features/ai_assistant/screens/ai_assistant_page.dart';
 
 /// Main application widget that configures themes, routing, and app-level settings
 class MixologistApp extends StatelessWidget {
