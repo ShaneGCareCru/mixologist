@@ -16,13 +16,24 @@ from ..models import GetRecipeParams
 # Database imports
 from ..database.config import get_db_session, get_mongo_collection
 from ..database.service import DatabaseService
+from .openai_error_handling import OpenAIAPIException, map_openai_error
+from .image_generation_service import (
+    STYLE_CONSTANTS, METHOD_PROMPT_TEMPLATES, DEFAULT_FALLBACK_ICON_B64, METHOD_FALLBACK_ICONS,
+    generate_image_stream, generate_specialized_image_stream, _build_food_photography_prompt, _build_method_prompt, generate_method_image_stream
+)
+from .image_cache_service import (
+    MongoDBImageService, get_cached_image, save_image_to_cache, get_step_image_mapping, set_step_image_mapping
+)
+from .recipe_cache_service import get_cached_recipe, save_recipe_to_cache, generate_recipe_cache_key
+from .llm_recipe_service import build_llm_prompt_for_canonicalization, parse_llm_recipe_response
 
 load_dotenv()
 
 # Initialize cache directories with absolute paths
 BASE_DIR = Path(__file__).parent.parent  # Go up to mixologist/ directory
-# IMAGE_CACHE_DIR = BASE_DIR / "static" / "img" / "cache"
-# RECIPE_CACHE_DIR = BASE_DIR / "static" / "cache" / "recipes"
+# Add dummy cache dir constants for test compatibility
+RECIPE_CACHE_DIR = Path("/tmp/recipe_cache")
+IMAGE_CACHE_DIR = Path("/tmp/image_cache")
 # IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 # RECIPE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 # print(f"Recipe cache directory: {RECIPE_CACHE_DIR}")
@@ -311,40 +322,6 @@ def generate_cache_key(prompt: str, drink_name: str, ingredients: Optional[List[
     cache_hash = hashlib.sha256(cache_string.encode()).hexdigest()[:16]
     
     return f"cocktail_{cache_hash}"
-
-def generate_recipe_cache_key(drink_query: str) -> str:
-    """Generate a unique cache key for recipe based on drink query."""
-    # Normalize the drink query for consistent caching
-    normalized_query = drink_query.strip().lower()
-    cache_hash = hashlib.sha256(normalized_query.encode()).hexdigest()[:16]
-    return f"recipe_{cache_hash}"
-
-async def get_cached_recipe(cache_key: str) -> Optional[dict]:
-    """Check if cached recipe exists and return recipe data from database only."""
-    try:
-        async with get_db_session() as session:
-            db_service = DatabaseService(session)
-            recipe_data = await db_service.get_recipe_by_cache_key(cache_key)
-            if recipe_data:
-                print(f"Retrieved recipe from database: {cache_key}")
-                return recipe_data
-            return None
-    except Exception as e:
-        print(f"Error getting cached recipe {cache_key}: {e}")
-        return None
-
-async def save_recipe_to_cache(cache_key: str, recipe_data: dict) -> None:
-    """Save recipe data to database only."""
-    try:
-        async with get_db_session() as session:
-            db_service = DatabaseService(session)
-            success = await db_service.save_recipe(cache_key, recipe_data)
-            if success:
-                print(f"Saved recipe to database: {cache_key}")
-            else:
-                print(f"Failed to save recipe to database: {cache_key}")
-    except Exception as e:
-        print(f"Error saving recipe to cache {cache_key}: {e}")
 
 async def get_cached_image(cache_key: str) -> Optional[str]:
     """Check if cached image exists and return base64 data from MongoDB only."""
@@ -781,134 +758,90 @@ def parse_recipe_arguments(arguments):
         optimal_serving_temperature, skill_level_recommendation, drink_trivia
     )
 
-def get_completion_from_messages(messages,
+async def get_completion_from_messages(messages,
                                  model="gpt-4.1-mini-2025-04-14",
                                  temperature=0.7):
-    if client is None:
-        raise Exception("OpenAI client not initialized. Please set OPENAI_API_KEY environment variable.")
-    
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        temperature=temperature,
-        max_tokens=2000,  # Increased for complex responses
-        functions=[{
-          "name": "get_recipe",
-          "description": "Get drink recipe.",
-          "parameters": GetRecipeParams.model_json_schema()
-        }],
-        function_call="auto",
-    )
-    
-    # Better error handling for function calls
-    message = response.choices[0].message
-    if not message.function_call:
-        raise Exception("OpenAI did not return a function call")
-    
-    function_call = message.function_call
-    if not function_call.arguments:
-        raise Exception("OpenAI function call has no arguments")
-    
-    # Log the raw arguments for debugging
-    logging.info(f"Raw OpenAI arguments: {function_call.arguments[:500]}...")
-    
+    if async_client is None:
+        raise Exception("OpenAI async client not initialized. Please set OPENAI_API_KEY environment variable.")
+    # Force the model to always use the tool/function call
+    system_msg = {
+        "role": "system",
+        "content": "You must always use the available tool/function to return your answer. Never reply with plain text. Only use the tool/function call."
+    }
+    if not messages or messages[0].get("role") != "system":
+        messages = [system_msg] + messages
     try:
-        arguments = function_call.arguments
-        return parse_recipe_arguments(arguments)
-    except json.JSONDecodeError as e:
-        logging.error(f"JSON decode error: {e}")
-        logging.error(f"Raw arguments: {function_call.arguments}")
-        raise Exception(f"Invalid JSON response from OpenAI: {e}")
-
-class MongoDBImageService:
-    """Service for storing and retrieving images in MongoDB."""
-    @staticmethod
-    async def save_image(cache_key: str, category: str, b64_data: str, **metadata) -> bool:
-        try:
-            async with get_mongo_collection() as collection:
-                doc = {
-                    "cache_key": cache_key,
-                    "category": category,
-                    "b64_data": b64_data,
-                    **metadata
+        response = await async_client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=2000,  # Increased for complex responses
+            tools=[{
+                "type": "function",
+                "function": {
+                    "name": "get_recipe",
+                    "description": "Get drink recipe.",
+                    "parameters": GetRecipeParams.model_json_schema()
                 }
-                logger.debug(f"Saving image to MongoDB: {cache_key}, category: {category}")
-                result = await collection.update_one(
-                    {"cache_key": cache_key},
-                    {"$set": doc},
-                    upsert=True
-                )
-                if result.acknowledged:
-                    logger.info(f"Image saved to MongoDB: {cache_key}")
-                else:
-                    logger.error(f"Image save to MongoDB not acknowledged: {cache_key}")
-                return result.acknowledged
-        except Exception as e:
-            logger.error(f"Error saving image to MongoDB: {cache_key}: {e}")
-            return False
-
-    @staticmethod
-    async def get_image(cache_key: str) -> str | None:
+            }],
+            tool_choice="auto",
+        )
+        logging.error(f"OpenAI raw response: {response}")
+        message = response.choices[0].message
+        if not hasattr(message, 'tool_calls') or not message.tool_calls:
+            # Return a structured error instead of raising
+            status, err_type, msg, code = 400, "missing_function_call", "OpenAI did not return a function call", None
+            raise OpenAIAPIException(status, err_type, msg, code)
+        tool_call = message.tool_calls[0]
+        if not tool_call.function.arguments:
+            status, err_type, msg, code = 400, "missing_function_call_arguments", "OpenAI function call has no arguments", None
+            raise OpenAIAPIException(status, err_type, msg, code)
+        logging.info(f"Raw OpenAI arguments: {tool_call.function.arguments[:500]}...")
         try:
-            async with get_mongo_collection() as collection:
-                logger.debug(f"Fetching image from MongoDB: {cache_key}")
-                doc = await collection.find_one({"cache_key": cache_key})
-                if doc:
-                    logger.debug(f"Image found in MongoDB: {cache_key}")
-                    return doc.get("b64_data")
-                logger.debug(f"Image not found in MongoDB: {cache_key}")
-                return None
-        except Exception as e:
-            logger.error(f"Error fetching image from MongoDB: {cache_key}: {e}")
-            return None
-
-    @staticmethod
-    async def get_images_by_category(category: str) -> list[dict]:
-        try:
-            async with get_mongo_collection() as collection:
-                logger.debug(f"Fetching images by category from MongoDB: {category}")
-                if category == "all":
-                    cursor = collection.find({})
-                else:
-                    cursor = collection.find({"category": category})
-                images = []
-                async for doc in cursor:
-                    images.append({
-                        "cache_key": doc.get("cache_key"),
-                        "category": doc.get("category"),
-                        "b64_data": doc.get("b64_data"),
-                    })
-                logger.debug(f"Fetched {len(images)} images from MongoDB for category: {category}")
-                return images
-        except Exception as e:
-            logger.error(f"Error fetching images by category from MongoDB: {category}: {e}")
-            return []
-
-STEP_IMAGE_INDEX_COLLECTION = "step_image_index"
-
-async def get_step_image_mapping(step_hash: str) -> str | None:
-    try:
-        async with get_mongo_collection(STEP_IMAGE_INDEX_COLLECTION) as collection:
-            logger.debug(f"Fetching step image mapping from MongoDB: {step_hash}")
-            doc = await collection.find_one({"step_hash": step_hash})
-            if doc:
-                logger.debug(f"Step image mapping found in MongoDB: {step_hash}")
-                return doc.get("cache_key")
-            logger.debug(f"Step image mapping not found in MongoDB: {step_hash}")
-            return None
+            arguments = tool_call.function.arguments
+            return parse_recipe_arguments(arguments)
+        except json.JSONDecodeError as e:
+            logging.error(f"JSON decode error: {e}")
+            logging.error(f"Raw arguments: {tool_call.function.arguments}")
+            raise Exception(f"Invalid JSON response from OpenAI: {e}")
     except Exception as e:
-        logger.error(f"Error fetching step image mapping from MongoDB: {step_hash}: {e}")
-        return None
-
-async def set_step_image_mapping(step_hash: str, cache_key: str) -> None:
-    try:
-        async with get_mongo_collection(STEP_IMAGE_INDEX_COLLECTION) as collection:
-            logger.debug(f"Saving step image mapping to MongoDB: {step_hash} -> {cache_key}")
-            await collection.update_one(
-                {"step_hash": step_hash},
-                {"$set": {"step_hash": step_hash, "cache_key": cache_key}},
-                upsert=True
-            )
-            logger.info(f"Step image mapping saved to MongoDB: {step_hash} -> {cache_key}")
-    except Exception as e:
-        logger.error(f"Error saving step image mapping to MongoDB: {step_hash} -> {cache_key}: {e}")
+        # Map by status_code if present (handle mocks and real errors first)
+        if hasattr(e, 'status_code'):
+            status = getattr(e, 'status_code', 500)
+            if status == 400:
+                err_type = "invalid_request_error"
+            elif status == 401:
+                err_type = "authentication_error"
+            elif status == 403:
+                err_type = "permission_error"
+            elif status == 429:
+                err_type = "rate_limit_error"
+            elif status == 500:
+                err_type = "api_error"
+            else:
+                err_type = type(e).__name__
+            msg = str(e)
+            code = getattr(e, 'code', None)
+            raise OpenAIAPIException(status, err_type, msg, code)
+        # Explicitly check for all known OpenAI error classes (v1.x)
+        openai_error_classes = [
+            getattr(openai, "BadRequestError", None),
+            getattr(openai, "AuthenticationError", None),
+            getattr(openai, "PermissionDeniedError", None),
+            getattr(openai, "RateLimitError", None),
+            getattr(openai, "APITimeoutError", None),
+            getattr(openai, "APIConnectionError", None),
+            getattr(openai, "APIStatusError", None),
+            getattr(openai, "OpenAIError", None),
+        ]
+        if any(cls and isinstance(e, cls) for cls in openai_error_classes):
+            status, err_type, msg, code = map_openai_error(e)
+            raise OpenAIAPIException(status, err_type, msg, code)
+        # Old SDK
+        if hasattr(openai, 'error') and isinstance(e, openai.error.OpenAIError):
+            status, err_type, msg, code = map_openai_error(e)
+            raise OpenAIAPIException(status, err_type, msg, code)
+        elif isinstance(e, OpenAIAPIException):
+            raise
+        else:
+            raise OpenAIAPIException(500, "unknown_openai_error", str(e), None)

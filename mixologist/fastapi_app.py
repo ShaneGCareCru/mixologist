@@ -191,7 +191,7 @@ async def create_drink(drink_query: str = Form(...)):
         The drink I want you to tell me about is: {drink_query}
         """
         
-        recipe = get_completion_from_messages([{"role": "user", "content": user_query}])
+        recipe = await get_completion_from_messages([{"role": "user", "content": user_query}])
         
         # Enhanced recipe data with all new fields
         recipe_data = {
@@ -251,7 +251,7 @@ async def create_drink_from_description(drink_description: str = Form(...)):
         Description: {drink_description}
         """
 
-        recipe = get_completion_from_messages([{"role": "user", "content": user_query}])
+        recipe = await get_completion_from_messages([{"role": "user", "content": user_query}])
 
         recipe_data = {
             "drink_name": recipe.drink_name,
@@ -398,7 +398,7 @@ async def get_related_cocktails(
         - Strength level
         """
         
-        response = get_completion_from_messages([{"role": "user", "content": related_prompt}])
+        response = await get_completion_from_messages([{"role": "user", "content": related_prompt}])
         
         # For this endpoint, we'll extract just the related cocktails if available
         # Otherwise generate them directly
@@ -443,7 +443,7 @@ async def get_ingredient_info(ingredient_name: str = Form(...)):
         }}
         """
         
-        response = get_completion_from_messages([{"role": "user", "content": ingredient_prompt}])
+        response = await get_completion_from_messages([{"role": "user", "content": ingredient_prompt}])
         
         # Return ingredient information
         return {
@@ -860,6 +860,24 @@ async def generate_recipe_visuals(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generating recipe visuals: {str(e)}")
 
+@app.get("/recipes/names")
+async def get_recipe_names():
+    """Return a list of canonical recipe names and their aliases."""
+    try:
+        async with get_db_session() as session:
+            db_service = DatabaseService(session)
+            recipes = await db_service.get_all_recipes()
+            # Each recipe is a dict; extract canonical_name and aliases if present
+            names = []
+            for recipe in recipes:
+                canonical = recipe.get("canonical_name") or recipe.get("drink_name")
+                aliases = recipe.get("aliases", [])
+                names.append({"canonical_name": canonical, "aliases": aliases})
+            return names
+    except Exception as e:
+        logging.error(f"Error getting recipe names: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting recipe names: {str(e)}")
+
 # ==================== INVENTORY ENDPOINTS ====================
 
 @app.get("/inventory")
@@ -1132,7 +1150,7 @@ async def create_drink_with_inventory_filter(
         The drink I want you to tell me about is: {drink_query}
         """
         
-        recipe = get_completion_from_messages([{"role": "user", "content": user_query}])
+        recipe = await get_completion_from_messages([{"role": "user", "content": user_query}])
         
         # Enhanced recipe data with inventory context
         recipe_data = {
