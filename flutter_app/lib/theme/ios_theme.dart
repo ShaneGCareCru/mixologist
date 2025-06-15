@@ -1,9 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
+import 'app_constants.dart';
 
-/// iOS-optimized theme constants and design system for the Mixologist app
+/// iOS-specific theme helpers and utilities for the Mixologist app
+/// Works in conjunction with the centralized app_colors.dart and app_constants.dart
 class iOSTheme {
-  // iOS-specific color palette
+  // Private constructor to prevent instantiation
+  iOSTheme._();
+
+  // iOS System Colors (native iOS colors not covered in app_colors.dart)
   static const Color primaryBlue = Color(0xFF007AFF);
   static const Color systemGray = Color(0xFF8E8E93);
   static const Color systemGray2 = Color(0xFFAEAEB2);
@@ -11,31 +17,36 @@ class iOSTheme {
   static const Color systemGray4 = Color(0xFFD1D1D6);
   static const Color systemGray5 = Color(0xFFE5E5EA);
   static const Color systemGray6 = Color(0xFFF2F2F7);
-  
-  // Cocktail-inspired iOS colors
-  static const Color whiskey = Color(0xFF6D4C2D);
-  static const Color amber = Color(0xFFD4A574);
-  static const Color champagne = Color(0xFFF7E7CE);
-  static const Color bitters = Color(0xFF722F37);
-  static const Color citrus = Color(0xFFE67E22);
-  static const Color ice = Color(0xFFF8FAFE);
-  
-  // iOS spacing constants
-  static const double smallPadding = 8.0;
-  static const double mediumPadding = 16.0;
-  static const double largePadding = 20.0;
-  static const double extraLargePadding = 24.0;
-  
-  // iOS touch targets (minimum 44pt)
-  static const double minimumTouchTarget = 44.0;
-  
-  // iOS corner radius
-  static const double smallRadius = 8.0;
-  static const double mediumRadius = 12.0;
-  static const double largeRadius = 16.0;
-  static const double extraLargeRadius = 20.0;
-  
-  // iOS-optimized typography scale
+
+  // Backward compatibility aliases to app_colors.dart
+  static Color get whiskey => AppColors.richWhiskey;
+  static Color get amber => AppColors.goldenAmber;
+  static Color get champagne => AppColors.champagneGold;
+  static Color get bitters => AppColors.deepBitters;
+  static Color get citrus => AppColors.citrushZest;
+  static Color get ice => AppColors.crystallIce;
+
+  // Backward compatibility aliases to app_constants.dart
+  static double get smallPadding => AppConstants.smallPadding;
+  static double get mediumPadding => AppConstants.mediumPadding;
+  static double get largePadding => AppConstants.largePadding;
+  static double get extraLargePadding => AppConstants.extraLargePadding;
+  static double get minimumTouchTarget => AppConstants.minimumTouchTarget;
+  static double get smallRadius => AppConstants.radiusSmall;
+  static double get mediumRadius => AppConstants.radiusMedium;
+  static double get largeRadius => AppConstants.radiusLarge;
+  static double get extraLargeRadius => AppConstants.radiusExtraLarge;
+  static Duration get shortAnimation => AppConstants.shortAnimation;
+  static Duration get mediumAnimation => AppConstants.mediumAnimation;
+  static Duration get longAnimation => AppConstants.longAnimation;
+  static Curve get iOSCurve => AppConstants.iOSCurve;
+  static EdgeInsets get screenPadding => AppConstants.screenPadding;
+  static EdgeInsets get cardPadding => AppConstants.cardPadding;
+  static EdgeInsets get buttonPadding => AppConstants.buttonPadding;
+  static List<BoxShadow> get cardShadow => AppConstants.cardShadow;
+  static List<BoxShadow> get buttonShadow => AppConstants.buttonShadow;
+
+  // iOS-specific typography scale (native iOS text styles)
   static const TextStyle largeTitle = TextStyle(
     fontSize: 34,
     fontWeight: FontWeight.w700,
@@ -106,67 +117,70 @@ class iOSTheme {
     fontWeight: FontWeight.w400,
     height: 1.4,
   );
-  
-  // iOS-style shadows
-  static List<BoxShadow> cardShadow = [
-    BoxShadow(
-      color: Colors.black.withOpacity(0.08),
-      blurRadius: 10,
-      offset: const Offset(0, 2),
-    ),
-    BoxShadow(
-      color: Colors.black.withOpacity(0.04),
-      blurRadius: 4,
-      offset: const Offset(0, 1),
-    ),
-  ];
-  
-  static List<BoxShadow> buttonShadow = [
-    BoxShadow(
-      color: Colors.black.withOpacity(0.12),
-      blurRadius: 8,
-      offset: const Offset(0, 2),
-    ),
-  ];
-  
-  // iOS-style padding helper
-  static const EdgeInsets screenPadding = EdgeInsets.symmetric(
-    horizontal: largePadding,
-    vertical: mediumPadding,
-  );
-  
-  static const EdgeInsets cardPadding = EdgeInsets.all(mediumPadding);
-  
-  static const EdgeInsets buttonPadding = EdgeInsets.symmetric(
-    horizontal: largePadding,
-    vertical: 12.0,
-  );
-  
-  // iOS-style transitions
-  static const Duration shortAnimation = Duration(milliseconds: 200);
-  static const Duration mediumAnimation = Duration(milliseconds: 300);
-  static const Duration longAnimation = Duration(milliseconds: 500);
-  
-  static const Curve iOSCurve = Curves.easeInOutCubic;
-  
-  // Dark mode support
-  static const Color darkBackground = Color(0xFF000000);
-  static const Color darkSecondaryBackground = Color(0xFF1C1C1E);
-  static const Color darkTertiaryBackground = Color(0xFF2C2C2E);
-  
-  // Helper method to get adaptive colors
+
+  // iOS-specific adaptive color helper
   static Color adaptiveColor(BuildContext context, Color lightColor, Color darkColor) {
     return CupertinoTheme.brightnessOf(context) == Brightness.dark 
         ? darkColor 
         : lightColor;
   }
   
-  // Helper method to create iOS-style cards
+  // iOS-specific card decoration helper
   static BoxDecoration cardDecoration(BuildContext context) {
     return BoxDecoration(
-      color: adaptiveColor(context, CupertinoColors.systemBackground, darkSecondaryBackground),
-      borderRadius: BorderRadius.circular(largeRadius),
-      boxShadow: cardShadow,
+      color: adaptiveColor(
+        context, 
+        CupertinoColors.systemBackground, 
+        AppColors.charcoalSurface,
+      ),
+      borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+      boxShadow: AppConstants.cardShadow,
+    );
+  }
+
+  // iOS-specific Cupertino theme data builder
+  static CupertinoThemeData buildCupertinoTheme() {
+    return CupertinoThemeData(
+      primaryColor: AppColors.richWhiskey,
+      primaryContrastingColor: CupertinoColors.white,
+      barBackgroundColor: CupertinoColors.systemBackground,
+      scaffoldBackgroundColor: CupertinoColors.systemGroupedBackground,
+      textTheme: const CupertinoTextThemeData(
+        primaryColor: AppColors.richWhiskey,
+        textStyle: body,
+        actionTextStyle: headline,
+        tabLabelTextStyle: caption1,
+        navTitleTextStyle: headline,
+        navLargeTitleTextStyle: largeTitle,
+      ),
+    );
+  }
+
+  // iOS-specific navigation bar styling
+  static Widget buildNavigationBar({
+    required String title,
+    Widget? leading,
+    List<Widget>? trailing,
+    bool automaticallyImplyLeading = true,
+  }) {
+    return CupertinoNavigationBar(
+      backgroundColor: CupertinoColors.systemBackground.withOpacity(0.8),
+      border: null,
+      middle: Text(
+        title,
+        style: headline.copyWith(
+          color: AppColors.richWhiskey,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      leading: leading,
+      trailing: trailing != null && trailing.isNotEmpty 
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: trailing,
+          )
+        : null,
+      automaticallyImplyLeading: automaticallyImplyLeading,
     );
   }
 }
