@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mixologist_flutter/models/inventory_models.dart';
-import 'package:mixologist_flutter/services/inventory_service.dart';
-import 'package:mixologist_flutter/widgets/inventory_item_card.dart';
-import 'package:mixologist_flutter/widgets/bottle_card.dart';
-import 'package:mixologist_flutter/widgets/add_item_dialog.dart';
-import 'package:mixologist_flutter/widgets/inventory_shelf.dart';
+import 'models/inventory_models.dart';
+import 'services/inventory_service.dart';
+import 'widgets/inventory_item_card.dart';
+import 'widgets/bottle_card.dart';
+import 'widgets/add_item_dialog.dart';
+import 'widgets/inventory_shelf.dart';
 import 'package:mixologist_flutter/theme/ios_theme.dart';
-import 'package:mixologist_flutter/widgets/ios_card.dart';
+import '../../shared/widgets/ios_card.dart';
 
 class UnifiedInventoryPage extends StatefulWidget {
   const UnifiedInventoryPage({super.key});

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mixologist_flutter/features/home/screens/home_screen.dart';
-import 'package:mixologist_flutter/main.dart' as main_screens;
+import 'package:mixologist_flutter/features/recipe/screens/recipe_screen.dart';
 
 void main() {
   group('Error Handling Integration Tests', () {
@@ -44,7 +44,7 @@ void main() {
       // Should handle malformed data without crashing
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: malformedData),
+          home: RecipeScreen(recipeData: malformedData),
         ),
       );
 
@@ -114,14 +114,14 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: minimalData),
+          home: RecipeScreen(recipeData: minimalData),
         ),
       );
 
       await tester.pumpAndSettle();
 
       // Should handle minimal data without crashing
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       expect(find.textContaining('Minimal Recipe'), findsAtLeastNWidgets(1));
       
       print('✅ App handles minimal recipe data gracefully');

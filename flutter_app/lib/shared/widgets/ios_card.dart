@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../theme/ios_theme.dart';
+import '../../theme/ios_theme.dart';
 
 /// iOS-style card widget that replaces Material's Card and GlassmorphicCard
 class iOSCard extends StatelessWidget {

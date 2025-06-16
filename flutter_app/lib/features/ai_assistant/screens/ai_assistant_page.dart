@@ -7,7 +7,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_audio_capture/flutter_audio_capture.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rive/rive.dart';
-import '../main.dart'; // For RecipeScreen
+import '../../../main.dart'; // For RecipeScreen
 import '../services/ai_assistant_service.dart';
 
 class AIAssistantPage extends StatefulWidget {

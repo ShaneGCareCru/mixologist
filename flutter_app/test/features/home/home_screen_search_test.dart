@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mixologist_flutter/features/home/screens/home_screen.dart';
-import 'package:mixologist_flutter/main.dart' as main_screens;
+import 'package:mixologist_flutter/features/recipe/screens/recipe_screen.dart';
 
 void main() {
   group('HomeScreen Search Integration Tests', () {
@@ -45,7 +45,7 @@ void main() {
       await tester.pumpAndSettle(Duration(seconds: 10));
       
       // Verify navigation to RecipeScreen occurred
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       // Verify recipe data is displayed (should contain "Margarita" somewhere)
       expect(find.textContaining('Margarita'), findsAtLeastNWidgets(1));
@@ -76,7 +76,7 @@ void main() {
       await tester.pumpAndSettle(Duration(seconds: 15));
       
       // Should navigate to recipe screen with generated recipe
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       // Should display some kind of recipe content (look for any ingredient-related text)
       final hasIngredientsText = find.textContaining('ingredient').evaluate().isNotEmpty ||
@@ -109,7 +109,7 @@ void main() {
       await tester.pumpAndSettle(Duration(seconds: 10));
       
       // Should navigate to RecipeScreen
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
     });
 
     testWidgets('should handle empty search input gracefully', (tester) async {
@@ -125,7 +125,7 @@ void main() {
 
       // Should remain on HomeScreen (no navigation)
       expect(find.byType(HomeScreen), findsOneWidget);
-      expect(find.byType(main_screens.RecipeScreen), findsNothing);
+      expect(find.byType(RecipeScreen), findsNothing);
       
       // Should not show loading screen
       expect(find.text('Generating your recipe...'), findsNothing);

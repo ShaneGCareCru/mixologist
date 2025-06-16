@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
-import 'package:mixologist_flutter/main.dart' as main_screens;
+import 'package:mixologist_flutter/features/recipe/screens/recipe_screen.dart';
 
 void main() {
   group('Recipe Screen Integration Tests', () {
@@ -27,24 +27,14 @@ void main() {
       } catch (e) {
         // Fallback to mock data if backend is unavailable
         sampleRecipeData = {
-          'drink_name': 'Test Martini',
+          'name': 'Test Martini',
+          'description': 'A classic cocktail',
           'ingredients': [
-            {'name': 'Gin', 'quantity': '2.5 oz'},
-            {'name': 'Dry Vermouth', 'quantity': '0.5 oz'},
+            {'name': 'Gin', 'amount': '2.5', 'unit': 'oz'},
+            {'name': 'Dry Vermouth', 'amount': '0.5', 'unit': 'oz'},
           ],
-          'steps': ['Step 1', 'Step 2'],
-          'enhanced_steps': [
-            {
-              'action': 'Chill the glass',
-              'step_number': 1,
-              'technique_detail': 'Use ice water',
-            },
-            {
-              'action': 'Mix ingredients',
-              'step_number': 2,
-              'technique_detail': 'Stir gently',
-            },
-          ],
+          'method': ['Chill the glass with ice water', 'Mix ingredients and stir gently'],
+          'equipment': ['Martini glass', 'Bar spoon'],
           'serving_glass': 'Martini glass',
           'difficulty_rating': 3,
           'preparation_time_minutes': 5,
@@ -57,7 +47,9 @@ void main() {
     testWidgets('should display recipe name and basic information', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: Scaffold(
+            body: RecipeScreen(recipeData: sampleRecipeData),
+          ),
         ),
       );
 
@@ -65,10 +57,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should display the drink name in AppBar
-      expect(find.textContaining(sampleRecipeData['drink_name']), findsAtLeastNWidgets(1));
+      expect(find.textContaining(sampleRecipeData['name']), findsAtLeastNWidgets(1));
       
       // Should display RecipeScreen widget itself
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       print('✅ Recipe name and basic info displayed correctly');
     });
@@ -76,7 +68,9 @@ void main() {
     testWidgets('should display ingredients list', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: Scaffold(
+            body: RecipeScreen(recipeData: sampleRecipeData),
+          ),
         ),
       );
 
@@ -86,7 +80,7 @@ void main() {
       final ingredients = sampleRecipeData['ingredients'] as List;
       for (final ingredient in ingredients.take(2)) { // Test first 2 ingredients
         expect(find.textContaining(ingredient['name']), findsAtLeastNWidgets(1));
-        expect(find.textContaining(ingredient['quantity']), findsAtLeastNWidgets(1));
+        expect(find.textContaining(ingredient['amount']), findsAtLeastNWidgets(1));
       }
       
       print('✅ Ingredients list displayed correctly');
@@ -95,18 +89,20 @@ void main() {
     testWidgets('should display method steps', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: Scaffold(
+            body: RecipeScreen(recipeData: sampleRecipeData),
+          ),
         ),
       );
 
       await tester.pumpAndSettle();
 
       // Should have method section and steps data structure
-      final steps = sampleRecipeData['steps'] as List;
+      final steps = sampleRecipeData['method'] as List;
       expect(steps.length, greaterThan(0));
       
       // Verify RecipeScreen renders without crashing
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       print('✅ Method steps displayed correctly');
     });
@@ -114,7 +110,9 @@ void main() {
     testWidgets('should handle images if present in recipe data', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: Scaffold(
+            body: RecipeScreen(recipeData: sampleRecipeData),
+          ),
         ),
       );
 
@@ -131,25 +129,27 @@ void main() {
       }
       
       // Test should pass regardless of image presence
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
     });
 
     testWidgets('should be interactive and not crash on user interaction', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: Scaffold(
+            body: RecipeScreen(recipeData: sampleRecipeData),
+          ),
         ),
       );
 
       await tester.pumpAndSettle();
 
       // Try scrolling (recipe screen should be scrollable)
-      await tester.drag(find.byType(main_screens.RecipeScreen), const Offset(0, -100));
+      await tester.drag(find.byType(RecipeScreen), const Offset(0, -100));
       await tester.pumpAndSettle();
 
       // Should not crash and still display content
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
-      expect(find.textContaining(sampleRecipeData['drink_name']), findsAtLeastNWidgets(1));
+      expect(find.byType(RecipeScreen), findsOneWidget);
+      expect(find.textContaining(sampleRecipeData['name']), findsAtLeastNWidgets(1));
       
       print('✅ Recipe screen handles user interaction correctly');
     });
@@ -157,7 +157,9 @@ void main() {
     testWidgets('should display recipe metadata (difficulty, time, etc.)', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: Scaffold(
+            body: RecipeScreen(recipeData: sampleRecipeData),
+          ),
         ),
       );
 
@@ -191,7 +193,7 @@ void main() {
       }
       
       // Test should pass regardless of metadata presence
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
     });
   });
 }

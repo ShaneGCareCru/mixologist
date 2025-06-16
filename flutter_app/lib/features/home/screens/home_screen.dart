@@ -5,11 +5,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:fuzzy/fuzzy.dart';
 import '../../../theme/ios_theme.dart';
-import '../../../widgets/loading_screen.dart';
+import '../../../shared/widgets/loading_screen.dart';
 import '../../ai_assistant/ai_assistant_page.dart';
 import '../../inventory/unified_inventory_page.dart';
 import '../../auth/login_screen.dart';
-import '../../../main.dart' as main_screens; // For RecipeScreen
+import '../../recipe/screens/recipe_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => main_screens.RecipeScreen(recipeData: recipeData)),
+            MaterialPageRoute(builder: (context) => RecipeScreen(recipeData: recipeData)),
           );
         }
       } else {

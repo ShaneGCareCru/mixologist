@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../theme/ios_theme.dart';
+import '../../theme/ios_theme.dart';
 
 /// iOS-style search bar that replaces Material's SearchAnchor
 class iOSSearchBar extends StatefulWidget {

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import '../../theme/ios_theme.dart';
 
 class SectionPreview extends StatefulWidget {
   final String title;
@@ -91,13 +93,21 @@ class _SectionPreviewState extends State<SectionPreview>
                 children: [
                   GestureDetector(
                     onTap: widget.expanded ? widget.onClose : widget.onOpen,
-                    child: ListTile(
-                      leading: Icon(widget.icon,
-                          color: Theme.of(context).colorScheme.primary),
-                      title: Text(widget.title,
-                          style: Theme.of(context).textTheme.titleMedium),
-                      trailing: Text(progress,
-                          style: Theme.of(context).textTheme.bodySmall),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      child: Row(
+                        children: [
+                          Icon(widget.icon,
+                              color: iOSTheme.whiskey),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(widget.title,
+                                style: iOSTheme.title2),
+                          ),
+                          Text(progress,
+                              style: iOSTheme.caption1),
+                        ],
+                      ),
                     ),
                   ),
                   AnimatedCrossFade(
@@ -126,10 +136,7 @@ class _SectionPreviewState extends State<SectionPreview>
                   alignment: Alignment.center,
                   child: Text(
                     'View All',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(color: Colors.white),
+                    style: iOSTheme.headline.copyWith(color: Colors.white),
                   ),
                 ),
               ),
@@ -137,10 +144,13 @@ class _SectionPreviewState extends State<SectionPreview>
                 Positioned(
                   top: 4,
                   right: 4,
-                  child: IconButton(
-                    icon: const Icon(Icons.close),
-                    color: Theme.of(context).colorScheme.primary,
+                  child: CupertinoButton(
+                    padding: EdgeInsets.zero,
                     onPressed: widget.onClose,
+                    child: Icon(
+                      CupertinoIcons.xmark,
+                      color: iOSTheme.whiskey,
+                    ),
                   ),
                 ),
               ],

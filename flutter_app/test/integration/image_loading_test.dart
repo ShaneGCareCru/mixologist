@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
-import 'package:mixologist_flutter/main.dart' as main_screens;
+import 'package:mixologist_flutter/features/recipe/screens/recipe_screen.dart';
 
 void main() {
   group('Image Loading Integration Tests', () {
@@ -57,7 +57,7 @@ void main() {
     testWidgets('should handle cocktail hero image loading', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: RecipeScreen(recipeData: sampleRecipeData),
         ),
       );
 
@@ -69,7 +69,7 @@ void main() {
       final cachedImageWidgets = find.byType(CachedNetworkImage);
       
       // Should have RecipeScreen without crashing
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       // Test that images exist or that the app handles their absence gracefully
       if (imageWidgets.evaluate().isNotEmpty || cachedImageWidgets.evaluate().isNotEmpty) {
@@ -77,7 +77,7 @@ void main() {
         
         // Test that image widgets don't cause crashes
         await tester.pump(Duration(seconds: 1));
-        expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+        expect(find.byType(RecipeScreen), findsOneWidget);
       } else {
         print('ℹ️  No direct image widgets found (images may be generated dynamically)');
       }
@@ -86,7 +86,7 @@ void main() {
     testWidgets('should handle ingredient images loading', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: RecipeScreen(recipeData: sampleRecipeData),
         ),
       );
 
@@ -102,7 +102,7 @@ void main() {
       }
 
       // Test that the app doesn't crash with ingredient data
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       print('✅ Ingredient section handles image data correctly');
     });
@@ -110,7 +110,7 @@ void main() {
     testWidgets('should handle step images and visual content', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: RecipeScreen(recipeData: sampleRecipeData),
         ),
       );
 
@@ -121,13 +121,13 @@ void main() {
       expect(steps.length, greaterThan(0));
 
       // Test that method section renders without crashing
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       // Test scrolling to ensure images don't cause memory issues
-      await tester.drag(find.byType(main_screens.RecipeScreen), const Offset(0, -200));
+      await tester.drag(find.byType(RecipeScreen), const Offset(0, -200));
       await tester.pumpAndSettle();
       
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       print('✅ Method steps handle visual content correctly');
     });
@@ -142,13 +142,13 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: testData),
+          home: RecipeScreen(recipeData: testData),
         ),
       );
 
       // Should render without crashing even with invalid URLs
       await tester.pumpAndSettle();
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       // Should display the recipe name
       expect(find.textContaining(testData['drink_name']), findsAtLeastNWidgets(1));
@@ -159,7 +159,7 @@ void main() {
     testWidgets('should handle image loading states and errors', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: sampleRecipeData),
+          home: RecipeScreen(recipeData: sampleRecipeData),
         ),
       );
 
@@ -167,20 +167,20 @@ void main() {
       await tester.pump();
       
       // Should show loading state or render immediately
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       // Allow time for potential image loading
       await tester.pump(Duration(milliseconds: 500));
       
       // Should still be functional
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       expect(find.textContaining(sampleRecipeData['drink_name']), findsAtLeastNWidgets(1));
       
       // Test interaction during image loading
-      await tester.drag(find.byType(main_screens.RecipeScreen), const Offset(0, -100));
+      await tester.drag(find.byType(RecipeScreen), const Offset(0, -100));
       await tester.pumpAndSettle();
       
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       print('✅ App handles image loading states correctly');
     });
@@ -200,21 +200,21 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: main_screens.RecipeScreen(recipeData: heavyImageData),
+          home: RecipeScreen(recipeData: heavyImageData),
         ),
       );
 
       // Should handle many images without major performance issues
       await tester.pumpAndSettle();
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       // Test scrolling performance
       for (int i = 0; i < 3; i++) {
-        await tester.drag(find.byType(main_screens.RecipeScreen), const Offset(0, -200));
+        await tester.drag(find.byType(RecipeScreen), const Offset(0, -200));
         await tester.pump(Duration(milliseconds: 100));
       }
       
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       print('✅ App maintains performance with multiple images');
     });
