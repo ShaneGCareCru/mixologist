@@ -742,8 +742,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   children: [
                     _buildHeroSection(),
                     const SizedBox(height: iOSTheme.largePadding),
-                    _buildProgressSection(),
-                    const SizedBox(height: iOSTheme.largePadding),
                     _buildSectionPreviews(),
                   ],
                 ),
@@ -756,94 +754,458 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildHeroSection() {
-    return Container(
-      padding: iOSTheme.cardPadding,
-      decoration: iOSTheme.cardDecoration(context),
+    // Calculate image dimensions based on 2:3 aspect ratio (width:height)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final imageWidth = (screenWidth - iOSTheme.screenPadding.horizontal - iOSTheme.mediumPadding) * 2/3;
+    final imageHeight = imageWidth * 3/2; // 2:3 ratio means height = width * 1.5
+    
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left side - 2/3 width for image with proper 2:3 aspect ratio
+        if (_currentImageBytes != null)
+          Container(
+            width: imageWidth,
+            height: imageHeight,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(iOSTheme.mediumRadius),
+              image: DecorationImage(
+                image: MemoryImage(_currentImageBytes!),
+                fit: BoxFit.contain, // Use contain to show full image without cropping
+              ),
+            ),
+          ),
+        const SizedBox(width: iOSTheme.mediumPadding),
+        // Right side - 1/3 width for comprehensive info (in a card)
+        Expanded(
+          child: Container(
+            height: imageHeight, // Match the image height
+            padding: iOSTheme.cardPadding,
+            decoration: iOSTheme.cardDecoration(context),
+            child: _buildComprehensiveInfoPanel(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildComprehensiveInfoPanel() {
+    return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.recipeData['name'] ?? widget.recipeData['drink_name'] ?? 'Recipe',
-                      style: iOSTheme.largeTitle,
-                    ),
-                    const SizedBox(height: iOSTheme.smallPadding),
-                    if (widget.recipeData['description'] != null)
-                      Text(
-                        widget.recipeData['description'] as String,
-                        style: iOSTheme.body.copyWith(
-                          color: CupertinoColors.secondaryLabel,
-                        ),
-                      ),
-                  ],
-                ),
+          // Title and description
+          Text(
+            widget.recipeData['name'] ?? widget.recipeData['drink_name'] ?? 'Recipe',
+            style: iOSTheme.title2.copyWith(fontWeight: FontWeight.bold),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: iOSTheme.smallPadding),
+          if (widget.recipeData['description'] != null)
+            Text(
+              widget.recipeData['description'] as String,
+              style: iOSTheme.caption1.copyWith(
+                color: CupertinoColors.secondaryLabel,
               ),
-              if (_currentImageBytes != null)
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(iOSTheme.mediumRadius),
-                    image: DecorationImage(
-                      image: MemoryImage(_currentImageBytes!),
-                      fit: BoxFit.cover,
-                    ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          const SizedBox(height: iOSTheme.mediumPadding),
+          
+          // Progress Section (moved from below)
+          _buildCompactProgress(),
+          const SizedBox(height: iOSTheme.mediumPadding),
+          
+          // Quick Facts
+          _buildCondensedFacts(),
+          const SizedBox(height: iOSTheme.mediumPadding),
+          
+          // History sections
+          _buildHistorySection(),
+          const SizedBox(height: iOSTheme.mediumPadding),
+          
+          // Trivia sections  
+          _buildTriviaSection(),
+          const SizedBox(height: iOSTheme.mediumPadding),
+          
+          // Variations and Similar Drinks
+          _buildVariationsSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactProgress() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Progress',
+          style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: iOSTheme.smallPadding),
+        Row(
+          children: [
+            DrinkProgressGlass(progress: _currentDrinkProgress, width: 20, height: 30),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getProgressText(),
+                    style: iOSTheme.caption1.copyWith(fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-            ],
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: _stepCompletion.isNotEmpty 
+                        ? _stepCompletion.values.where((v) => v).length / _stepCompletion.length
+                        : 0,
+                    backgroundColor: CupertinoColors.systemGrey5,
+                    color: iOSTheme.whiskey,
+                    minHeight: 3,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCondensedFacts() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Facts',
+          style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: iOSTheme.smallPadding),
+        
+        // Glass type
+        if (widget.recipeData['serving_glass'] != null)
+          _buildFactRow(
+            'Glass',
+            widget.recipeData['serving_glass'].toString(),
+            CupertinoIcons.circle,
+          ),
+        
+        // Alcohol content or spirit base
+        if (widget.recipeData['ingredients'] is List)
+          _buildFactRow(
+            'Base',
+            _getPrimarySpirit(),
+            CupertinoIcons.drop,
+          ),
+        
+        // Preparation method
+        _buildFactRow(
+          'Method',
+          _getPreparationMethod(),
+          CupertinoIcons.gear,
+        ),
+        
+        // Difficulty or category
+        if (widget.recipeData['category'] != null)
+          _buildFactRow(
+            'Style',
+            widget.recipeData['category'].toString(),
+            CupertinoIcons.tag,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildHistorySection() {
+    final drinkHistory = widget.recipeData['drink_history'];
+    if (drinkHistory == null || drinkHistory.toString().trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'History',
+          style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: iOSTheme.smallPadding),
+        Text(
+          drinkHistory.toString(),
+          style: iOSTheme.caption2.copyWith(
+            color: CupertinoColors.secondaryLabel,
+          ),
+          maxLines: 6,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTriviaSection() {
+    final drinkTrivia = widget.recipeData['drink_trivia'];
+    if (drinkTrivia == null || (drinkTrivia is List && drinkTrivia.isEmpty)) {
+      return const SizedBox.shrink();
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Trivia',
+          style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: iOSTheme.smallPadding),
+        
+        // Display trivia facts from the array
+        if (drinkTrivia is List)
+          ...drinkTrivia.map<Widget>((triviaItem) {
+            if (triviaItem is Map) {
+              final fact = triviaItem['fact']?.toString() ?? '';
+              final category = triviaItem['category']?.toString() ?? '';
+              
+              if (fact.isNotEmpty) {
+                return _buildTriviaItem(fact, category);
+              }
+            }
+            return const SizedBox.shrink();
+          }),
+      ],
+    );
+  }
+
+  Widget _buildTriviaItem(String fact, String category) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (category.isNotEmpty)
+            Text(
+              category,
+              style: iOSTheme.caption1.copyWith(
+                fontWeight: FontWeight.w600,
+                color: iOSTheme.whiskey,
+              ),
+            ),
+          const SizedBox(height: 2),
+          Text(
+            fact,
+            style: iOSTheme.caption2.copyWith(
+              color: CupertinoColors.secondaryLabel,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProgressSection() {
-    return Container(
-      padding: iOSTheme.cardPadding,
-      decoration: iOSTheme.cardDecoration(context),
+  Widget _buildVariationsSection() {
+    final relatedCocktails = widget.recipeData['related_cocktails'];
+    final suggestedVariations = widget.recipeData['suggested_variations'];
+    
+    if ((relatedCocktails == null || (relatedCocktails is List && relatedCocktails.isEmpty)) &&
+        (suggestedVariations == null || (suggestedVariations is List && suggestedVariations.isEmpty))) {
+      return const SizedBox.shrink();
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Related Drinks',
+          style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: iOSTheme.smallPadding),
+        
+        // Related Cocktails
+        if (relatedCocktails is List && relatedCocktails.isNotEmpty)
+          _buildRelatedCocktailsList(relatedCocktails),
+        
+        // Suggested Variations
+        if (suggestedVariations is List && suggestedVariations.isNotEmpty) ...[
+          const SizedBox(height: iOSTheme.smallPadding),
+          _buildVariationsList(suggestedVariations),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildRelatedCocktailsList(List relatedCocktails) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Similar Cocktails',
+          style: iOSTheme.caption1.copyWith(
+            fontWeight: FontWeight.w600,
+            color: iOSTheme.whiskey,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: relatedCocktails.take(6).map<Widget>((cocktail) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: CupertinoColors.systemGrey6,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                cocktail.toString(),
+                style: iOSTheme.caption2.copyWith(
+                  color: CupertinoColors.label,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVariationsList(List variations) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Variations',
+          style: iOSTheme.caption1.copyWith(
+            fontWeight: FontWeight.w600,
+            color: iOSTheme.whiskey,
+          ),
+        ),
+        const SizedBox(height: 4),
+        ...variations.take(3).map<Widget>((variation) {
+          if (variation is Map) {
+            final name = variation['name']?.toString() ?? '';
+            final description = variation['description']?.toString() ?? '';
+            
+            if (name.isNotEmpty) {
+              return _buildVariationItem(name, description);
+            }
+          }
+          return const SizedBox.shrink();
+        }),
+      ],
+    );
+  }
+
+  Widget _buildVariationItem(String name, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Progress',
-            style: iOSTheme.title2,
+            name,
+            style: iOSTheme.caption2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: CupertinoColors.label,
+            ),
           ),
-          const SizedBox(height: iOSTheme.mediumPadding),
-          Row(
-            children: [
-              DrinkProgressGlass(progress: _currentDrinkProgress),
-              const SizedBox(width: iOSTheme.mediumPadding),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _getProgressText(),
-                      style: iOSTheme.headline,
-                    ),
-                    const SizedBox(height: iOSTheme.smallPadding),
-                    LinearProgressIndicator(
-                      value: _stepCompletion.isNotEmpty 
-                          ? _stepCompletion.values.where((v) => v).length / _stepCompletion.length
-                          : 0,
-                      backgroundColor: CupertinoColors.systemGrey5,
-                      color: iOSTheme.whiskey,
-                    ),
-                  ],
-                ),
+          if (description.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              description,
+              style: iOSTheme.caption2.copyWith(
+                color: CupertinoColors.secondaryLabel,
               ),
-            ],
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildFactRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: CupertinoColors.systemGrey,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: iOSTheme.caption1.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: CupertinoColors.label,
+                    ),
+                  ),
+                  TextSpan(
+                    text: value,
+                    style: iOSTheme.caption1.copyWith(
+                      color: CupertinoColors.secondaryLabel,
+                    ),
+                  ),
+                ],
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
     );
   }
+
+  String _getPrimarySpirit() {
+    final ingredients = widget.recipeData['ingredients'] as List? ?? [];
+    for (var ingredient in ingredients) {
+      final name = ingredient['name']?.toString().toLowerCase() ?? '';
+      if (name.contains('whiskey') || name.contains('bourbon') || name.contains('scotch')) {
+        return 'Whiskey';
+      } else if (name.contains('vodka')) {
+        return 'Vodka';
+      } else if (name.contains('gin')) {
+        return 'Gin';
+      } else if (name.contains('rum')) {
+        return 'Rum';
+      } else if (name.contains('tequila')) {
+        return 'Tequila';
+      }
+    }
+    return 'Mixed';
+  }
+
+  String _getPreparationMethod() {
+    final method = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+    if (method.isNotEmpty) {
+      final firstStep = method.first.toString().toLowerCase();
+      if (firstStep.contains('shake')) {
+        return 'Shaken';
+      } else if (firstStep.contains('stir')) {
+        return 'Stirred';
+      } else if (firstStep.contains('build')) {
+        return 'Built';
+      } else if (firstStep.contains('muddle')) {
+        return 'Muddled';
+      }
+    }
+    return 'Mixed';
+  }
+
 
   Widget _buildSectionPreviews() {
     return Column(
