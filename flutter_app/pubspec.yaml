@@ -30,9 +30,13 @@ dependencies:
   # Fuzzy search for cocktail name matching
   fuzzy: ^0.5.1
   liquid_progress_indicator: ^0.4.0
-  flutter_animate: ^4.2.0
+  flutter_animate: ^4.5.2
   particles_flutter: ^0.1.1
   flutter_riverpod: ^2.5.1
+  fast_noise: ^2.0.0
+  glassmorphism: ^2.0.0
+  shadows: ^1.0.0
+  parallax_animation: ^0.0.3
 
 
 flutter:
