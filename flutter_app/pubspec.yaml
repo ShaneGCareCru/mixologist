@@ -33,6 +33,11 @@ dependencies:
   flutter_animate: ^4.2.0
   particles_flutter: ^0.1.1
   flutter_riverpod: ^2.5.1
+  # Visual depth system dependencies
+  glassmorphism: ^3.0.0
+  shadows: ^1.0.1
+  perlin_noise_dart: ^1.1.0
+  parallax_animation: ^2.0.0
 
 
 flutter:
