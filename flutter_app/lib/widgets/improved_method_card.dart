@@ -34,9 +34,10 @@ class SafeMethodCardData {
     this.proTip,
     this.tipCategory,
   }) : imageAlt = imageAlt ?? 'Step $stepNumber technique illustration';
-  
+
   /// Factory method to create from potentially unsafe data
-  factory SafeMethodCardData.fromMap(Map<String, dynamic>? data, int stepNumber) {
+  factory SafeMethodCardData.fromMap(
+      Map<String, dynamic>? data, int stepNumber) {
     if (data == null) {
       return SafeMethodCardData(
         stepNumber: stepNumber,
@@ -44,39 +45,41 @@ class SafeMethodCardData {
         imageAlt: 'Step $stepNumber illustration',
       );
     }
-    
+
     return SafeMethodCardData(
       stepNumber: stepNumber,
       title: data['title']?.toString() ?? '',
-      description: data['description']?.toString() ?? 
-                  data['instruction']?.toString() ?? 
-                  'Step information will be available soon.',
+      description: data['description']?.toString() ??
+          data['instruction']?.toString() ??
+          'Step information will be available soon.',
       imageUrl: data['imageUrl']?.toString(),
       imageBytes: data['imageBytes'] as Uint8List?,
       isGenerating: data['isGenerating'] as bool? ?? false,
       imageAlt: data['imageAlt']?.toString() ?? 'Step $stepNumber illustration',
       isCompleted: data['isCompleted'] as bool? ?? false,
-      duration: data['duration']?.toString() ?? 
-               _estimateDuration(data['description']?.toString() ?? ''),
-      difficulty: data['difficulty']?.toString() ?? 
-                 _estimateDifficulty(data['description']?.toString() ?? ''),
+      duration: data['duration']?.toString() ??
+          _estimateDuration(data['description']?.toString() ?? ''),
+      difficulty: data['difficulty']?.toString() ??
+          _estimateDifficulty(data['description']?.toString() ?? ''),
       proTip: data['proTip']?.toString(),
       tipCategory: data['tipCategory'] as TipCategory?,
     );
   }
-  
+
   /// Create from simple string step (most common case)
   factory SafeMethodCardData.fromString(String stepText, int stepNumber) {
     return SafeMethodCardData(
       stepNumber: stepNumber,
-      description: stepText.isNotEmpty ? stepText : 'Step information will be available soon.',
+      description: stepText.isNotEmpty
+          ? stepText
+          : 'Step information will be available soon.',
       duration: _estimateDuration(stepText),
       difficulty: _estimateDifficulty(stepText),
       proTip: _generateProTip(stepText),
       tipCategory: _determineTipCategory(stepText),
     );
   }
-  
+
   static String _estimateDuration(String stepText) {
     final text = stepText.toLowerCase();
     if (text.contains('shake')) return '15 seconds';
@@ -87,18 +90,22 @@ class SafeMethodCardData {
     if (text.contains('chill') || text.contains('freeze')) return '2-5 minutes';
     return '30 seconds';
   }
-  
+
   static String _estimateDifficulty(String stepText) {
     final text = stepText.toLowerCase();
-    if (text.contains('muddle') || text.contains('flame') || text.contains('layer')) {
+    if (text.contains('muddle') ||
+        text.contains('flame') ||
+        text.contains('layer')) {
       return 'Advanced';
     }
-    if (text.contains('shake') || text.contains('double strain') || text.contains('express')) {
+    if (text.contains('shake') ||
+        text.contains('double strain') ||
+        text.contains('express')) {
       return 'Intermediate';
     }
     return 'Basic';
   }
-  
+
   static String? _generateProTip(String stepText) {
     final text = stepText.toLowerCase();
     if (text.contains('shake')) {
@@ -118,10 +125,12 @@ class SafeMethodCardData {
     }
     return null;
   }
-  
+
   static TipCategory? _determineTipCategory(String stepText) {
     final text = stepText.toLowerCase();
-    if (text.contains('shake') || text.contains('stir') || text.contains('muddle')) {
+    if (text.contains('shake') ||
+        text.contains('stir') ||
+        text.contains('muddle')) {
       return TipCategory.technique;
     }
     if (text.contains('strain')) {
@@ -155,9 +164,7 @@ enum TipCategory {
 }
 
 /// Haptic feedback types for better user experience
-enum HapticFeedbackType {
-  light, medium, heavy, selection, success, error
-}
+enum HapticFeedbackType { light, medium, heavy, selection, success, error }
 
 /// Method card states for visual feedback
 enum MethodCardState { defaultState, active, completed, loading }
@@ -173,7 +180,7 @@ class ImprovedMethodCard extends StatefulWidget {
   final VoidCallback? onGenerateImage;
   final bool enableSwipeGestures;
   final bool enableKeyboardNavigation;
-  final ValueChanged<bool>? onCheckboxChanged;
+  final ValueChanged<bool?>? onCheckboxChanged;
 
   const ImprovedMethodCard({
     super.key,
@@ -249,7 +256,7 @@ class _ImprovedMethodCardState extends State<ImprovedMethodCard>
     setState(() {
       _isSwipeInProgress = true;
     });
-    
+
     _swipeAnimationController.forward().then((_) {
       widget.onCompleted?.call();
       _swipeAnimationController.reverse().then((_) {
@@ -262,9 +269,10 @@ class _ImprovedMethodCardState extends State<ImprovedMethodCard>
     });
   }
 
-  void _triggerHapticFeedback([HapticFeedbackType type = HapticFeedbackType.light]) async {
+  void _triggerHapticFeedback(
+      [HapticFeedbackType type = HapticFeedbackType.light]) async {
     if (kIsWeb) return;
-    
+
     switch (type) {
       case HapticFeedbackType.light:
         HapticFeedback.lightImpact();
@@ -280,14 +288,17 @@ class _ImprovedMethodCardState extends State<ImprovedMethodCard>
         break;
       case HapticFeedbackType.success:
         if (await Vibration.hasVibrator() ?? false) {
-          Vibration.vibrate(pattern: [0, 100, 50, 100], intensities: [0, 128, 0, 255]);
+          Vibration.vibrate(
+              pattern: [0, 100, 50, 100], intensities: [0, 128, 0, 255]);
         } else {
           HapticFeedback.heavyImpact();
         }
         break;
       case HapticFeedbackType.error:
         if (await Vibration.hasVibrator() ?? false) {
-          Vibration.vibrate(pattern: [0, 200, 100, 200, 100, 200], intensities: [0, 255, 0, 255, 0, 255]);
+          Vibration.vibrate(
+              pattern: [0, 200, 100, 200, 100, 200],
+              intensities: [0, 255, 0, 255, 0, 255]);
         } else {
           HapticFeedback.heavyImpact();
         }
@@ -297,14 +308,14 @@ class _ImprovedMethodCardState extends State<ImprovedMethodCard>
 
   void _handleKeyPress(KeyEvent event) {
     if (!widget.enableKeyboardNavigation) return;
-    
+
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.space ||
           event.logicalKey == LogicalKeyboardKey.enter) {
         _triggerHapticFeedback(HapticFeedbackType.success);
         widget.onCompleted?.call();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
-                 event.logicalKey == LogicalKeyboardKey.backspace) {
+          event.logicalKey == LogicalKeyboardKey.backspace) {
         _triggerHapticFeedback(HapticFeedbackType.selection);
         widget.onPrevious?.call();
       } else if (event.logicalKey == LogicalKeyboardKey.escape) {
@@ -334,7 +345,8 @@ class _ImprovedMethodCardState extends State<ImprovedMethodCard>
 
     Widget cardContent = Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16), // Slightly smaller for modern look
+        borderRadius:
+            BorderRadius.circular(16), // Slightly smaller for modern look
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -344,7 +356,8 @@ class _ImprovedMethodCardState extends State<ImprovedMethodCard>
                   Colors.white.withOpacity(0.04),
                 ]
               : [
-                  const Color(0xFFF5F5DC).withOpacity(0.4), // Cream from design philosophy
+                  const Color(0xFFF5F5DC)
+                      .withOpacity(0.4), // Cream from design philosophy
                   const Color(0xFFF5F5DC).withOpacity(0.2),
                 ],
         ),
@@ -381,7 +394,8 @@ class _ImprovedMethodCardState extends State<ImprovedMethodCard>
               top: 12,
               left: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFFB8860B).withOpacity(0.9), // Amber
                   borderRadius: BorderRadius.circular(16),
@@ -485,7 +499,7 @@ class _ImprovedMethodCardState extends State<ImprovedMethodCard>
 
     // Add gesture and keyboard handling
     Widget interactiveCard = cardContent;
-    
+
     if (widget.enableSwipeGestures) {
       interactiveCard = GestureDetector(
         onPanEnd: (details) {

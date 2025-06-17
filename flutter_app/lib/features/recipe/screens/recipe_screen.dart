@@ -25,16 +25,17 @@ class _RecipeScreenState extends State<RecipeScreen> {
   String? _imageStreamError;
   bool _isImageStreamComplete = false;
   StreamSubscription<String>? _imageStreamSubscription; // Changed type
-  final http.Client _httpClient = http.Client(); // HTTP client for streaming request
-  
+  final http.Client _httpClient =
+      http.Client(); // HTTP client for streaming request
+
   // Epic 2: Interactive Recipe Components
   int _servingSize = 1;
   bool _isMetric = false; // false = oz, true = ml
   final Map<String, bool> _ingredientChecklist = {};
-  
+
   // Epic 3: Visual Recipe Steps
-  final Map<int, bool> _stepCompletion = {};
-  
+  final Map<int, bool?> _stepCompletion = {};
+
   // Dynamic Visual Generation System
   final Map<String, Uint8List?> _specializedImages = {};
   Map<String, bool> _imageGenerationProgress = {};
@@ -48,14 +49,16 @@ class _RecipeScreenState extends State<RecipeScreen> {
   int? _hoveredStep;
   bool _isGeneratingVisuals = false;
   bool _isLoadingRelatedCocktail = false;
-  
+
   DrinkProgress get _currentDrinkProgress {
     // Check if Mise En Place is complete
     if (_stepCompletion[-1] != true) {
       return DrinkProgress.emptyGlass;
     }
-    
-    final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+
+    final steps =
+        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
+            [];
     int completedRecipeSteps = 0;
     for (int i = 0; i < steps.length; i++) {
       if (_stepCompletion[i] == true) {
@@ -63,23 +66,27 @@ class _RecipeScreenState extends State<RecipeScreen> {
       }
     }
     final totalRecipeSteps = steps.length;
-    
+
     if (completedRecipeSteps == 0) return DrinkProgress.ingredientsAdded;
-    if (completedRecipeSteps < totalRecipeSteps * 0.4) return DrinkProgress.ingredientsAdded;
-    if (completedRecipeSteps < totalRecipeSteps * 0.8) return DrinkProgress.mixed;
+    if (completedRecipeSteps < totalRecipeSteps * 0.4)
+      return DrinkProgress.ingredientsAdded;
+    if (completedRecipeSteps < totalRecipeSteps * 0.8)
+      return DrinkProgress.mixed;
     if (completedRecipeSteps < totalRecipeSteps) return DrinkProgress.garnished;
     return DrinkProgress.complete;
   }
-  
+
   String _getProgressText() {
     // Check if Mise En Place is complete
     if (_stepCompletion[-1] != true) {
       return _getMiseEnPlaceDescription();
     }
-    
-    final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+
+    final steps =
+        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
+            [];
     if (steps.isEmpty) return 'No steps available';
-    
+
     // Find the next incomplete step
     int nextStepIndex = -1;
     for (int i = 0; i < steps.length; i++) {
@@ -88,7 +95,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
         break;
       }
     }
-    
+
     if (nextStepIndex == -1) {
       // All recipe steps complete - show flavor profile
       return _getFlavorProfileDescription();
@@ -96,16 +103,18 @@ class _RecipeScreenState extends State<RecipeScreen> {
       return 'Step ${nextStepIndex + 1}: ${steps[nextStepIndex]}';
     }
   }
-  
+
   int _getCurrentStepIndex() {
     // Check if Mise En Place is complete
     if (_stepCompletion[-1] != true) {
       return -1; // Mise En Place
     }
-    
-    final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+
+    final steps =
+        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
+            [];
     if (steps.isEmpty) return -2; // No steps available
-    
+
     // Find the next incomplete step
     for (int i = 0; i < steps.length; i++) {
       if (_stepCompletion[i] != true) {
@@ -119,9 +128,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
     final ingredients = widget.recipeData['ingredients'] as List? ?? [];
     final glassware = widget.recipeData['serving_glass'] ?? '';
     final equipment = widget.recipeData['equipment_needed'] as List? ?? [];
-    
+
     List<String> allItems = [];
-    
+
     // Add ingredient names only (no quantities)
     for (var ingredient in ingredients) {
       final name = ingredient['name']?.toString() ?? '';
@@ -129,24 +138,26 @@ class _RecipeScreenState extends State<RecipeScreen> {
         allItems.add(name);
       }
     }
-    
+
     // Add glassware
     if (glassware.isNotEmpty) {
       allItems.add(glassware);
     }
-    
+
     // Add equipment
     for (var eq in equipment) {
-      final equipmentName = eq is Map ? (eq['item'] ?? eq['name'] ?? eq.toString()) : eq.toString();
+      final equipmentName = eq is Map
+          ? (eq['item'] ?? eq['name'] ?? eq.toString())
+          : eq.toString();
       if (equipmentName.isNotEmpty) {
         allItems.add(equipmentName);
       }
     }
-    
+
     if (allItems.isEmpty) {
       return 'Mise En Place - Ready to start!';
     }
-    
+
     return 'Gather the following: ${allItems.join(', ')}.';
   }
 
@@ -155,40 +166,42 @@ class _RecipeScreenState extends State<RecipeScreen> {
     if (flavorProfile.isEmpty) {
       return 'Cocktail complete! Enjoy your drink! 🍹';
     }
-    
+
     String description = 'Tasting Notes - What to expect:\n\n';
-    
+
     // Primary flavors
     if (flavorProfile['primary_flavors'] is List) {
-      final primaryFlavors = (flavorProfile['primary_flavors'] as List).join(', ');
+      final primaryFlavors =
+          (flavorProfile['primary_flavors'] as List).join(', ');
       description += 'Primary Flavors: $primaryFlavors\n\n';
     }
-    
+
     // Secondary notes
     if (flavorProfile['secondary_notes'] is List) {
-      final secondaryNotes = (flavorProfile['secondary_notes'] as List).join(', ');
+      final secondaryNotes =
+          (flavorProfile['secondary_notes'] as List).join(', ');
       description += 'Secondary Notes: $secondaryNotes\n\n';
     }
-    
+
     // Mouthfeel
     if (flavorProfile['mouthfeel'] != null) {
       description += 'Mouthfeel: ${flavorProfile['mouthfeel']}\n\n';
     }
-    
+
     // Finish
     if (flavorProfile['finish'] != null) {
       description += 'Finish: ${flavorProfile['finish']}\n\n';
     }
-    
+
     // Balance
     if (flavorProfile['balance'] != null) {
       description += 'Balance: ${flavorProfile['balance']}';
     }
-    
+
     return description.trim();
   }
 
-  void _toggleStepCompleted(int stepIndex, bool completed) {
+  void _toggleStepCompleted(int stepIndex, bool? completed) {
     setState(() {
       _stepCompletion[stepIndex] = completed;
     });
@@ -198,7 +211,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
   String? _getProTipForStep(String stepText) {
     // Simple pro tip generation based on step content
     final stepLower = stepText.toLowerCase();
-    
+
     if (stepLower.contains('shake') || stepLower.contains('shaking')) {
       return 'Shake vigorously for 10-15 seconds to properly chill and dilute the drink.';
     } else if (stepLower.contains('stir') || stepLower.contains('stirring')) {
@@ -210,48 +223,64 @@ class _RecipeScreenState extends State<RecipeScreen> {
     } else if (stepLower.contains('muddle')) {
       return 'Muddle gently to release oils without creating bitter flavors from over-crushing.';
     }
-    
+
     return null; // No pro tip for this step
   }
 
   TipCategory? _getTipCategoryForStep(String stepText) {
     final stepLower = stepText.toLowerCase();
-    
-    if (stepLower.contains('shake') || stepLower.contains('shaking') ||
-        stepLower.contains('stir') || stepLower.contains('stirring') ||
+
+    if (stepLower.contains('shake') ||
+        stepLower.contains('shaking') ||
+        stepLower.contains('stir') ||
+        stepLower.contains('stirring') ||
         stepLower.contains('muddle')) {
       return TipCategory.technique;
     } else if (stepLower.contains('strain')) {
       return TipCategory.equipment;
     } else if (stepLower.contains('garnish') || stepLower.contains('serve')) {
       return TipCategory.presentation;
-    } else if (stepLower.contains('chill') || stepLower.contains('temperature')) {
+    } else if (stepLower.contains('chill') ||
+        stepLower.contains('temperature')) {
       return TipCategory.timing;
     } else if (stepLower.contains('fresh') || stepLower.contains('quality')) {
       return TipCategory.ingredient;
     }
-    
+
     return null;
   }
 
   IconData _getIngredientIcon(String ingredientName) {
     final nameLower = ingredientName.toLowerCase();
-    
-    if (nameLower.contains('whiskey') || nameLower.contains('bourbon') || nameLower.contains('scotch')) {
+
+    if (nameLower.contains('whiskey') ||
+        nameLower.contains('bourbon') ||
+        nameLower.contains('scotch')) {
       return Icons.local_bar;
-    } else if (nameLower.contains('vodka') || nameLower.contains('gin') || nameLower.contains('rum')) {
+    } else if (nameLower.contains('vodka') ||
+        nameLower.contains('gin') ||
+        nameLower.contains('rum')) {
       return Icons.local_bar;
-    } else if (nameLower.contains('lemon') || nameLower.contains('lime') || nameLower.contains('orange')) {
+    } else if (nameLower.contains('lemon') ||
+        nameLower.contains('lime') ||
+        nameLower.contains('orange')) {
       return Icons.circle;
-    } else if (nameLower.contains('syrup') || nameLower.contains('honey') || nameLower.contains('sugar')) {
+    } else if (nameLower.contains('syrup') ||
+        nameLower.contains('honey') ||
+        nameLower.contains('sugar')) {
       return Icons.water_drop;
-    } else if (nameLower.contains('bitters') || nameLower.contains('vermouth')) {
+    } else if (nameLower.contains('bitters') ||
+        nameLower.contains('vermouth')) {
       return Icons.opacity;
     } else if (nameLower.contains('ice') || nameLower.contains('water')) {
       return Icons.ac_unit;
-    } else if (nameLower.contains('mint') || nameLower.contains('herb') || nameLower.contains('basil')) {
+    } else if (nameLower.contains('mint') ||
+        nameLower.contains('herb') ||
+        nameLower.contains('basil')) {
       return Icons.eco;
-    } else if (nameLower.contains('cherry') || nameLower.contains('olive') || nameLower.contains('garnish')) {
+    } else if (nameLower.contains('cherry') ||
+        nameLower.contains('olive') ||
+        nameLower.contains('garnish')) {
       return Icons.circle_outlined;
     } else {
       return Icons.local_grocery_store;
@@ -265,14 +294,17 @@ class _RecipeScreenState extends State<RecipeScreen> {
     _initializeSpecializedImages();
     _initializeStepConnections();
     _loadCachedImages(); // Check for existing cached images
-    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreExpandedFromHash());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _restoreExpandedFromHash());
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Call _connectToImageStream here where MediaQuery is available
-    if (!_isImageStreamComplete && _currentImageBytes == null && _imageStreamError == null) {
+    if (!_isImageStreamComplete &&
+        _currentImageBytes == null &&
+        _imageStreamError == null) {
       _connectToImageStream();
     }
   }
@@ -288,7 +320,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
         _expandedSection = null;
       } else {
         _expandedSection = id;
-        
+
         // Auto-generate ingredient images when ingredients section is expanded
         if (id == 'ingredients') {
           _autoGenerateIngredientImages();
@@ -302,11 +334,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
       for (var ingredient in widget.recipeData['ingredients']) {
         final ingredientName = ingredient['name'];
         final imageKey = 'ingredient_$ingredientName';
-        
+
         // Only generate if we don't already have the image and aren't currently generating
-        if (_specializedImages[imageKey] == null && 
+        if (_specializedImages[imageKey] == null &&
             _imageGenerationProgress[imageKey] != true) {
-          _generateSpecializedImage(imageKey, ingredientName, context: 'ingredient');
+          _generateSpecializedImage(imageKey, ingredientName,
+              context: 'ingredient');
         }
       }
     }
@@ -314,14 +347,16 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
   bool _ingredientActive(String name) {
     if (_hoveredStep == null) return false;
-    return _stepIngredientMap[_hoveredStep!]?.contains(name.toLowerCase()) ?? false;
+    return _stepIngredientMap[_hoveredStep!]?.contains(name.toLowerCase()) ??
+        false;
   }
 
   bool _equipmentActive(String name) {
     if (_hoveredStep == null) return false;
-    return _stepEquipmentMap[_hoveredStep!]?.contains(name.toLowerCase()) ?? false;
+    return _stepEquipmentMap[_hoveredStep!]?.contains(name.toLowerCase()) ??
+        false;
   }
-  
+
   void _initializeSpecializedImages() {
     _specializedImages.clear();
     _specializedImages.addAll({
@@ -332,7 +367,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       'glassware': false,
       'garnish': false,
     };
-    
+
     // Initialize ingredient images
     if (widget.recipeData['ingredients'] is List) {
       for (var ingredient in widget.recipeData['ingredients']) {
@@ -341,19 +376,24 @@ class _RecipeScreenState extends State<RecipeScreen> {
         _imageGenerationProgress['ingredient_$ingredientName'] = false;
       }
     }
-    
+
     // Initialize equipment images - handle both new and old data format
-    final equipmentList = widget.recipeData['equipment_needed'] ?? widget.recipeData['equipment'] ?? [];
+    final equipmentList = widget.recipeData['equipment_needed'] ??
+        widget.recipeData['equipment'] ??
+        [];
     if (equipmentList is List) {
       for (var equipment in equipmentList) {
-        final equipmentName = equipment is Map ? (equipment['item'] ?? equipment['name'] ?? equipment.toString()) : equipment.toString();
+        final equipmentName = equipment is Map
+            ? (equipment['item'] ?? equipment['name'] ?? equipment.toString())
+            : equipment.toString();
         _specializedImages['equipment_$equipmentName'] = null;
         _imageGenerationProgress['equipment_$equipmentName'] = false;
       }
     }
-    
+
     // Initialize method/step images - handle both 'steps' and 'method' keys
-    final stepsList = widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final stepsList =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
     if (stepsList is List) {
       for (int i = 0; i < stepsList.length; i++) {
         _specializedImages['method_step_$i'] = null;
@@ -361,7 +401,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       }
     }
   }
-  
+
   // Load cached images by checking endpoints without generating new ones
   Future<void> _loadCachedImages() async {
     // Try to load glassware
@@ -369,13 +409,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
     if (glassType != null && glassType.isNotEmpty) {
       await _checkCachedImage('glassware', glassType);
     }
-    
+
     // Try to load garnish
     final garnishes = widget.recipeData['garnish'];
     if (garnishes is List && garnishes.isNotEmpty) {
       await _checkCachedImage('garnish', garnishes.first);
     }
-    
+
     // Try to load ALL ingredient images
     if (widget.recipeData['ingredients'] is List) {
       final ingredients = widget.recipeData['ingredients'] as List;
@@ -386,24 +426,28 @@ class _RecipeScreenState extends State<RecipeScreen> {
         await Future.delayed(const Duration(milliseconds: 100));
       }
     }
-    
+
     // Try to load equipment images
-    final equipmentList = widget.recipeData['equipment_needed'] ?? widget.recipeData['equipment'] ?? [];
+    final equipmentList = widget.recipeData['equipment_needed'] ??
+        widget.recipeData['equipment'] ??
+        [];
     if (equipmentList is List) {
       for (var item in equipmentList) {
-        final equipmentName = item is Map ? (item['item'] ?? item['name'] ?? item.toString()) : item.toString();
+        final equipmentName = item is Map
+            ? (item['item'] ?? item['name'] ?? item.toString())
+            : item.toString();
         await _checkCachedImage('equipment_$equipmentName', equipmentName);
         await Future.delayed(const Duration(milliseconds: 100));
       }
     }
   }
-  
+
   // Check if an image is cached on the server and load it if available
   Future<void> _checkCachedImage(String imageType, String subject) async {
     try {
       String endpoint;
       Map<String, String> bodyFields;
-      
+
       // Determine endpoint based on image type
       if (imageType == 'glassware') {
         endpoint = 'generate_glassware_image';
@@ -420,14 +464,15 @@ class _RecipeScreenState extends State<RecipeScreen> {
       } else {
         return;
       }
-      
-      final request = http.Request('POST', Uri.parse('http://127.0.0.1:8081/$endpoint'));
-      request.headers.addAll({"Accept": "text/event-stream", "Cache-Control": "no-cache"});
+
+      final request =
+          http.Request('POST', Uri.parse('http://127.0.0.1:8081/$endpoint'));
+      request.headers
+          .addAll({"Accept": "text/event-stream", "Cache-Control": "no-cache"});
       request.bodyFields = bodyFields;
-      
+
       final http.StreamedResponse response = await _httpClient.send(request);
       if (response.statusCode == 200) {
-        
         response.stream
             .transform(utf8.decoder)
             .transform(const LineSplitter())
@@ -437,10 +482,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
               final eventDataString = line.substring('data: '.length);
               try {
                 final jsonData = jsonDecode(eventDataString);
-                if (jsonData['type'] == 'partial_image' && jsonData['b64_data'] != null) {
+                if (jsonData['type'] == 'partial_image' &&
+                    jsonData['b64_data'] != null) {
                   if (mounted) {
                     setState(() {
-                      _specializedImages[imageType] = base64Decode(jsonData['b64_data']);
+                      _specializedImages[imageType] =
+                          base64Decode(jsonData['b64_data']);
                     });
                   }
                 }
@@ -468,27 +515,34 @@ class _RecipeScreenState extends State<RecipeScreen> {
         _ingredientChecklist[ingredient['name']] = false;
       }
     }
-    
+
     // Initialize Mise En Place step (step -1)
     _stepCompletion[-1] = false;
-    
+
     // Epic 3: Initialize step completion tracking
-    final stepsList = widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final stepsList =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
     if (stepsList is List) {
       for (int i = 0; i < stepsList.length; i++) {
         _stepCompletion[i] = false;
       }
     }
-    
+
     // Load saved progress
     _loadProgress();
   }
 
   String _getRecipeKey() {
     // Generate a unique key for this recipe based on its content
-    final recipeName = widget.recipeData['name'] ?? widget.recipeData['drink_name'] ?? 'unknown';
-    final ingredientCount = (widget.recipeData['ingredients'] as List?)?.length ?? 0;
-    final stepCount = ((widget.recipeData['steps'] ?? widget.recipeData['method']) as List?)?.length ?? 0;
+    final recipeName = widget.recipeData['name'] ??
+        widget.recipeData['drink_name'] ??
+        'unknown';
+    final ingredientCount =
+        (widget.recipeData['ingredients'] as List?)?.length ?? 0;
+    final stepCount =
+        ((widget.recipeData['steps'] ?? widget.recipeData['method']) as List?)
+                ?.length ??
+            0;
     return '${recipeName}_${ingredientCount}_$stepCount';
   }
 
@@ -496,17 +550,17 @@ class _RecipeScreenState extends State<RecipeScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final recipeKey = _getRecipeKey();
-      
+
       // Save ingredient checklist
       for (String ingredient in _ingredientChecklist.keys) {
-        await prefs.setBool('${recipeKey}_ingredient_$ingredient', 
+        await prefs.setBool('${recipeKey}_ingredient_$ingredient',
             _ingredientChecklist[ingredient] ?? false);
       }
-      
+
       // Save step completion
       for (int step in _stepCompletion.keys) {
-        await prefs.setBool('${recipeKey}_step_$step', 
-            _stepCompletion[step] ?? false);
+        await prefs.setBool(
+            '${recipeKey}_step_$step', _stepCompletion[step] ?? false);
       }
     } catch (e) {
       debugPrint('Error saving progress: $e');
@@ -517,7 +571,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final recipeKey = _getRecipeKey();
-      
+
       // Load ingredient checklist
       final ingredientKeys = _ingredientChecklist.keys.toList();
       for (String ingredient in ingredientKeys) {
@@ -526,7 +580,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
           _ingredientChecklist[ingredient] = saved;
         }
       }
-      
+
       // Load step completion
       final stepKeys = _stepCompletion.keys.toList();
       for (int step in stepKeys) {
@@ -535,7 +589,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
           _stepCompletion[step] = saved;
         }
       }
-      
+
       // Update UI if any progress was loaded
       if (mounted) {
         setState(() {});
@@ -550,20 +604,26 @@ class _RecipeScreenState extends State<RecipeScreen> {
             ?.map((e) => e['name'].toString().toLowerCase())
             .toList() ??
         [];
-    final equipmentList = widget.recipeData['equipment_needed'] ?? widget.recipeData['equipment'] ?? [];
+    final equipmentList = widget.recipeData['equipment_needed'] ??
+        widget.recipeData['equipment'] ??
+        [];
     final equipment = (equipmentList as List?)
-            ?.map((e) => (e is Map ? (e['item'] ?? e['name'] ?? e.toString()) : e.toString()).toLowerCase())
+            ?.map((e) => (e is Map
+                    ? (e['item'] ?? e['name'] ?? e.toString())
+                    : e.toString())
+                .toLowerCase())
             .toList() ??
         [];
-    final stepsList = widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final stepsList =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
     final steps = (stepsList as List?)?.map((e) => e.toString()) ?? [];
-    
+
     // Initialize step card keys
     _stepCardKeys.clear();
     for (int i = 0; i < steps.length; i++) {
       _stepCardKeys.add(GlobalKey());
     }
-    
+
     int idx = 0;
     for (final step in steps) {
       final stepLower = step.toLowerCase();
@@ -578,18 +638,18 @@ class _RecipeScreenState extends State<RecipeScreen> {
       idx++;
     }
   }
-  
+
   // Epic 2: Task 2.1 - Serving Size Calculator Logic
   String _scaleIngredientAmount(String originalAmount, int servings) {
     // Extract number from amount string (e.g., "2 oz" -> 2.0)
     final RegExp numberRegex = RegExp(r'(\d+(?:\.\d+)?)');
     final match = numberRegex.firstMatch(originalAmount);
-    
+
     if (match != null) {
       final double baseAmount = double.parse(match.group(1)!);
       final double scaledAmount = baseAmount * servings;
       final String unit = originalAmount.replaceAll(numberRegex, '').trim();
-      
+
       // Epic 2: Task 2.2 - Unit conversion
       if (_isMetric && unit.toLowerCase().contains('oz')) {
         final double mlAmount = scaledAmount * 29.5735;
@@ -598,30 +658,32 @@ class _RecipeScreenState extends State<RecipeScreen> {
         final double ozAmount = scaledAmount / 29.5735;
         return '${ozAmount.toStringAsFixed(1)} oz';
       }
-      
+
       return '${scaledAmount % 1 == 0 ? scaledAmount.toInt() : scaledAmount.toStringAsFixed(1)} $unit';
     }
-    
+
     return originalAmount; // Return original if no number found
   }
-  
+
   // Specialized Image Generation Functions
-  Future<void> _generateSpecializedImage(String imageType, String subject, {String context = ""}) async {
+  Future<void> _generateSpecializedImage(String imageType, String subject,
+      {String context = ""}) async {
     if (_imageGenerationProgress[imageType] == true) return;
-    
+
     setState(() {
       _imageGenerationProgress[imageType] = true;
     });
-    
+
     String endpoint;
     Map<String, String> bodyFields;
-    
+
     // Determine endpoint and parameters based on image type
     if (imageType == 'glassware') {
       endpoint = 'generate_glassware_image';
       bodyFields = {
         'glass_type': subject,
-        'drink_context': widget.recipeData['drink_name'] ?? widget.recipeData['name'] ?? '',
+        'drink_context':
+            widget.recipeData['drink_name'] ?? widget.recipeData['name'] ?? '',
       };
     } else if (imageType == 'garnish') {
       endpoint = 'generate_garnish_image';
@@ -633,9 +695,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
       endpoint = 'generate_ingredient_image';
       bodyFields = {
         'ingredient_name': subject,
-        'drink_context': widget.recipeData['drink_name'] ?? widget.recipeData['name'] ?? '',
+        'drink_context':
+            widget.recipeData['drink_name'] ?? widget.recipeData['name'] ?? '',
       };
-    } else if (imageType.startsWith('method_') || imageType.startsWith('step_')) {
+    } else if (imageType.startsWith('method_') ||
+        imageType.startsWith('step_')) {
       endpoint = 'generate_method_image';
       bodyFields = {
         'step_text': subject,
@@ -645,19 +709,22 @@ class _RecipeScreenState extends State<RecipeScreen> {
       endpoint = 'generate_equipment_image';
       bodyFields = {
         'equipment_name': subject,
-        'drink_context': widget.recipeData['drink_name'] ?? widget.recipeData['name'] ?? '',
+        'drink_context':
+            widget.recipeData['drink_name'] ?? widget.recipeData['name'] ?? '',
       };
     } else {
       return; // Unknown image type
     }
-    
-    final request = http.Request('POST', Uri.parse('http://127.0.0.1:8081/$endpoint'));
-    request.headers.addAll({"Accept": "text/event-stream", "Cache-Control": "no-cache"});
+
+    final request =
+        http.Request('POST', Uri.parse('http://127.0.0.1:8081/$endpoint'));
+    request.headers
+        .addAll({"Accept": "text/event-stream", "Cache-Control": "no-cache"});
     request.bodyFields = bodyFields;
-    
+
     try {
       final http.StreamedResponse response = await _httpClient.send(request);
-      
+
       if (response.statusCode == 200) {
         response.stream
             .transform(utf8.decoder)
@@ -668,10 +735,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
               final eventDataString = line.substring('data: '.length);
               try {
                 final jsonData = jsonDecode(eventDataString);
-                if (jsonData['type'] == 'partial_image' && jsonData['b64_data'] != null) {
+                if (jsonData['type'] == 'partial_image' &&
+                    jsonData['b64_data'] != null) {
                   if (mounted) {
                     setState(() {
-                      _specializedImages[imageType] = base64Decode(jsonData['b64_data']);
+                      _specializedImages[imageType] =
+                          base64Decode(jsonData['b64_data']);
                     });
                   }
                 } else if (jsonData['type'] == 'stream_complete') {
@@ -726,36 +795,47 @@ class _RecipeScreenState extends State<RecipeScreen> {
       _isImageStreamComplete = false;
     });
 
-    final imageDescription = widget.recipeData['drink_image_description'] ?? 'A delicious cocktail.';
-    final drinkName = widget.recipeData['drink_name'] ?? widget.recipeData['name'] ?? 'Cocktail';
+    final imageDescription =
+        widget.recipeData['drink_image_description'] ?? 'A delicious cocktail.';
+    final drinkName = widget.recipeData['drink_name'] ??
+        widget.recipeData['name'] ??
+        'Cocktail';
     final servingGlass = widget.recipeData['serving_glass'] ?? '';
     final ingredients = widget.recipeData['ingredients'];
 
     // Get device screen information for optimal image sizing
     final screenSize = MediaQuery.of(context).size;
     final pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    
+
     // Always use phone portrait size regardless of device orientation
     String preferredImageSize = '1024x1536'; // Phone portrait only
 
     _imageStreamSubscription?.cancel(); // Cancel previous subscription
 
-    final request = http.Request('POST', Uri.parse('http://127.0.0.1:8081/generate_image')); // Changed port to 8081
-    request.headers.addAll({"Accept": "text/event-stream", "Cache-Control": "no-cache"});
-    request.bodyFields = { // Use bodyFields for form data
-        'image_description': imageDescription,
-        'drink_query': drinkName,
-        'serving_glass': servingGlass,
-        'ingredients': jsonEncode(ingredients),
-        'steps': jsonEncode(widget.recipeData['steps'] ?? widget.recipeData['method'] ?? []),
-        'garnish': jsonEncode(widget.recipeData['garnish'] ?? []),
-        'equipment_needed': jsonEncode(widget.recipeData['equipment_needed'] ?? widget.recipeData['equipment'] ?? []),
-        // Device-aware image sizing for better iOS screen utilization
-        'image_size': preferredImageSize,
-        'screen_width': screenSize.width.toString(),
-        'screen_height': screenSize.height.toString(),
-        'pixel_ratio': pixelRatio.toString(),
-        'platform': 'ios', // Specify platform for backend optimizations
+    final request = http.Request(
+        'POST',
+        Uri.parse(
+            'http://127.0.0.1:8081/generate_image')); // Changed port to 8081
+    request.headers
+        .addAll({"Accept": "text/event-stream", "Cache-Control": "no-cache"});
+    request.bodyFields = {
+      // Use bodyFields for form data
+      'image_description': imageDescription,
+      'drink_query': drinkName,
+      'serving_glass': servingGlass,
+      'ingredients': jsonEncode(ingredients),
+      'steps': jsonEncode(
+          widget.recipeData['steps'] ?? widget.recipeData['method'] ?? []),
+      'garnish': jsonEncode(widget.recipeData['garnish'] ?? []),
+      'equipment_needed': jsonEncode(widget.recipeData['equipment_needed'] ??
+          widget.recipeData['equipment'] ??
+          []),
+      // Device-aware image sizing for better iOS screen utilization
+      'image_size': preferredImageSize,
+      'screen_width': screenSize.width.toString(),
+      'screen_height': screenSize.height.toString(),
+      'pixel_ratio': pixelRatio.toString(),
+      'platform': 'ios', // Specify platform for backend optimizations
     };
 
     try {
@@ -775,7 +855,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 if (jsonData['type'] != null) {
                   debugPrint("SSE Event: ${jsonData['type']}");
                 }
-                if (jsonData['type'] == 'partial_image' && jsonData['b64_data'] != null) {
+                if (jsonData['type'] == 'partial_image' &&
+                    jsonData['b64_data'] != null) {
                   if (mounted) {
                     setState(() {
                       _currentImageBytes = base64Decode(jsonData['b64_data']);
@@ -784,14 +865,17 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   }
                 } else if (jsonData['type'] == 'stream_complete') {
                   if (mounted) {
-                    setState(() { _isImageStreamComplete = true; });
+                    setState(() {
+                      _isImageStreamComplete = true;
+                    });
                   }
                   debugPrint("Image stream complete from server.");
-                  _imageStreamSubscription?.cancel(); 
+                  _imageStreamSubscription?.cancel();
                 } else if (jsonData['type'] == 'error') {
                   if (mounted) {
                     setState(() {
-                      _imageStreamError = jsonData['message'] ?? 'Unknown stream error';
+                      _imageStreamError =
+                          jsonData['message'] ?? 'Unknown stream error';
                       _currentImageBytes = null;
                     });
                   }
@@ -799,30 +883,52 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   _imageStreamSubscription?.cancel();
                 }
               } catch (e) {
-                debugPrint("Error parsing SSE JSON data: $e. Data: ${eventDataString.length > 50 ? '${eventDataString.substring(0, 50)}...' : eventDataString}");
-                if (mounted) { setState(() { _imageStreamError = "Error parsing stream data."; });}
+                debugPrint(
+                    "Error parsing SSE JSON data: $e. Data: ${eventDataString.length > 50 ? '${eventDataString.substring(0, 50)}...' : eventDataString}");
+                if (mounted) {
+                  setState(() {
+                    _imageStreamError = "Error parsing stream data.";
+                  });
+                }
               }
             }
           },
           onError: (error) {
             debugPrint('SSE Stream Listen Error: $error');
-            if (mounted) { setState(() { _imageStreamError = 'SSE stream error: $error'; _currentImageBytes = null; });}
+            if (mounted) {
+              setState(() {
+                _imageStreamError = 'SSE stream error: $error';
+                _currentImageBytes = null;
+              });
+            }
           },
           onDone: () {
             debugPrint('SSE Stream Listen Done.');
-            if (mounted && !_isImageStreamComplete && _imageStreamError == null) {
-                 // setState(() { _imageStreamError = 'Image stream closed prematurely.'; });
+            if (mounted &&
+                !_isImageStreamComplete &&
+                _imageStreamError == null) {
+              // setState(() { _imageStreamError = 'Image stream closed prematurely.'; });
             }
           },
           cancelOnError: true,
         );
       } else {
-        debugPrint('SSE initial request failed: ${response.statusCode} ${response.reasonPhrase}');
-        if (mounted) { setState(() { _imageStreamError = 'Failed to connect to image stream: ${response.statusCode}';});}
+        debugPrint(
+            'SSE initial request failed: ${response.statusCode} ${response.reasonPhrase}');
+        if (mounted) {
+          setState(() {
+            _imageStreamError =
+                'Failed to connect to image stream: ${response.statusCode}';
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error sending SSE request: $e');
-      if (mounted) { setState(() { _imageStreamError = 'Error connecting to image stream: $e';});}
+      if (mounted) {
+        setState(() {
+          _imageStreamError = 'Error connecting to image stream: $e';
+        });
+      }
     }
   }
 
@@ -837,7 +943,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text(widget.recipeData['name'] ?? widget.recipeData['drink_name'] ?? 'Recipe'),
+        middle: Text(widget.recipeData['name'] ??
+            widget.recipeData['drink_name'] ??
+            'Recipe'),
         backgroundColor: CupertinoColors.systemBackground,
         border: const Border(),
         leading: CupertinoButton(
@@ -872,9 +980,14 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget _buildHeroSection() {
     // Calculate image dimensions based on 2:3 aspect ratio (width:height)
     final screenWidth = MediaQuery.of(context).size.width;
-    final imageWidth = (screenWidth - iOSTheme.screenPadding.horizontal - iOSTheme.mediumPadding) * 2/3;
-    final imageHeight = imageWidth * 3/2; // 2:3 ratio means height = width * 1.5
-    
+    final imageWidth = (screenWidth -
+            iOSTheme.screenPadding.horizontal -
+            iOSTheme.mediumPadding) *
+        2 /
+        3;
+    final imageHeight =
+        imageWidth * 3 / 2; // 2:3 ratio means height = width * 1.5
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -887,7 +1000,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
               borderRadius: BorderRadius.circular(iOSTheme.mediumRadius),
               image: DecorationImage(
                 image: MemoryImage(_currentImageBytes!),
-                fit: BoxFit.contain, // Use contain to show full image without cropping
+                fit: BoxFit
+                    .contain, // Use contain to show full image without cropping
               ),
             ),
           ),
@@ -912,7 +1026,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
         children: [
           // Title and description
           Text(
-            widget.recipeData['name'] ?? widget.recipeData['drink_name'] ?? 'Recipe',
+            widget.recipeData['name'] ??
+                widget.recipeData['drink_name'] ??
+                'Recipe',
             style: iOSTheme.title2.copyWith(fontWeight: FontWeight.bold),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -928,23 +1044,23 @@ class _RecipeScreenState extends State<RecipeScreen> {
               overflow: TextOverflow.ellipsis,
             ),
           const SizedBox(height: iOSTheme.mediumPadding),
-          
+
           // Progress Section (moved from below)
           _buildCompactProgress(),
           const SizedBox(height: iOSTheme.mediumPadding),
-          
+
           // Quick Facts
           _buildCondensedFacts(),
           const SizedBox(height: iOSTheme.mediumPadding),
-          
+
           // History sections
           _buildHistorySection(),
           const SizedBox(height: iOSTheme.mediumPadding),
-          
-          // Trivia sections  
+
+          // Trivia sections
           _buildTriviaSection(),
           const SizedBox(height: iOSTheme.mediumPadding),
-          
+
           // Variations and Similar Drinks
           _buildVariationsSection(),
         ],
@@ -956,7 +1072,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     final currentStepIndex = _getCurrentStepIndex();
     final isMiseEnPlace = currentStepIndex == -1;
     final isFlavorProfile = currentStepIndex == -2;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -979,13 +1095,14 @@ class _RecipeScreenState extends State<RecipeScreen> {
           ],
         ),
         const SizedBox(height: iOSTheme.smallPadding),
-        
+
         // Glass at top, centered
         Center(
-          child: DrinkProgressGlass(progress: _currentDrinkProgress, width: 40, height: 60),
+          child: DrinkProgressGlass(
+              progress: _currentDrinkProgress, width: 40, height: 60),
         ),
         const SizedBox(height: iOSTheme.smallPadding),
-        
+
         // Progress bar
         LinearProgressIndicator(
           value: _getOverallProgress(),
@@ -994,7 +1111,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
           minHeight: 4,
         ),
         const SizedBox(height: iOSTheme.mediumPadding),
-        
+
         // Step text below glass
         Text(
           _getProgressText(),
@@ -1003,7 +1120,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: iOSTheme.mediumPadding),
-        
+
         // Action button at bottom
         if (isMiseEnPlace)
           SizedBox(
@@ -1065,23 +1182,25 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   double _getOverallProgress() {
-    final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+    final steps =
+        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
+            [];
     final totalSteps = steps.length + 1; // +1 for Mise En Place
-    
+
     int completedSteps = 0;
-    
+
     // Check Mise En Place
     if (_stepCompletion[-1] == true) {
       completedSteps++;
     }
-    
+
     // Check recipe steps
     for (int i = 0; i < steps.length; i++) {
       if (_stepCompletion[i] == true) {
         completedSteps++;
       }
     }
-    
+
     return totalSteps > 0 ? completedSteps / totalSteps : 0;
   }
 
@@ -1089,13 +1208,15 @@ class _RecipeScreenState extends State<RecipeScreen> {
     setState(() {
       // Reset Mise En Place
       _stepCompletion[-1] = false;
-      
+
       // Reset all recipe steps
-      final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+      final steps = (widget.recipeData['steps'] ?? widget.recipeData['method'])
+              as List? ??
+          [];
       for (int i = 0; i < steps.length; i++) {
         _stepCompletion[i] = false;
       }
-      
+
       // Reset ingredient checklist
       for (String ingredient in _ingredientChecklist.keys) {
         _ingredientChecklist[ingredient] = false;
@@ -1113,7 +1234,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: iOSTheme.smallPadding),
-        
+
         // Glass type
         if (widget.recipeData['serving_glass'] != null)
           _buildFactRow(
@@ -1121,7 +1242,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
             widget.recipeData['serving_glass'].toString(),
             CupertinoIcons.circle,
           ),
-        
+
         // Alcohol content or spirit base
         if (widget.recipeData['ingredients'] is List)
           _buildFactRow(
@@ -1129,14 +1250,14 @@ class _RecipeScreenState extends State<RecipeScreen> {
             _getPrimarySpirit(),
             CupertinoIcons.drop,
           ),
-        
+
         // Preparation method
         _buildFactRow(
           'Method',
           _getPreparationMethod(),
           CupertinoIcons.gear,
         ),
-        
+
         // Difficulty or category
         if (widget.recipeData['category'] != null)
           _buildFactRow(
@@ -1153,7 +1274,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     if (drinkHistory == null || drinkHistory.toString().trim().isEmpty) {
       return const SizedBox.shrink();
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1179,7 +1300,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     if (drinkTrivia == null || (drinkTrivia is List && drinkTrivia.isEmpty)) {
       return const SizedBox.shrink();
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1188,14 +1309,14 @@ class _RecipeScreenState extends State<RecipeScreen> {
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: iOSTheme.smallPadding),
-        
+
         // Display trivia facts from the array
         if (drinkTrivia is List)
           ...drinkTrivia.map<Widget>((triviaItem) {
             if (triviaItem is Map) {
               final fact = triviaItem['fact']?.toString() ?? '';
               final category = triviaItem['category']?.toString() ?? '';
-              
+
               if (fact.isNotEmpty) {
                 return _buildTriviaItem(fact, category);
               }
@@ -1237,12 +1358,14 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget _buildVariationsSection() {
     final relatedCocktails = widget.recipeData['related_cocktails'];
     final suggestedVariations = widget.recipeData['suggested_variations'];
-    
-    if ((relatedCocktails == null || (relatedCocktails is List && relatedCocktails.isEmpty)) &&
-        (suggestedVariations == null || (suggestedVariations is List && suggestedVariations.isEmpty))) {
+
+    if ((relatedCocktails == null ||
+            (relatedCocktails is List && relatedCocktails.isEmpty)) &&
+        (suggestedVariations == null ||
+            (suggestedVariations is List && suggestedVariations.isEmpty))) {
       return const SizedBox.shrink();
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1251,11 +1374,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: iOSTheme.smallPadding),
-        
+
         // Related Cocktails
         if (relatedCocktails is List && relatedCocktails.isNotEmpty)
           _buildRelatedCocktailsList(relatedCocktails),
-        
+
         // Suggested Variations
         if (suggestedVariations is List && suggestedVariations.isNotEmpty) ...[
           const SizedBox(height: iOSTheme.smallPadding),
@@ -1317,7 +1440,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
           if (variation is Map) {
             final name = variation['name']?.toString() ?? '';
             final description = variation['description']?.toString() ?? '';
-            
+
             if (name.isNotEmpty) {
               return _buildVariationItem(name, description);
             }
@@ -1356,7 +1479,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
       ),
     );
   }
-
 
   Widget _buildFactRow(String label, String value, IconData icon) {
     return Padding(
@@ -1401,7 +1523,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
     final ingredients = widget.recipeData['ingredients'] as List? ?? [];
     for (var ingredient in ingredients) {
       final name = ingredient['name']?.toString().toLowerCase() ?? '';
-      if (name.contains('whiskey') || name.contains('bourbon') || name.contains('scotch')) {
+      if (name.contains('whiskey') ||
+          name.contains('bourbon') ||
+          name.contains('scotch')) {
         return 'Whiskey';
       } else if (name.contains('vodka')) {
         return 'Vodka';
@@ -1417,7 +1541,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   String _getPreparationMethod() {
-    final method = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+    final method =
+        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
+            [];
     if (method.isNotEmpty) {
       final firstStep = method.first.toString().toLowerCase();
       if (firstStep.contains('shake')) {
@@ -1433,7 +1559,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return 'Mixed';
   }
 
-
   Widget _buildSectionPreviews() {
     return Column(
       children: [
@@ -1442,8 +1567,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
           icon: Icons.format_list_numbered,
           previewContent: _buildMethodPreviewWidget(),
           expandedContent: _buildMethodSection(),
-          totalItems: ((widget.recipeData['steps'] ?? widget.recipeData['method']) as List?)?.length ?? 0,
-          completedItems: _stepCompletion.values.where((e) => e).length,
+          totalItems: ((widget.recipeData['steps'] ??
+                      widget.recipeData['method']) as List?)
+                  ?.length ??
+              0,
+          completedItems: _stepCompletion.values.where((e) => e == true).length,
           expanded: _expandedSection == 'method',
           onOpen: () => _toggleExpandedSection('method'),
           onClose: () => _toggleExpandedSection('method'),
@@ -1466,7 +1594,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
           icon: Icons.build,
           previewContent: _buildEquipmentPreviewWidget(),
           expandedContent: _buildEquipmentSection(),
-          totalItems: ((widget.recipeData['equipment_needed'] ?? widget.recipeData['equipment']) as List?)?.length ?? 0,
+          totalItems: ((widget.recipeData['equipment_needed'] ??
+                      widget.recipeData['equipment']) as List?)
+                  ?.length ??
+              0,
           expanded: _expandedSection == 'equipment',
           onOpen: () => _toggleExpandedSection('equipment'),
           onClose: () => _toggleExpandedSection('equipment'),
@@ -1476,7 +1607,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildMethodPreviewWidget() {
-    final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+    final steps =
+        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
+            [];
     if (steps.isEmpty) return const SizedBox.shrink();
     return Text(
       steps.first.toString(),
@@ -1487,7 +1620,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildIngredientsPreviewWidget() {
-    final ingredients = (widget.recipeData['ingredients'] as List?)?.take(4).toList() ?? [];
+    final ingredients =
+        (widget.recipeData['ingredients'] as List?)?.take(4).toList() ?? [];
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -1519,14 +1653,15 @@ class _RecipeScreenState extends State<RecipeScreen> {
                           ? Container(
                               color: Colors.grey[200],
                               child: const Center(
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
                             )
                           : Container(
                               color: Colors.grey[100],
                               child: const Center(
-                                child: Icon(Icons.image_not_supported, 
-                                           color: Colors.grey, size: 32),
+                                child: Icon(Icons.image_not_supported,
+                                    color: Colors.grey, size: 32),
                               ),
                             ),
                 ),
@@ -1555,12 +1690,15 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildEquipmentPreviewWidget() {
-    final equipmentList = widget.recipeData['equipment_needed'] ?? widget.recipeData['equipment'] ?? [];
+    final equipmentList = widget.recipeData['equipment_needed'] ??
+        widget.recipeData['equipment'] ??
+        [];
     final equipment = (equipmentList as List?)?.take(3).toList() ?? [];
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: equipment.map((e) {
-        final name = e is Map ? (e['item'] ?? e['name'] ?? e.toString()) : e.toString();
+        final name =
+            e is Map ? (e['item'] ?? e['name'] ?? e.toString()) : e.toString();
         final imageKey = 'equipment_$name';
         Widget child;
         if (_specializedImages[imageKey] != null) {
@@ -1585,14 +1723,16 @@ class _RecipeScreenState extends State<RecipeScreen> {
             ),
           );
         }
-        return Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: child);
+        return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4), child: child);
       }).toList(),
     );
   }
 
   Widget _buildIngredientsSection() {
-    final ingredients = widget.recipeData['ingredients'] as List<dynamic>? ?? [];
-    
+    final ingredients =
+        widget.recipeData['ingredients'] as List<dynamic>? ?? [];
+
     return Container(
       padding: iOSTheme.cardPadding,
       decoration: iOSTheme.cardDecoration(context),
@@ -1608,7 +1748,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
             final name = ingredient['name'] as String? ?? '';
             final amount = ingredient['amount'] as String? ?? '';
             final unit = ingredient['unit'] as String? ?? '';
-            
+
             return Padding(
               padding: const EdgeInsets.only(bottom: iOSTheme.smallPadding),
               child: Row(
@@ -1625,7 +1765,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _ingredientChecklist[name] = !(_ingredientChecklist[name] ?? false);
+                        _ingredientChecklist[name] =
+                            !(_ingredientChecklist[name] ?? false);
                       });
                       _saveProgress();
                     },
@@ -1660,8 +1801,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildMethodSection() {
-    final method = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List<dynamic>? ?? [];
-    
+    final method = (widget.recipeData['steps'] ?? widget.recipeData['method'])
+            as List<dynamic>? ??
+        [];
+
     return Container(
       padding: iOSTheme.cardPadding,
       decoration: iOSTheme.cardDecoration(context),
@@ -1677,7 +1820,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
             final index = entry.key;
             final step = entry.value as String? ?? '';
             final isCompleted = _stepCompletion[index] ?? false;
-            
+
             return Padding(
               padding: const EdgeInsets.only(bottom: iOSTheme.mediumPadding),
               child: MethodCard(
@@ -1693,7 +1836,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   proTip: _getProTipForStep(step),
                   tipCategory: _getTipCategoryForStep(step),
                 ),
-                onCheckboxChanged: (completed) => _toggleStepCompleted(index, completed),
+                onCheckboxChanged: (completed) =>
+                    _toggleStepCompleted(index, completed),
               ),
             );
           }),
@@ -1703,13 +1847,15 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildEquipmentSection() {
-    final equipmentList = widget.recipeData['equipment_needed'] ?? widget.recipeData['equipment'] ?? [];
+    final equipmentList = widget.recipeData['equipment_needed'] ??
+        widget.recipeData['equipment'] ??
+        [];
     final equipment = equipmentList as List<dynamic>? ?? [];
-    
+
     if (equipment.isEmpty) {
       return const SizedBox.shrink();
     }
-    
+
     return Container(
       padding: iOSTheme.cardPadding,
       decoration: iOSTheme.cardDecoration(context),
@@ -1722,8 +1868,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
           ),
           const SizedBox(height: iOSTheme.mediumPadding),
           ...equipment.map((item) {
-            final name = item is Map ? (item['item'] ?? item['name'] ?? item.toString()) : item.toString();
-            
+            final name = item is Map
+                ? (item['item'] ?? item['name'] ?? item.toString())
+                : item.toString();
+
             return Padding(
               padding: const EdgeInsets.only(bottom: iOSTheme.smallPadding),
               child: Row(

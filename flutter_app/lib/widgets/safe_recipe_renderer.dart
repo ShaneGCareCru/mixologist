@@ -4,20 +4,25 @@ import 'package:flutter/material.dart';
 /// Implements the "Graceful Data Handling" principle from our design philosophy
 class SafeRecipeData {
   final Map<String, dynamic> _rawData;
-  
+
   const SafeRecipeData(this._rawData);
-  
+
   /// Safely get the recipe name with fallback
-  String get name => _rawData['drink_name']?.toString() ?? _rawData['name']?.toString() ?? 'Unnamed Cocktail';
-  
+  String get name =>
+      _rawData['drink_name']?.toString() ??
+      _rawData['name']?.toString() ??
+      'Unnamed Cocktail';
+
   /// Safely get recipe description with fallback
-  String get description => _rawData['description']?.toString() ?? 'A delicious cocktail worth trying.';
-  
+  String get description =>
+      _rawData['description']?.toString() ??
+      'A delicious cocktail worth trying.';
+
   /// Safely get ingredients list with validation
   List<Map<String, dynamic>> get ingredients {
     final rawIngredients = _rawData['ingredients'];
     if (rawIngredients is! List) return [];
-    
+
     return rawIngredients.map((ingredient) {
       if (ingredient is Map<String, dynamic>) {
         return ingredient;
@@ -29,23 +34,28 @@ class SafeRecipeData {
       }
     }).toList();
   }
-  
+
   /// Safely get steps/method list with validation
   List<String> get steps {
     final rawSteps = _rawData['steps'] ?? _rawData['method'];
-    if (rawSteps is! List) return ['Preparation instructions will be available soon.'];
-    
-    return rawSteps.map((step) => step?.toString() ?? 'Step information missing').toList();
+    if (rawSteps is! List)
+      return ['Preparation instructions will be available soon.'];
+
+    return rawSteps
+        .map((step) => step?.toString() ?? 'Step information missing')
+        .toList();
   }
-  
+
   /// Safely get equipment list with validation
   List<String> get equipment {
     final rawEquipment = _rawData['equipment_needed'] ?? _rawData['equipment'];
     if (rawEquipment is! List) return [];
-    
+
     return rawEquipment.map((item) {
       if (item is Map<String, dynamic>) {
-        return item['item']?.toString() ?? item['name']?.toString() ?? 'Unknown equipment';
+        return item['item']?.toString() ??
+            item['name']?.toString() ??
+            'Unknown equipment';
       } else if (item is String) {
         return item;
       } else {
@@ -53,44 +63,49 @@ class SafeRecipeData {
       }
     }).toList();
   }
-  
+
   /// Safely get glass type with fallback
-  String get glassType => _rawData['serving_glass']?.toString() ?? _rawData['glass']?.toString() ?? 'Cocktail glass';
-  
+  String get glassType =>
+      _rawData['serving_glass']?.toString() ??
+      _rawData['glass']?.toString() ??
+      'Cocktail glass';
+
   /// Safely get garnish with fallback
   String get garnish => _rawData['garnish']?.toString() ?? 'Garnish as desired';
-  
+
   /// Check if recipe has sufficient data for display
   bool get isComplete => ingredients.isNotEmpty && steps.isNotEmpty;
-  
+
   /// Get ingredient by index safely
   Map<String, dynamic>? getIngredient(int index) {
     if (index < 0 || index >= ingredients.length) return null;
     return ingredients[index];
   }
-  
+
   /// Get step by index safely
   String? getStep(int index) {
     if (index < 0 || index >= steps.length) return null;
     return steps[index];
   }
-  
-  /// Get equipment by index safely  
+
+  /// Get equipment by index safely
   String? getEquipment(int index) {
     if (index < 0 || index >= equipment.length) return null;
     return equipment[index];
   }
-  
+
   /// Safely get ingredient name with fallback
   String getIngredientName(int index) {
     final ingredient = getIngredient(index);
     return ingredient?['name']?.toString() ?? 'Unknown ingredient';
   }
-  
+
   /// Safely get ingredient quantity with fallback
   String getIngredientQuantity(int index) {
     final ingredient = getIngredient(index);
-    return ingredient?['quantity']?.toString() ?? ingredient?['amount']?.toString() ?? 'To taste';
+    return ingredient?['quantity']?.toString() ??
+        ingredient?['amount']?.toString() ??
+        'To taste';
   }
 }
 
@@ -101,7 +116,7 @@ class SafeRecipeRenderer extends StatelessWidget {
   final Widget Function(BuildContext context, SafeRecipeData safeData) builder;
   final Widget? errorWidget;
   final Widget? emptyWidget;
-  
+
   const SafeRecipeRenderer({
     super.key,
     required this.recipeData,
@@ -109,24 +124,24 @@ class SafeRecipeRenderer extends StatelessWidget {
     this.errorWidget,
     this.emptyWidget,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     try {
       final safeData = SafeRecipeData(recipeData);
-      
+
       // Show empty state if recipe is fundamentally incomplete
       if (!safeData.isComplete) {
         return emptyWidget ?? _buildEmptyState(context);
       }
-      
+
       return builder(context, safeData);
     } catch (error) {
       // Fallback for any unexpected errors
       return errorWidget ?? _buildErrorState(context, error);
     }
   }
-  
+
   Widget _buildEmptyState(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(16),
@@ -136,7 +151,7 @@ class SafeRecipeRenderer extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.recipe_long,
+              Icons.receipt_long,
               size: 48,
               color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
             ),
@@ -168,7 +183,7 @@ class SafeRecipeRenderer extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildErrorState(BuildContext context, dynamic error) {
     return Card(
       margin: const EdgeInsets.all(16),
@@ -186,8 +201,8 @@ class SafeRecipeRenderer extends StatelessWidget {
             Text(
               'Recipe Display Error',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.error,
-              ),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),

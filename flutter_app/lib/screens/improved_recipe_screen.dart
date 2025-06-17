@@ -7,7 +7,7 @@ import '../widgets/mixologist_image.dart';
 /// Features: Safe data handling, consistent image sizing, unified visual language
 class ImprovedRecipeScreen extends StatefulWidget {
   final Map<String, dynamic> recipeData;
-  
+
   const ImprovedRecipeScreen({
     super.key,
     required this.recipeData,
@@ -30,7 +30,8 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
       builder: (context, safeData) => Scaffold(
         appBar: AppBar(
           title: Text(safeData.name),
-          backgroundColor: const Color(0xFFB8860B), // Amber from design philosophy
+          backgroundColor:
+              const Color(0xFFB8860B), // Amber from design philosophy
           foregroundColor: Colors.white,
           elevation: 0,
         ),
@@ -71,16 +72,16 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                 Text(
                   safeData.name,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFB8860B), // Amber
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFB8860B), // Amber
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   safeData.description,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    height: 1.4,
-                  ),
+                        height: 1.4,
+                      ),
                 ),
                 const SizedBox(height: 12),
                 _buildRecipeMetadata(safeData),
@@ -123,9 +124,9 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF87A96B),
-            ),
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF87A96B),
+                ),
           ),
         ],
       ),
@@ -143,18 +144,20 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            onPressed: _servingSize > 1 ? () => setState(() => _servingSize--) : null,
+            onPressed:
+                _servingSize > 1 ? () => setState(() => _servingSize--) : null,
             icon: const Icon(Icons.remove_circle_outline, size: 20),
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           Text(
             '$_servingSize',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           IconButton(
-            onPressed: _servingSize < 12 ? () => setState(() => _servingSize++) : null,
+            onPressed:
+                _servingSize < 12 ? () => setState(() => _servingSize++) : null,
             icon: const Icon(Icons.add_circle_outline, size: 20),
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
@@ -181,9 +184,9 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                 Text(
                   'Ingredients & Equipment',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFB8860B),
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFB8860B),
+                      ),
                 ),
                 const Spacer(),
                 Switch(
@@ -204,11 +207,13 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 1.0, // Consistent 1:1 ratio from design philosophy
+                childAspectRatio:
+                    1.0, // Consistent 1:1 ratio from design philosophy
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              itemCount: safeData.ingredients.length + safeData.equipment.length,
+              itemCount:
+                  safeData.ingredients.length + safeData.equipment.length,
               itemBuilder: (context, index) {
                 if (index < safeData.ingredients.length) {
                   // Render ingredient card
@@ -230,7 +235,7 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
     final ingredientName = safeData.getIngredientName(index);
     final quantity = safeData.getIngredientQuantity(index);
     final scaledQuantity = _scaleQuantity(quantity, _servingSize);
-    
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -243,7 +248,8 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
               flex: 3,
               child: MixologistImage.ingredient(
                 altText: ingredientName,
-                onGenerateRequest: () => _generateIngredientImage(ingredientName),
+                onGenerateRequest: () =>
+                    _generateIngredientImage(ingredientName),
               ),
             ),
             const SizedBox(height: 8),
@@ -255,8 +261,8 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                   Text(
                     ingredientName,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                          fontWeight: FontWeight.w600,
+                        ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -265,9 +271,9 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                   Text(
                     scaledQuantity,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF87A96B), // Sage
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: const Color(0xFF87A96B), // Sage
+                          fontWeight: FontWeight.w500,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   const Spacer(),
@@ -297,7 +303,7 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
 
   Widget _buildEquipmentCard(SafeRecipeData safeData, int index) {
     final equipmentName = safeData.getEquipment(index) ?? 'Unknown equipment';
-    
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -322,8 +328,8 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                   Text(
                     equipmentName,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                          fontWeight: FontWeight.w600,
+                        ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -332,9 +338,9 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                   Text(
                     'Equipment',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFFB8860B), // Amber for equipment
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: const Color(0xFFB8860B), // Amber for equipment
+                          fontWeight: FontWeight.w500,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   const Spacer(),
@@ -347,7 +353,8 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                           _ingredientChecklist[equipmentName] = value ?? false;
                         });
                       },
-                      activeColor: const Color(0xFFB8860B), // Amber for equipment
+                      activeColor:
+                          const Color(0xFFB8860B), // Amber for equipment
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -380,9 +387,9 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                 Text(
                   'Method',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFB8860B),
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFB8860B),
+                      ),
                 ),
               ],
             ),
@@ -395,26 +402,31 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width > 1200 ? 3 : 
-                               MediaQuery.of(context).size.width > 800 ? 2 : 1,
+                crossAxisCount: MediaQuery.of(context).size.width > 1200
+                    ? 3
+                    : MediaQuery.of(context).size.width > 800
+                        ? 2
+                        : 1,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 childAspectRatio: 0.8, // Optimized for method cards
               ),
               itemCount: safeData.steps.length,
               itemBuilder: (context, index) {
-                final stepText = safeData.getStep(index) ?? 'Step information missing';
+                final stepText =
+                    safeData.getStep(index) ?? 'Step information missing';
                 final data = SafeMethodCardData.fromString(stepText, index + 1);
-                
+
                 return ImprovedMethodCard(
                   data: data,
-                  state: (_stepCompletion[index] ?? false) 
-                      ? MethodCardState.completed 
+                  state: (_stepCompletion[index] ?? false)
+                      ? MethodCardState.completed
                       : MethodCardState.defaultState,
                   onCompleted: () => _toggleStepCompleted(index, true),
                   onPrevious: () => _toggleStepCompleted(index, false),
                   onGenerateImage: () => _generateMethodImage(index),
-                  onCheckboxChanged: (value) => _toggleStepCompleted(index, value ?? false),
+                  onCheckboxChanged: (value) =>
+                      _toggleStepCompleted(index, value ?? false),
                 );
               },
             ),
@@ -426,9 +438,10 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
 
   Widget _buildProgressIndicator(SafeRecipeData safeData) {
     final totalSteps = safeData.steps.length;
-    final completedSteps = _stepCompletion.values.where((completed) => completed).length;
+    final completedSteps =
+        _stepCompletion.values.where((completed) => completed).length;
     final progress = totalSteps > 0 ? completedSteps / totalSteps : 0.0;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -452,15 +465,15 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
               Text(
                 'Progress',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               Text(
                 '$completedSteps/$totalSteps steps',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF87A96B),
-                  fontWeight: FontWeight.w600,
-                ),
+                      color: const Color(0xFF87A96B),
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ],
           ),
@@ -477,14 +490,13 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
           Text(
             _getProgressText(progress),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-            ),
+                  fontStyle: FontStyle.italic,
+                ),
           ),
         ],
       ),
     );
   }
-
 
   void _toggleStepCompleted(int index, bool completed) {
     setState(() {
@@ -495,13 +507,15 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
   String _scaleQuantity(String quantity, int servingSize) {
     // Simple quantity scaling - could be enhanced with proper parsing
     if (servingSize == 1) return quantity;
-    
+
     // Extract numbers and scale them
     final regex = RegExp(r'(\d+\.?\d*)');
     return quantity.replaceAllMapped(regex, (match) {
       final number = double.tryParse(match.group(0)!) ?? 1.0;
       final scaled = number * servingSize;
-      return scaled % 1 == 0 ? scaled.toInt().toString() : scaled.toStringAsFixed(1);
+      return scaled % 1 == 0
+          ? scaled.toInt().toString()
+          : scaled.toStringAsFixed(1);
     });
   }
 
