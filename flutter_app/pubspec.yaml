@@ -29,6 +29,10 @@ dependencies:
   just_audio: ^0.9.36
   # Fuzzy search for cocktail name matching
   fuzzy: ^0.5.1
+  liquid_progress_indicator: ^0.4.0
+  flutter_animate: ^4.2.0
+  particles_flutter: ^0.1.1
+  flutter_riverpod: ^2.5.1
 
 
 flutter:
