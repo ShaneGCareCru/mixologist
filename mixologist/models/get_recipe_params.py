@@ -1,9 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictStr
 from typing import List, Dict, Optional
 
 class Ingredient(BaseModel):
-    name: str = Field(..., description="Name of the ingredient")
-    quantity: str = Field(..., description="Quantity of the ingredient")
+    name: StrictStr = Field(..., description="Name of the ingredient")
+    quantity: StrictStr = Field(..., description="Quantity of the ingredient")
 
 class BrandRecommendation(BaseModel):
     ingredient: str = Field(..., description="Name of the ingredient")
