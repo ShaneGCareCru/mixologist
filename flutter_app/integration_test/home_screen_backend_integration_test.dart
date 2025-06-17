@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mixologist_flutter/features/home/screens/home_screen.dart';
-import 'package:mixologist_flutter/main.dart' as main_screens;
+import 'package:mixologist_flutter/features/recipe/screens/recipe_screen.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -71,7 +71,7 @@ void main() {
       await tester.pumpAndSettle(Duration(seconds: 15));
       
       // Should now be on the recipe screen
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       // Should display recipe content mentioning Margarita
       expect(find.textContaining('Margarita'), findsAtLeastNWidgets(1));
@@ -106,7 +106,7 @@ void main() {
       await tester.pumpAndSettle(Duration(seconds: 15));
       
       // Should navigate to recipe screen
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       expect(find.textContaining('Old Fashioned'), findsAtLeastNWidgets(1));
       
       print('✅ Search button test passed');
@@ -137,11 +137,11 @@ void main() {
       await tester.pumpAndSettle(Duration(seconds: 20));
       
       // Should navigate to recipe screen
-      expect(find.byType(main_screens.RecipeScreen), findsOneWidget);
+      expect(find.byType(RecipeScreen), findsOneWidget);
       
       // Should have some recipe content
-      final recipeContent = tester.widget<main_screens.RecipeScreen>(
-        find.byType(main_screens.RecipeScreen)
+      final recipeContent = tester.widget<RecipeScreen>(
+        find.byType(RecipeScreen)
       );
       expect(recipeContent.recipeData, isNotNull);
       
@@ -163,7 +163,7 @@ void main() {
 
       // Should remain on HomeScreen (no API call made)
       expect(find.byType(HomeScreen), findsOneWidget);
-      expect(find.byType(main_screens.RecipeScreen), findsNothing);
+      expect(find.byType(RecipeScreen), findsNothing);
       expect(find.text('Generating your recipe...'), findsNothing);
       
       print('✅ Empty search test passed');

@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:mixologist_flutter/main.dart';
+import 'package:mixologist_flutter/features/auth/login_screen.dart';
 
 void main() {
   testWidgets('Mixologist app smoke test', (WidgetTester tester) async {

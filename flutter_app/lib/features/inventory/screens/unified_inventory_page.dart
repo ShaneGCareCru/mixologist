@@ -7,8 +7,8 @@ import '../widgets/inventory_item_card.dart';
 import '../widgets/bottle_card.dart';
 import '../widgets/add_item_dialog.dart';
 import '../widgets/inventory_shelf.dart';
-import '../theme/ios_theme.dart';
-import '../widgets/ios_card.dart';
+import '../../../theme/ios_theme.dart';
+import '../../../shared/widgets/ios_card.dart';
 
 class UnifiedInventoryPage extends StatefulWidget {
   const UnifiedInventoryPage({super.key});

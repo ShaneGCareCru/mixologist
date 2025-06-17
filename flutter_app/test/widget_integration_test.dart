@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mixologist_flutter/widgets/method_card.dart';
-import 'package:mixologist_flutter/widgets/drink_progress_glass.dart';
-import 'package:mixologist_flutter/widgets/connection_line.dart';
-import 'package:mixologist_flutter/widgets/section_preview.dart';
+import 'package:mixologist_flutter/shared/widgets/method_card.dart';
+import 'package:mixologist_flutter/shared/widgets/drink_progress_glass.dart';
+import 'package:mixologist_flutter/shared/widgets/connection_line.dart';
+import 'package:mixologist_flutter/shared/widgets/section_preview.dart';
 
 void main() {
   group('Widget Integration Tests', () {

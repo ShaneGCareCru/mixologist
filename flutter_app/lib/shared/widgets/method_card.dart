@@ -510,15 +510,35 @@ class _MethodCardState extends State<MethodCard>
                 if (widget.onCheckboxChanged != null)
                   Align(
                     alignment: Alignment.centerRight,
-                    child: Checkbox(
-                      value: widget.data.isCompleted,
-                      onChanged: (value) {
+                    child: GestureDetector(
+                      onTap: () {
                         if (widget.onCheckboxChanged != null) {
-                          widget.onCheckboxChanged!(value ?? false);
+                          widget.onCheckboxChanged!(!widget.data.isCompleted);
                         }
                       },
-                      activeColor: theme.colorScheme.secondary,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: widget.data.isCompleted 
+                                ? theme.colorScheme.secondary 
+                                : Colors.grey,
+                            width: 2,
+                          ),
+                          color: widget.data.isCompleted 
+                              ? theme.colorScheme.secondary 
+                              : Colors.transparent,
+                        ),
+                        child: widget.data.isCompleted
+                            ? Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Colors.white,
+                              )
+                            : null,
+                      ),
                     ),
                   ),
               ],
