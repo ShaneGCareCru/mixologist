@@ -294,7 +294,7 @@ class _GlassClinkAnimationState extends State<GlassClinkAnimation>
     // Optional system sound (iOS only)
     if (widget.enableSoundEffects) {
       // Use haptic for sound effect since SystemSound.click doesn't exist
-      await HapticService.instance.selection();
+      HapticService.instance.selection();
     }
   }
   

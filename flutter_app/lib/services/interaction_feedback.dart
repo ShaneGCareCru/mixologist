@@ -105,7 +105,7 @@ class InteractionFeedback {
     }
     
     if (_soundEnabled) {
-      SystemSound.play(SystemSound.click);
+      HapticService.instance.selection();
     }
   }
   
@@ -172,7 +172,7 @@ class InteractionFeedback {
     }
     
     if (_soundEnabled) {
-      SystemSound.play(SystemSound.click);
+      HapticService.instance.selection();
     }
     
     onComplete?.call();
@@ -184,7 +184,7 @@ class InteractionFeedback {
     await HapticService.instance.heavyImpact();
     
     if (_soundEnabled) {
-      SystemSound.play(SystemSound.click);
+      HapticService.instance.selection();
     }
   }
   
@@ -196,7 +196,7 @@ class InteractionFeedback {
     await HapticService.instance.selection();
     
     if (_soundEnabled) {
-      SystemSound.play(SystemSound.click);
+      HapticService.instance.selection();
     }
   }
   
