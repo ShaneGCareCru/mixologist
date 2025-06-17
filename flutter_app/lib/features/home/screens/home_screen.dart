@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:fuzzy/fuzzy.dart';
 import '../../../theme/ios_theme.dart';
 import '../../../shared/widgets/loading_screen.dart';
+import '../../../shared/widgets/depth_effects.dart';
 import '../../ai_assistant/ai_assistant_page.dart';
 import '../../inventory/unified_inventory_page.dart';
 import '../../auth/login_screen.dart';
@@ -350,10 +351,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 40),
               ],
-            ),
+              ),
+            ).layerBack(),
           ),
         ),
-      ),
     );
   }
 
