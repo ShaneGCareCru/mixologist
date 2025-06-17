@@ -6,6 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Mixologist is a cross-platform Flutter app that serves as an AI-powered cocktail discovery and inventory management system. The app features an iOS-focused Cupertino design with natural language cocktail search, voice-enabled AI assistant, and visual inventory management.
 
+## Critical Architecture Note
+
+**The project maintains two parallel widget systems:**
+- **Active Production**: `RecipeScreen` with legacy widgets (fully integrated with backend)
+- **Design Philosophy**: `ImprovedRecipeScreen` with enhanced widgets (implements design philosophy but not actively used)
+
+When working on recipes/UI, determine which system you're targeting. The improved system demonstrates better architectural patterns but requires integration work to become active.
+
 ## Development Commands
 
 ### Core Flutter Commands
@@ -40,11 +48,17 @@ flutter test
 # Run specific test file
 flutter test test/path/to/test_file.dart
 
+# Run specific test by name
+flutter test test/widgets/improved_components_test.dart --name "handles checkbox interaction"
+
 # Run integration tests (requires backend server running)
 flutter test integration_test/
 
 # Run tests with coverage
 flutter test --coverage
+
+# Clean and rebuild (helpful when tests fail unexpectedly)
+flutter clean && flutter pub get
 ```
 
 ### Backend Integration
@@ -56,7 +70,8 @@ The app communicates with a FastAPI backend server that must be running on local
 - **Entry Point**: `lib/main.dart` → `lib/app.dart` (MixologistApp root widget)
 - **Theme System**: iOS-focused Cupertino design in `lib/theme/`
 - **Feature Modules**: Organized in `lib/features/` (auth, home, inventory, ai_assistant)
-- **Shared Components**: Reusable widgets and utilities in `lib/shared/`
+- **Shared Components**: Reusable widgets in `lib/shared/` and `lib/widgets/`
+- **Design Philosophy Components**: Enhanced widgets in `lib/widgets/` (improved_*, safe_*, mixologist_*)
 
 ### Key Features
 
@@ -88,11 +103,18 @@ The app communicates with a FastAPI backend server that must be running on local
 - **Inventory Service**: Handles CRUD operations for inventory items
 - **Backend API**: HTTP client for FastAPI integration on port 8081
 
-### Custom Widgets (`lib/widgets/`)
-- **iOS-native components**: `ios_card.dart`, `ios_search_bar.dart`
-- **Inventory display**: `inventory_shelf.dart`, `bottle_card.dart`, `inventory_item_card.dart`
-- **Recipe components**: `method_card.dart`, `drink_progress_glass.dart`
+### Widget Systems
+
+#### Legacy Widgets (`lib/shared/widgets/`)
+- **Recipe Display**: `method_card.dart` (actively used)
 - **UI utilities**: `loading_screen.dart`, `connection_line.dart`, `lazy_load_section.dart`
+- **Inventory**: `inventory_shelf.dart`, `bottle_card.dart`, `inventory_item_card.dart`
+
+#### Design Philosophy Widgets (`lib/widgets/`)
+- **Safe Rendering**: `safe_recipe_renderer.dart` (graceful data handling)
+- **Unified Images**: `mixologist_image.dart` (enforced aspect ratios)
+- **Enhanced Cards**: `improved_method_card.dart` (haptic feedback, accessibility)
+- **Recipe Screen**: `improved_recipe_screen.dart` (Material Design + philosophy colors)
 
 ## Backend API Integration
 
@@ -135,10 +157,12 @@ The app communicates with a FastAPI backend server that must be running on local
 ### Color Palette (`lib/theme/app_colors.dart`)
 Cocktail-inspired colors including whiskey amber, gin green, vodka clear, and dark background tones.
 
-### Design Philosophy
-- iOS-first Cupertino design language
-- Glassmorphic cards and visual effects
-- Emphasis on visual hierarchy and Apple design guidelines
+### Design Philosophy (`docs/design_philosophy.md`)
+- iOS-first Apple Human Interface Guidelines
+- **Colors**: Amber (#B8860B), Sage (#87A96B), Cream (#F5F5DC), Charcoal (#36454F)
+- **Image System**: 16:9 hero, 1:1 ingredients/equipment, 4:3 method steps
+- **Safe Data Handling**: Graceful fallbacks for missing/null data
+- **Unified Visual Language**: SF Symbols, Core Haptics, Dynamic Type
 
 ## Development Workflow
 
@@ -172,13 +196,41 @@ Cocktail-inspired colors including whiskey amber, gin green, vodka clear, and da
 - Some features disabled due to API limitations
 - Backend server dependency for full functionality
 
-## Architecture Refactoring
+## Current Development Status
 
-The codebase is currently transitioning from a pages-based to a features-based architecture:
-- ✅ Theme system modularized
-- ✅ App entry point separated
-- 🚧 Feature folders partially implemented
-- 🚧 Shared components being consolidated
-- 🚧 Import statements being updated
+### Widget Architecture State
+- **Production**: Uses legacy `RecipeScreen` with full backend integration
+- **Enhanced**: `ImprovedRecipeScreen` implements design philosophy but requires routing updates to become active
+- **Navigation**: Currently routes to legacy system in `home_screen.dart`
 
-Refer to `REFACTOR_CHECKLIST.md` for detailed progress and remaining tasks.
+### Implementation Patterns
+
+#### Safe Data Handling (Design Philosophy)
+```dart
+// Use SafeRecipeRenderer for null-safe data access
+SafeRecipeRenderer(
+  recipeData: widget.recipeData,
+  builder: (context, safeData) => YourWidget(safeData),
+)
+```
+
+#### Unified Image System (Design Philosophy)
+```dart
+// Enforces aspect ratios and consistent caching
+MixologistImage.recipeHero(altText: 'Cocktail presentation'),
+MixologistImage.ingredient(altText: 'Whiskey'),
+MixologistImage.methodStep(altText: 'Shaking technique'),
+MixologistImage.equipment(altText: 'Cocktail shaker'),
+```
+
+#### Testing Patterns
+- Platform channel mocking for vibration/haptics
+- Comprehensive widget state testing
+- Image bytes testing with actual PNG data
+- Error state validation and loading skeleton testing
+
+### Key Files to Understand
+- `docs/design_philosophy.md` - Complete design system documentation
+- `lib/widgets/safe_recipe_renderer.dart` - Null-safe data wrapper pattern
+- `lib/widgets/mixologist_image.dart` - Unified image aspect ratio system
+- `test/widgets/improved_components_test.dart` - Modern testing patterns
