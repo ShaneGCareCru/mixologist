@@ -56,9 +56,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
       return DrinkProgress.emptyGlass;
     }
 
-    final steps =
-        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
-            [];
+    final stepsRaw =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final steps = stepsRaw is List ? stepsRaw : [];
     int completedRecipeSteps = 0;
     for (int i = 0; i < steps.length; i++) {
       if (_stepCompletion[i] == true) {
@@ -82,9 +82,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
       return _getMiseEnPlaceDescription();
     }
 
-    final steps =
-        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
-            [];
+    final stepsRaw =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final steps = stepsRaw is List ? stepsRaw : [];
     if (steps.isEmpty) return 'No steps available';
 
     // Find the next incomplete step
@@ -110,9 +110,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
       return -1; // Mise En Place
     }
 
-    final steps =
-        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
-            [];
+    final stepsRaw =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final steps = stepsRaw is List ? stepsRaw : [];
     if (steps.isEmpty) return -2; // No steps available
 
     // Find the next incomplete step
@@ -125,9 +125,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   String _getMiseEnPlaceDescription() {
-    final ingredients = widget.recipeData['ingredients'] as List? ?? [];
+    final ingredientsRaw = widget.recipeData['ingredients'];
+    final ingredients = ingredientsRaw is List ? ingredientsRaw : [];
     final glassware = widget.recipeData['serving_glass'] ?? '';
-    final equipment = widget.recipeData['equipment_needed'] as List? ?? [];
+    final equipmentRaw = widget.recipeData['equipment_needed'] ?? [];
+    final equipment = equipmentRaw is List ? equipmentRaw : [];
 
     List<String> allItems = [];
 
@@ -369,36 +371,34 @@ class _RecipeScreenState extends State<RecipeScreen> {
     };
 
     // Initialize ingredient images
-    if (widget.recipeData['ingredients'] is List) {
-      for (var ingredient in widget.recipeData['ingredients']) {
-        final ingredientName = ingredient['name'];
-        _specializedImages['ingredient_$ingredientName'] = null;
-        _imageGenerationProgress['ingredient_$ingredientName'] = false;
-      }
+    final ingredientsRaw = widget.recipeData['ingredients'];
+    final ingredientsList = ingredientsRaw is List ? ingredientsRaw : [];
+    for (var ingredient in ingredientsList) {
+      final ingredientName = ingredient['name'];
+      _specializedImages['ingredient_$ingredientName'] = null;
+      _imageGenerationProgress['ingredient_$ingredientName'] = false;
     }
 
     // Initialize equipment images - handle both new and old data format
-    final equipmentList = widget.recipeData['equipment_needed'] ??
+    final equipmentRaw = widget.recipeData['equipment_needed'] ??
         widget.recipeData['equipment'] ??
         [];
-    if (equipmentList is List) {
-      for (var equipment in equipmentList) {
-        final equipmentName = equipment is Map
-            ? (equipment['item'] ?? equipment['name'] ?? equipment.toString())
-            : equipment.toString();
-        _specializedImages['equipment_$equipmentName'] = null;
-        _imageGenerationProgress['equipment_$equipmentName'] = false;
-      }
+    final equipmentList = equipmentRaw is List ? equipmentRaw : [];
+    for (var equipment in equipmentList) {
+      final equipmentName = equipment is Map
+          ? (equipment['item'] ?? equipment['name'] ?? equipment.toString())
+          : equipment.toString();
+      _specializedImages['equipment_$equipmentName'] = null;
+      _imageGenerationProgress['equipment_$equipmentName'] = false;
     }
 
     // Initialize method/step images - handle both 'steps' and 'method' keys
-    final stepsList =
+    final stepsRaw =
         widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
-    if (stepsList is List) {
-      for (int i = 0; i < stepsList.length; i++) {
-        _specializedImages['method_step_$i'] = null;
-        _imageGenerationProgress['method_step_$i'] = false;
-      }
+    final stepsList = stepsRaw is List ? stepsRaw : [];
+    for (int i = 0; i < stepsList.length; i++) {
+      _specializedImages['method_step_$i'] = null;
+      _imageGenerationProgress['method_step_$i'] = false;
     }
   }
 
@@ -520,12 +520,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
     _stepCompletion[-1] = false;
 
     // Epic 3: Initialize step completion tracking
-    final stepsList =
+    final stepsRaw =
         widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
-    if (stepsList is List) {
-      for (int i = 0; i < stepsList.length; i++) {
-        _stepCompletion[i] = false;
-      }
+    final stepsList = stepsRaw is List ? stepsRaw : [];
+    for (int i = 0; i < stepsList.length; i++) {
+      _stepCompletion[i] = false;
     }
 
     // Load saved progress
@@ -600,23 +599,23 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   void _initializeStepConnections() {
-    final ingredients = (widget.recipeData['ingredients'] as List?)
-            ?.map((e) => e['name'].toString().toLowerCase())
-            .toList() ??
-        [];
-    final equipmentList = widget.recipeData['equipment_needed'] ??
+    final ingredientsRaw = widget.recipeData['ingredients'];
+    final ingredients = (ingredientsRaw is List)
+        ? ingredientsRaw.map((e) => e['name'].toString().toLowerCase()).toList()
+        : <String>[];
+    final equipmentRaw = widget.recipeData['equipment_needed'] ??
         widget.recipeData['equipment'] ??
         [];
-    final equipment = (equipmentList as List?)
-            ?.map((e) => (e is Map
-                    ? (e['item'] ?? e['name'] ?? e.toString())
-                    : e.toString())
+    final equipmentList = equipmentRaw is List ? equipmentRaw : [];
+    final equipment = equipmentList
+        .map((e) =>
+            (e is Map ? (e['item'] ?? e['name'] ?? e.toString()) : e.toString())
                 .toLowerCase())
-            .toList() ??
-        [];
-    final stepsList =
+        .toList();
+    final stepsRaw =
         widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
-    final steps = (stepsList as List?)?.map((e) => e.toString()) ?? [];
+    final stepsList = stepsRaw is List ? stepsRaw : [];
+    final steps = stepsList.map((e) => e.toString());
 
     // Initialize step card keys
     _stepCardKeys.clear();
@@ -1182,9 +1181,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   double _getOverallProgress() {
-    final steps =
-        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
-            [];
+    final stepsRaw =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final steps = stepsRaw is List ? stepsRaw : [];
     final totalSteps = steps.length + 1; // +1 for Mise En Place
 
     int completedSteps = 0;
@@ -1210,9 +1209,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
       _stepCompletion[-1] = false;
 
       // Reset all recipe steps
-      final steps = (widget.recipeData['steps'] ?? widget.recipeData['method'])
-              as List? ??
-          [];
+      final stepsRaw =
+          widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+      final steps = stepsRaw is List ? stepsRaw : [];
       for (int i = 0; i < steps.length; i++) {
         _stepCompletion[i] = false;
       }
@@ -1541,9 +1540,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   String _getPreparationMethod() {
-    final method =
-        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
-            [];
+    final methodRaw =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final method = methodRaw is List ? methodRaw : [];
     if (method.isNotEmpty) {
       final firstStep = method.first.toString().toLowerCase();
       if (firstStep.contains('shake')) {
@@ -1567,10 +1566,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
           icon: Icons.format_list_numbered,
           previewContent: _buildMethodPreviewWidget(),
           expandedContent: _buildMethodSection(),
-          totalItems: ((widget.recipeData['steps'] ??
-                      widget.recipeData['method']) as List?)
-                  ?.length ??
-              0,
+          totalItems: (() {
+            final stepsRaw =
+                widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+            final steps = stepsRaw is List ? stepsRaw : [];
+            return steps.length;
+          })(),
           completedItems: _stepCompletion.values.where((e) => e == true).length,
           expanded: _expandedSection == 'method',
           onOpen: () => _toggleExpandedSection('method'),
@@ -1582,7 +1583,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
           icon: Icons.local_grocery_store,
           previewContent: _buildIngredientsPreviewWidget(),
           expandedContent: _buildIngredientsSection(),
-          totalItems: (widget.recipeData['ingredients'] as List?)?.length ?? 0,
+          totalItems: (() {
+            final ingredientsRaw = widget.recipeData['ingredients'];
+            final ingredients = ingredientsRaw is List ? ingredientsRaw : [];
+            return ingredients.length;
+          })(),
           completedItems: _ingredientChecklist.values.where((e) => e).length,
           expanded: _expandedSection == 'ingredients',
           onOpen: () => _toggleExpandedSection('ingredients'),
@@ -1594,10 +1599,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
           icon: Icons.build,
           previewContent: _buildEquipmentPreviewWidget(),
           expandedContent: _buildEquipmentSection(),
-          totalItems: ((widget.recipeData['equipment_needed'] ??
-                      widget.recipeData['equipment']) as List?)
-                  ?.length ??
-              0,
+          totalItems: (() {
+            final equipmentRaw = widget.recipeData['equipment_needed'] ??
+                widget.recipeData['equipment'] ??
+                [];
+            final equipment = equipmentRaw is List ? equipmentRaw : [];
+            return equipment.length;
+          })(),
           expanded: _expandedSection == 'equipment',
           onOpen: () => _toggleExpandedSection('equipment'),
           onClose: () => _toggleExpandedSection('equipment'),
@@ -1607,9 +1615,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildMethodPreviewWidget() {
-    final steps =
-        (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ??
-            [];
+    final stepsRaw =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final steps = stepsRaw is List ? stepsRaw : [];
     if (steps.isEmpty) return const SizedBox.shrink();
     return Text(
       steps.first.toString(),
@@ -1620,8 +1628,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildIngredientsPreviewWidget() {
-    final ingredients =
-        (widget.recipeData['ingredients'] as List?)?.take(4).toList() ?? [];
+    final ingredientsRaw = widget.recipeData['ingredients'];
+    final ingredients = ingredientsRaw is List ? ingredientsRaw : [];
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -1690,10 +1698,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildEquipmentPreviewWidget() {
-    final equipmentList = widget.recipeData['equipment_needed'] ??
+    final equipmentRaw = widget.recipeData['equipment_needed'] ??
         widget.recipeData['equipment'] ??
         [];
-    final equipment = (equipmentList as List?)?.take(3).toList() ?? [];
+    final equipment = equipmentRaw is List ? equipmentRaw : [];
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: equipment.map((e) {
@@ -1730,8 +1738,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildIngredientsSection() {
-    final ingredients =
-        widget.recipeData['ingredients'] as List<dynamic>? ?? [];
+    final ingredientsRaw = widget.recipeData['ingredients'];
+    final ingredients = ingredientsRaw is List ? ingredientsRaw : [];
 
     return Container(
       padding: iOSTheme.cardPadding,
@@ -1801,9 +1809,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildMethodSection() {
-    final method = (widget.recipeData['steps'] ?? widget.recipeData['method'])
-            as List<dynamic>? ??
-        [];
+    final methodRaw =
+        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final method = methodRaw is List ? methodRaw : [];
 
     return Container(
       padding: iOSTheme.cardPadding,
@@ -1847,10 +1855,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildEquipmentSection() {
-    final equipmentList = widget.recipeData['equipment_needed'] ??
+    final equipmentRaw = widget.recipeData['equipment_needed'] ??
         widget.recipeData['equipment'] ??
         [];
-    final equipment = equipmentList as List<dynamic>? ?? [];
+    final equipment = equipmentRaw is List ? equipmentRaw : [];
 
     if (equipment.isEmpty) {
       return const SizedBox.shrink();
