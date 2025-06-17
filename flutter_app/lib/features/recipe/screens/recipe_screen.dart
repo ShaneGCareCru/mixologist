@@ -50,29 +50,142 @@ class _RecipeScreenState extends State<RecipeScreen> {
   bool _isLoadingRelatedCocktail = false;
   
   DrinkProgress get _currentDrinkProgress {
-    final totalSteps = _stepCompletion.length;
-    final completedSteps = _stepCompletion.values.where((completed) => completed).length;
+    // Check if Mise En Place is complete
+    if (_stepCompletion[-1] != true) {
+      return DrinkProgress.emptyGlass;
+    }
     
-    if (completedSteps == 0) return DrinkProgress.emptyGlass;
-    if (completedSteps < totalSteps * 0.4) return DrinkProgress.ingredientsAdded;
-    if (completedSteps < totalSteps * 0.8) return DrinkProgress.mixed;
-    if (completedSteps < totalSteps) return DrinkProgress.garnished;
+    final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+    int completedRecipeSteps = 0;
+    for (int i = 0; i < steps.length; i++) {
+      if (_stepCompletion[i] == true) {
+        completedRecipeSteps++;
+      }
+    }
+    final totalRecipeSteps = steps.length;
+    
+    if (completedRecipeSteps == 0) return DrinkProgress.ingredientsAdded;
+    if (completedRecipeSteps < totalRecipeSteps * 0.4) return DrinkProgress.ingredientsAdded;
+    if (completedRecipeSteps < totalRecipeSteps * 0.8) return DrinkProgress.mixed;
+    if (completedRecipeSteps < totalRecipeSteps) return DrinkProgress.garnished;
     return DrinkProgress.complete;
   }
   
   String _getProgressText() {
-    switch (_currentDrinkProgress) {
-      case DrinkProgress.emptyGlass:
-        return 'Ready to start mixing';
-      case DrinkProgress.ingredientsAdded:
-        return 'Adding ingredients...';
-      case DrinkProgress.mixed:
-        return 'Mixing and blending...';
-      case DrinkProgress.garnished:
-        return 'Almost finished!';
-      case DrinkProgress.complete:
-        return 'Cocktail complete! 🍹';
+    // Check if Mise En Place is complete
+    if (_stepCompletion[-1] != true) {
+      return _getMiseEnPlaceDescription();
     }
+    
+    final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+    if (steps.isEmpty) return 'No steps available';
+    
+    // Find the next incomplete step
+    int nextStepIndex = -1;
+    for (int i = 0; i < steps.length; i++) {
+      if (_stepCompletion[i] != true) {
+        nextStepIndex = i;
+        break;
+      }
+    }
+    
+    if (nextStepIndex == -1) {
+      // All recipe steps complete - show flavor profile
+      return _getFlavorProfileDescription();
+    } else {
+      return 'Step ${nextStepIndex + 1}: ${steps[nextStepIndex]}';
+    }
+  }
+  
+  int _getCurrentStepIndex() {
+    // Check if Mise En Place is complete
+    if (_stepCompletion[-1] != true) {
+      return -1; // Mise En Place
+    }
+    
+    final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+    if (steps.isEmpty) return -2; // No steps available
+    
+    // Find the next incomplete step
+    for (int i = 0; i < steps.length; i++) {
+      if (_stepCompletion[i] != true) {
+        return i;
+      }
+    }
+    return -2; // All steps complete - show flavor profile
+  }
+
+  String _getMiseEnPlaceDescription() {
+    final ingredients = widget.recipeData['ingredients'] as List? ?? [];
+    final glassware = widget.recipeData['serving_glass'] ?? '';
+    final equipment = widget.recipeData['equipment_needed'] as List? ?? [];
+    
+    List<String> allItems = [];
+    
+    // Add ingredient names only (no quantities)
+    for (var ingredient in ingredients) {
+      final name = ingredient['name']?.toString() ?? '';
+      if (name.isNotEmpty) {
+        allItems.add(name);
+      }
+    }
+    
+    // Add glassware
+    if (glassware.isNotEmpty) {
+      allItems.add(glassware);
+    }
+    
+    // Add equipment
+    for (var eq in equipment) {
+      final equipmentName = eq is Map ? (eq['item'] ?? eq['name'] ?? eq.toString()) : eq.toString();
+      if (equipmentName.isNotEmpty) {
+        allItems.add(equipmentName);
+      }
+    }
+    
+    if (allItems.isEmpty) {
+      return 'Mise En Place - Ready to start!';
+    }
+    
+    return 'Gather the following: ${allItems.join(', ')}.';
+  }
+
+  String _getFlavorProfileDescription() {
+    final flavorProfile = widget.recipeData['flavor_profile'] as Map? ?? {};
+    if (flavorProfile.isEmpty) {
+      return 'Cocktail complete! Enjoy your drink! 🍹';
+    }
+    
+    String description = 'Tasting Notes - What to expect:\n\n';
+    
+    // Primary flavors
+    if (flavorProfile['primary_flavors'] is List) {
+      final primaryFlavors = (flavorProfile['primary_flavors'] as List).join(', ');
+      description += 'Primary Flavors: $primaryFlavors\n\n';
+    }
+    
+    // Secondary notes
+    if (flavorProfile['secondary_notes'] is List) {
+      final secondaryNotes = (flavorProfile['secondary_notes'] as List).join(', ');
+      description += 'Secondary Notes: $secondaryNotes\n\n';
+    }
+    
+    // Mouthfeel
+    if (flavorProfile['mouthfeel'] != null) {
+      description += 'Mouthfeel: ${flavorProfile['mouthfeel']}\n\n';
+    }
+    
+    // Finish
+    if (flavorProfile['finish'] != null) {
+      description += 'Finish: ${flavorProfile['finish']}\n\n';
+    }
+    
+    // Balance
+    if (flavorProfile['balance'] != null) {
+      description += 'Balance: ${flavorProfile['balance']}';
+    }
+    
+    return description.trim();
   }
 
   void _toggleStepCompleted(int stepIndex, bool completed) {
@@ -355,6 +468,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
         _ingredientChecklist[ingredient['name']] = false;
       }
     }
+    
+    // Initialize Mise En Place step (step -1)
+    _stepCompletion[-1] = false;
     
     // Epic 3: Initialize step completion tracking
     final stepsList = widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
@@ -837,44 +953,155 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Widget _buildCompactProgress() {
+    final currentStepIndex = _getCurrentStepIndex();
+    final isMiseEnPlace = currentStepIndex == -1;
+    final isFlavorProfile = currentStepIndex == -2;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Progress',
-          style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: iOSTheme.smallPadding),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            DrinkProgressGlass(progress: _currentDrinkProgress, width: 20, height: 30),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _getProgressText(),
-                    style: iOSTheme.caption1.copyWith(fontWeight: FontWeight.w500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: _stepCompletion.isNotEmpty 
-                        ? _stepCompletion.values.where((v) => v).length / _stepCompletion.length
-                        : 0,
-                    backgroundColor: CupertinoColors.systemGrey5,
-                    color: iOSTheme.whiskey,
-                    minHeight: 3,
-                  ),
-                ],
+            Text(
+              'Progress',
+              style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: _resetProgress,
+              child: Icon(
+                CupertinoIcons.refresh,
+                size: 18,
+                color: CupertinoColors.systemGrey,
               ),
             ),
           ],
         ),
+        const SizedBox(height: iOSTheme.smallPadding),
+        
+        // Glass at top, centered
+        Center(
+          child: DrinkProgressGlass(progress: _currentDrinkProgress, width: 40, height: 60),
+        ),
+        const SizedBox(height: iOSTheme.smallPadding),
+        
+        // Progress bar
+        LinearProgressIndicator(
+          value: _getOverallProgress(),
+          backgroundColor: CupertinoColors.systemGrey5,
+          color: iOSTheme.whiskey,
+          minHeight: 4,
+        ),
+        const SizedBox(height: iOSTheme.mediumPadding),
+        
+        // Step text below glass
+        Text(
+          _getProgressText(),
+          style: iOSTheme.caption1.copyWith(fontWeight: FontWeight.w500),
+          maxLines: 8,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: iOSTheme.mediumPadding),
+        
+        // Action button at bottom
+        if (isMiseEnPlace)
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoButton(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              color: iOSTheme.whiskey,
+              borderRadius: BorderRadius.circular(8),
+              onPressed: () {
+                _toggleStepCompleted(-1, true);
+              },
+              child: Text(
+                'Ready to Start Mixing',
+                style: iOSTheme.caption1.copyWith(
+                  color: CupertinoColors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        if (!isMiseEnPlace && !isFlavorProfile)
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoButton(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              color: iOSTheme.whiskey,
+              borderRadius: BorderRadius.circular(8),
+              onPressed: () {
+                _toggleStepCompleted(currentStepIndex, true);
+              },
+              child: Text(
+                'Mark Step ${currentStepIndex + 1} Done',
+                style: iOSTheme.caption1.copyWith(
+                  color: CupertinoColors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        if (isFlavorProfile)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: CupertinoColors.systemGreen,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '🍹 Enjoy Your Cocktail!',
+              textAlign: TextAlign.center,
+              style: iOSTheme.caption1.copyWith(
+                color: CupertinoColors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
       ],
     );
+  }
+
+  double _getOverallProgress() {
+    final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+    final totalSteps = steps.length + 1; // +1 for Mise En Place
+    
+    int completedSteps = 0;
+    
+    // Check Mise En Place
+    if (_stepCompletion[-1] == true) {
+      completedSteps++;
+    }
+    
+    // Check recipe steps
+    for (int i = 0; i < steps.length; i++) {
+      if (_stepCompletion[i] == true) {
+        completedSteps++;
+      }
+    }
+    
+    return totalSteps > 0 ? completedSteps / totalSteps : 0;
+  }
+
+  void _resetProgress() {
+    setState(() {
+      // Reset Mise En Place
+      _stepCompletion[-1] = false;
+      
+      // Reset all recipe steps
+      final steps = (widget.recipeData['steps'] ?? widget.recipeData['method']) as List? ?? [];
+      for (int i = 0; i < steps.length; i++) {
+        _stepCompletion[i] = false;
+      }
+      
+      // Reset ingredient checklist
+      for (String ingredient in _ingredientChecklist.keys) {
+        _ingredientChecklist[ingredient] = false;
+      }
+    });
+    _saveProgress();
   }
 
   Widget _buildCondensedFacts() {

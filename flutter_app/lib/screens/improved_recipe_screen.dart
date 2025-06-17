@@ -41,11 +41,9 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
             children: [
               _buildRecipeHero(safeData),
               const SizedBox(height: 24),
-              _buildIngredientsSection(safeData),
+              _buildIngredientsAndEquipmentSection(safeData),
               const SizedBox(height: 24),
               _buildMethodSection(safeData),
-              const SizedBox(height: 24),
-              _buildEquipmentSection(safeData),
             ],
           ),
         ),
@@ -165,7 +163,7 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
     );
   }
 
-  Widget _buildIngredientsSection(SafeRecipeData safeData) {
+  Widget _buildIngredientsAndEquipmentSection(SafeRecipeData safeData) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -181,7 +179,7 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Ingredients',
+                  'Ingredients & Equipment',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFFB8860B),
@@ -200,7 +198,7 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            // Consistent ingredient grid with 1:1 aspect ratio
+            // Combined ingredients and equipment grid with 1:1 aspect ratio
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -210,8 +208,17 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              itemCount: safeData.ingredients.length,
-              itemBuilder: (context, index) => _buildIngredientCard(safeData, index),
+              itemCount: safeData.ingredients.length + safeData.equipment.length,
+              itemBuilder: (context, index) {
+                if (index < safeData.ingredients.length) {
+                  // Render ingredient card
+                  return _buildIngredientCard(safeData, index);
+                } else {
+                  // Render equipment card
+                  final equipmentIndex = index - safeData.ingredients.length;
+                  return _buildEquipmentCard(safeData, equipmentIndex);
+                }
+              },
             ),
           ],
         ),
@@ -274,6 +281,73 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
                         });
                       },
                       activeColor: const Color(0xFF87A96B), // Sage
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEquipmentCard(SafeRecipeData safeData, int index) {
+    final equipmentName = safeData.getEquipment(index) ?? 'Unknown equipment';
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: [
+            // Consistent equipment image with 1:1 aspect ratio
+            Expanded(
+              flex: 3,
+              child: MixologistImage.equipment(
+                altText: equipmentName,
+                onGenerateRequest: () => _generateEquipmentImage(equipmentName),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Equipment details
+            Expanded(
+              flex: 2,
+              child: Column(
+                children: [
+                  Text(
+                    equipmentName,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Equipment',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFFB8860B), // Amber for equipment
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const Spacer(),
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Checkbox(
+                      value: _ingredientChecklist[equipmentName] ?? false,
+                      onChanged: (value) {
+                        setState(() {
+                          _ingredientChecklist[equipmentName] = value ?? false;
+                        });
+                      },
+                      activeColor: const Color(0xFFB8860B), // Amber for equipment
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -411,92 +485,6 @@ class _ImprovedRecipeScreenState extends State<ImprovedRecipeScreen> {
     );
   }
 
-  Widget _buildEquipmentSection(SafeRecipeData safeData) {
-    if (safeData.equipment.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('No specific equipment required'),
-        ),
-      );
-    }
-
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.kitchen,
-                  color: const Color(0xFFB8860B), // Amber
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Equipment',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFB8860B),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Consistent equipment grid with 1:1 aspect ratio
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 1.0, // Consistent 1:1 ratio
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: safeData.equipment.length,
-              itemBuilder: (context, index) {
-                final equipmentName = safeData.getEquipment(index) ?? 'Unknown equipment';
-                
-                return Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: MixologistImage.equipment(
-                            altText: equipmentName,
-                            onGenerateRequest: () => _generateEquipmentImage(equipmentName),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            equipmentName,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _toggleStepCompleted(int index, bool completed) {
     setState(() {
