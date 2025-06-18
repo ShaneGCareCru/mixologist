@@ -32,6 +32,10 @@ import '../../../widgets/ingredient_intelligence/substitution_sheet.dart';
 import '../../../models/ingredient.dart';
 import '../../../services/tasting_note_service.dart';
 import '../../../services/cost_calculator.dart';
+import '../../../services/haptic_service.dart';
+import '../../../widgets/animations/liquid_drop_animation.dart';
+import '../../../widgets/animations/cocktail_shaker_animation.dart';
+import '../../../widgets/animations/glass_clink_animation.dart';
 
 class RecipeScreen extends StatefulWidget {
   final Map<String, dynamic> recipeData;
@@ -227,10 +231,31 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return description.trim();
   }
 
-  void _toggleStepCompleted(int stepIndex, bool? completed) {
+  void _toggleStepCompleted(int stepIndex, bool? completed) async {
     setState(() {
       _stepCompletion[stepIndex] = completed;
     });
+    
+    if (completed == true) {
+      // Trigger haptic feedback for step completion
+      await HapticService.instance.stepComplete();
+      
+      // Check if this is a shaking step and show shaker animation
+      final stepsRaw = widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+      final steps = stepsRaw is List ? stepsRaw : [];
+      if (stepIndex >= 0 && stepIndex < steps.length) {
+        final stepText = steps[stepIndex].toString().toLowerCase();
+        if (_isShakingStep(stepText)) {
+          _showCocktailShakerAnimation();
+        }
+      }
+      
+      // Check if recipe is complete
+      if (_isRecipeComplete()) {
+        _onRecipeComplete();
+      }
+    }
+    
     _saveProgress();
   }
 
@@ -582,6 +607,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
     // Initialize ambient animation system
     _ambientController = AmbientAnimationController.instance;
     _ambientController.startAll();
+    
+    // Initialize haptic service
+    HapticService.instance.initialize();
     
     _initializeIngredientChecklist();
     _initializeSpecializedImages();
@@ -1228,6 +1256,155 @@ class _RecipeScreenState extends State<RecipeScreen> {
     _httpClient.close(); // Close the client when the widget is disposed
     _ambientController.dispose();
     super.dispose();
+  }
+
+  // Phase 3.1: Haptic & Animation Integration Methods
+  
+  /// Handle ingredient checking with haptic feedback and liquid drop animation
+  void _onIngredientChecked(String ingredientName, bool checked) async {
+    if (!checked) return;
+    
+    // Trigger haptic feedback
+    await HapticService.instance.ingredientCheck();
+    
+    // Get ingredient color for animation
+    final color = _getIngredientColor(ingredientName);
+    
+    // Show liquid drop animation
+    _showLiquidDropAnimation(ingredientName, color);
+  }
+  
+  /// Get color for ingredient based on type
+  Color _getIngredientColor(String ingredientName) {
+    final nameLower = ingredientName.toLowerCase();
+    
+    if (nameLower.contains('whiskey') || nameLower.contains('bourbon') || nameLower.contains('scotch')) {
+      return const Color(0xFF8B4513); // Saddle brown
+    } else if (nameLower.contains('gin')) {
+      return const Color(0xFF87A96B); // Sage green
+    } else if (nameLower.contains('vodka')) {
+      return Colors.white.withOpacity(0.7);
+    } else if (nameLower.contains('rum')) {
+      return const Color(0xFFCD853F); // Peru
+    } else if (nameLower.contains('tequila')) {
+      return const Color(0xFFFFD700); // Gold
+    } else if (nameLower.contains('juice') || nameLower.contains('lime') || nameLower.contains('lemon')) {
+      return const Color(0xFFFFFF00); // Yellow/green
+    } else if (nameLower.contains('syrup') || nameLower.contains('honey')) {
+      return const Color(0xFFB8860B); // Amber
+    } else {
+      return const Color(0xFFB8860B); // Default amber
+    }
+  }
+  
+  /// Show liquid drop animation from ingredient to glass area
+  void _showLiquidDropAnimation(String ingredientName, Color liquidColor) {
+    // For now, create a simple drop animation in the center
+    // In a full implementation, we would calculate actual positions
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+    
+    overlayEntry = OverlayEntry(
+      builder: (context) => LiquidDropAnimation(
+        startPosition: const Offset(100, 200), // Top of ingredient area
+        glassPosition: const Offset(150, 400), // Glass area
+        liquidColor: liquidColor,
+        onAnimationComplete: () {
+          overlayEntry.remove();
+        },
+      ),
+    );
+    
+    overlay.insert(overlayEntry);
+  }
+  
+  /// Check if a step involves shaking
+  bool _isShakingStep(String stepText) {
+    final stepLower = stepText.toLowerCase();
+    return stepLower.contains('shake') || stepLower.contains('shaking');
+  }
+  
+  /// Show cocktail shaker animation for mixing steps
+  void _showCocktailShakerAnimation() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (context) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            InteractiveCocktailShaker(
+              shakeCount: 10,
+              shakeDuration: const Duration(seconds: 3),
+              enableHaptics: true,
+              onShakeComplete: () => Navigator.of(context).pop(),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Shake vigorously!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Check if recipe is completely finished
+  bool _isRecipeComplete() {
+    // Check if Mise En Place is complete
+    if (_stepCompletion[-1] != true) return false;
+    
+    final stepsRaw = widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final steps = stepsRaw is List ? stepsRaw : [];
+    
+    // Check if all recipe steps are complete
+    for (int i = 0; i < steps.length; i++) {
+      if (_stepCompletion[i] != true) return false;
+    }
+    
+    return true;
+  }
+  
+  // Phase 3.2: Share Animation Integration
+  
+  /// Handle recipe completion with celebration animation
+  void _onRecipeComplete() async {
+    // Final success haptic pattern
+    await HapticService.instance.recipeFinish();
+    
+    // Show completion celebration
+    _showCompletionCelebration();
+  }
+  
+  /// Show glass clink completion celebration
+  void _showCompletionCelebration() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (context) => GlassClinkOverlay(
+        onComplete: () {
+          Navigator.of(context).pop();
+          _shareRecipe();
+        },
+      ),
+    );
+  }
+  
+  /// Share recipe functionality
+  void _shareRecipe() {
+    // Placeholder for sharing functionality
+    // In full implementation, this would integrate with platform sharing
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🍹 Cocktail complete! Share feature coming soon...'),
+        backgroundColor: Color(0xFF87A96B),
+      ),
+    );
   }
 
   @override
@@ -2106,10 +2283,18 @@ class _RecipeScreenState extends State<RecipeScreen> {
                             : CupertinoColors.systemGrey,
                       ),
                       onPressed: () {
+                        final wasChecked = _ingredientChecklist[name] ?? false;
+                        final nowChecked = !wasChecked;
+                        
                         setState(() {
-                          _ingredientChecklist[name] =
-                              !(_ingredientChecklist[name] ?? false);
+                          _ingredientChecklist[name] = nowChecked;
                         });
+                        
+                        if (nowChecked) {
+                          // Trigger haptic feedback and liquid drop animation
+                          _onIngredientChecked(name, true);
+                        }
+                        
                         _saveProgress();
                       },
                     ),
