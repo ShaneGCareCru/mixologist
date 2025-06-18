@@ -431,14 +431,14 @@ class VariableFontTypography {
   }
   
   /// Get cocktail-themed font weights
-  static class CocktailWeights {
-    static const double light = 300;      // Ingredients, descriptions
-    static const double regular = 400;    // Body text
-    static const double medium = 500;     // Subheadings
-    static const double semiBold = 600;   // Active elements
-    static const double bold = 700;       // Headlines, emphasis
-    static const double extraBold = 800;  // Brand, hero text
-  }
+  static Map<String, double> get cocktailWeights => {
+    'light': 300.0,      // Ingredients, descriptions
+    'regular': 400.0,    // Body text
+    'medium': 500.0,     // Subheadings
+    'semiBold': 600.0,   // Active elements
+    'bold': 700.0,       // Headlines, emphasis
+    'extraBold': 800.0,  // Brand, hero text
+  };
 }
 
 /// Extension methods for easy scroll-aware text usage

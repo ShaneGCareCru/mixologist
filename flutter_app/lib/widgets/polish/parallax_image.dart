@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 /// Image widget with parallax scrolling effect for depth and polish
 /// Creates the illusion of depth by moving images at different rates
@@ -166,7 +165,7 @@ class _ParallaxImageState extends State<ParallaxImage> {
       image: _getImageProvider(),
       fit: widget.fit,
       alignment: widget.alignment,
-      colorFilter: widget.colorFilter,
+      colorBlendMode: widget.blendMode,
       width: widget.width,
       height: widget.height + 100,
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
@@ -322,7 +321,7 @@ class IngredientParallax extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -350,7 +349,7 @@ class IngredientParallax extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.4),
+                      Colors.black.withValues(alpha: 0.4),
                     ],
                   ),
                 ),
@@ -420,7 +419,7 @@ class RecipeHeroParallax extends StatelessWidget {
             height: height,
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.3),
+              Colors.black.withValues(alpha: 0.3),
               BlendMode.darken,
             ),
           ),
@@ -433,7 +432,7 @@ class RecipeHeroParallax extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.transparent,
-                  Colors.black.withOpacity(0.6),
+                  Colors.black.withValues(alpha: 0.6),
                 ],
               ),
             ),
@@ -465,7 +464,7 @@ class RecipeHeroParallax extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       shadows: [
                         const Shadow(
                           color: Colors.black,
@@ -518,7 +517,7 @@ class ParallaxPresets {
         imagePath: backgroundImage,
         parallaxFactor: gentle,
         colorFilter: ColorFilter.mode(
-          Colors.black.withOpacity(0.2),
+          Colors.black.withValues(alpha: 0.2),
           BlendMode.darken,
         ),
       ),
