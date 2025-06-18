@@ -12,6 +12,11 @@ import '../../../shared/widgets/method_card.dart';
 import '../../../shared/widgets/section_preview.dart';
 import '../../../theme/ios_theme.dart';
 
+// Polish imports
+import '../../../widgets/polish/polish_animations.dart';
+import '../../../widgets/polish/scroll_aware_text.dart';
+import '../../../widgets/polish/parallax_image.dart';
+
 class RecipeScreen extends StatefulWidget {
   final Map<String, dynamic> recipeData;
   const RecipeScreen({super.key, required this.recipeData});
@@ -990,19 +995,43 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Left side - 2/3 width for image with proper 2:3 aspect ratio
+        // Left side - 2/3 width for image with proper 2:3 aspect ratio and parallax
         if (_currentImageBytes != null)
-          Container(
-            width: imageWidth,
-            height: imageHeight,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(iOSTheme.mediumRadius),
-              image: DecorationImage(
-                image: MemoryImage(_currentImageBytes!),
-                fit: BoxFit
-                    .contain, // Use contain to show full image without cropping
+          ClipRRect(
+            borderRadius: BorderRadius.circular(iOSTheme.mediumRadius),
+            child: SizedBox(
+              width: imageWidth,
+              height: imageHeight,
+              child: ParallaxImage(
+                imageProvider: MemoryImage(_currentImageBytes!),
+                parallaxFactor: 0.3,
+                height: imageHeight,
+                width: imageWidth,
+                fit: BoxFit.contain,
               ),
             ),
+          ),
+        // Loading state with shimmer effect
+        if (_currentImageBytes == null && _imageStreamError == null)
+          PolishAnimations.shimmerEffect(
+            Container(
+              width: imageWidth,
+              height: imageHeight,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(iOSTheme.mediumRadius),
+                color: CupertinoColors.systemGrey5,
+              ),
+              child: const Center(
+                child: Icon(
+                  CupertinoIcons.photo,
+                  size: 48,
+                  color: CupertinoColors.systemGrey,
+                ),
+              ),
+            ),
+            duration: const Duration(milliseconds: 1500),
+            baseColor: CupertinoColors.systemGrey6,
+            highlightColor: CupertinoColors.systemGrey4,
           ),
         const SizedBox(width: iOSTheme.mediumPadding),
         // Right side - 1/3 width for comprehensive info (in a card)
@@ -1023,18 +1052,16 @@ class _RecipeScreenState extends State<RecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title and description
-          Text(
+          // Title with scroll-aware typography
+          ScrollHeadline(
             widget.recipeData['name'] ??
                 widget.recipeData['drink_name'] ??
                 'Recipe',
             style: iOSTheme.title2.copyWith(fontWeight: FontWeight.bold),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: iOSTheme.smallPadding),
           if (widget.recipeData['description'] != null)
-            Text(
+            ScrollBodyText(
               widget.recipeData['description'] as String,
               style: iOSTheme.caption1.copyWith(
                 color: CupertinoColors.secondaryLabel,
@@ -1078,18 +1105,23 @@ class _RecipeScreenState extends State<RecipeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            ScrollHeadline(
               'Progress',
               style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
             ),
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: _resetProgress,
-              child: Icon(
-                CupertinoIcons.refresh,
-                size: 18,
-                color: CupertinoColors.systemGrey,
+            PolishAnimations.subtleBreathing(
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: _resetProgress,
+                child: Icon(
+                  CupertinoIcons.refresh,
+                  size: 18,
+                  color: CupertinoColors.systemGrey,
+                ),
               ),
+              scaleMin: 0.95,
+              scaleMax: 1.05,
+              duration: const Duration(milliseconds: 3000),
             ),
           ],
         ),
@@ -1102,17 +1134,23 @@ class _RecipeScreenState extends State<RecipeScreen> {
         ),
         const SizedBox(height: iOSTheme.smallPadding),
 
-        // Progress bar
-        LinearProgressIndicator(
-          value: _getOverallProgress(),
-          backgroundColor: CupertinoColors.systemGrey5,
-          color: iOSTheme.whiskey,
-          minHeight: 4,
+        // Progress bar with glow effect
+        PolishAnimations.glowPulse(
+          LinearProgressIndicator(
+            value: _getOverallProgress(),
+            backgroundColor: CupertinoColors.systemGrey5,
+            color: iOSTheme.whiskey,
+            minHeight: 4,
+          ),
+          glowColor: iOSTheme.whiskey,
+          intensity: _getOverallProgress() > 0.8 ? 0.3 : 0.1,
+          radius: 6.0,
+          enabled: _getOverallProgress() > 0.5,
         ),
         const SizedBox(height: iOSTheme.mediumPadding),
 
-        // Step text below glass
-        Text(
+        // Step text below glass with scroll-aware typography
+        ScrollBodyText(
           _getProgressText(),
           style: iOSTheme.caption1.copyWith(fontWeight: FontWeight.w500),
           maxLines: 8,
@@ -1120,61 +1158,76 @@ class _RecipeScreenState extends State<RecipeScreen> {
         ),
         const SizedBox(height: iOSTheme.mediumPadding),
 
-        // Action button at bottom
+        // Action button at bottom with breathing animation
         if (isMiseEnPlace)
           SizedBox(
             width: double.infinity,
-            child: CupertinoButton(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              color: iOSTheme.whiskey,
-              borderRadius: BorderRadius.circular(8),
-              onPressed: () {
-                _toggleStepCompleted(-1, true);
-              },
-              child: Text(
-                'Ready to Start Mixing',
-                style: iOSTheme.caption1.copyWith(
-                  color: CupertinoColors.white,
-                  fontWeight: FontWeight.w600,
+            child: PolishAnimations.subtleBreathing(
+              CupertinoButton(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                color: iOSTheme.whiskey,
+                borderRadius: BorderRadius.circular(8),
+                onPressed: () {
+                  _toggleStepCompleted(-1, true);
+                },
+                child: Text(
+                  'Ready to Start Mixing',
+                  style: iOSTheme.caption1.copyWith(
+                    color: CupertinoColors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
+              scaleMin: 0.98,
+              scaleMax: 1.02,
+              duration: const Duration(milliseconds: 2500),
             ),
           ),
         if (!isMiseEnPlace && !isFlavorProfile)
           SizedBox(
             width: double.infinity,
-            child: CupertinoButton(
+            child: PolishAnimations.subtleBreathing(
+              CupertinoButton(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                color: iOSTheme.whiskey,
+                borderRadius: BorderRadius.circular(8),
+                onPressed: () {
+                  _toggleStepCompleted(currentStepIndex, true);
+                },
+                child: Text(
+                  'Mark Step ${currentStepIndex + 1} Done',
+                  style: iOSTheme.caption1.copyWith(
+                    color: CupertinoColors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              scaleMin: 0.98,
+              scaleMax: 1.02,
+              duration: const Duration(milliseconds: 2500),
+            ),
+          ),
+        if (isFlavorProfile)
+          PolishAnimations.glowPulse(
+            Container(
+              width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
-              color: iOSTheme.whiskey,
-              borderRadius: BorderRadius.circular(8),
-              onPressed: () {
-                _toggleStepCompleted(currentStepIndex, true);
-              },
+              decoration: BoxDecoration(
+                color: CupertinoColors.systemGreen,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Text(
-                'Mark Step ${currentStepIndex + 1} Done',
+                '🍹 Enjoy Your Cocktail!',
+                textAlign: TextAlign.center,
                 style: iOSTheme.caption1.copyWith(
                   color: CupertinoColors.white,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ),
-        if (isFlavorProfile)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemGreen,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '🍹 Enjoy Your Cocktail!',
-              textAlign: TextAlign.center,
-              style: iOSTheme.caption1.copyWith(
-                color: CupertinoColors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            glowColor: CupertinoColors.systemGreen,
+            intensity: 0.4,
+            radius: 8.0,
           ),
       ],
     );
@@ -1228,7 +1281,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        ScrollHeadline(
           'Quick Facts',
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
@@ -1277,12 +1330,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        ScrollHeadline(
           'History',
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: iOSTheme.smallPadding),
-        Text(
+        ScrollBodyText(
           drinkHistory.toString(),
           style: iOSTheme.caption2.copyWith(
             color: CupertinoColors.secondaryLabel,
@@ -1303,7 +1356,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        ScrollHeadline(
           'Trivia',
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
@@ -1368,7 +1421,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        ScrollHeadline(
           'Related Drinks',
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
@@ -1653,24 +1706,38 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: _specializedImages[imageKey] != null
-                      ? Image.memory(
-                          _specializedImages[imageKey]!,
+                      ? ParallaxImage(
+                          imageProvider: MemoryImage(_specializedImages[imageKey]!),
+                          parallaxFactor: 0.2,
+                          height: double.infinity,
+                          width: double.infinity,
                           fit: BoxFit.cover,
                         )
                       : _imageGenerationProgress[imageKey] == true
-                          ? Container(
-                              color: Colors.grey[200],
-                              child: const Center(
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                          ? PolishAnimations.shimmerEffect(
+                              Container(
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                ),
                               ),
+                              duration: const Duration(milliseconds: 1500),
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
                             )
-                          : Container(
-                              color: Colors.grey[100],
-                              child: const Center(
-                                child: Icon(Icons.image_not_supported,
-                                    color: Colors.grey, size: 32),
+                          : PolishAnimations.shimmerEffect(
+                              Container(
+                                color: Colors.grey[100],
+                                child: const Center(
+                                  child: Icon(Icons.image_not_supported,
+                                      color: Colors.grey, size: 32),
+                                ),
                               ),
+                              duration: const Duration(milliseconds: 2000),
+                              baseColor: Colors.grey[200]!,
+                              highlightColor: Colors.white,
+                              enabled: false, // Only shimmer when loading
                             ),
                 ),
               ),
@@ -1679,12 +1746,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
-                  child: Text(
+                  child: ScrollBodyText(
                     name,
                     style: iOSTheme.body.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
-                    textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1712,23 +1778,30 @@ class _RecipeScreenState extends State<RecipeScreen> {
         if (_specializedImages[imageKey] != null) {
           child = ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: Image.memory(
-              _specializedImages[imageKey]!,
+            child: ParallaxImage(
+              imageProvider: MemoryImage(_specializedImages[imageKey]!),
+              parallaxFactor: 0.1,
               width: 40,
               height: 40,
               fit: BoxFit.cover,
             ),
           );
         } else {
-          child = Container(
-            width: 40,
-            height: 40,
-            color: Colors.grey[200],
-            child: Icon(
-              Icons.build,
-              size: 20,
-              color: iOSTheme.whiskey,
+          child = PolishAnimations.shimmerEffect(
+            Container(
+              width: 40,
+              height: 40,
+              color: Colors.grey[200],
+              child: Icon(
+                Icons.build,
+                size: 20,
+                color: iOSTheme.whiskey,
+              ),
             ),
+            duration: const Duration(milliseconds: 2000),
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            enabled: false, // Only show static placeholder
           );
         }
         return Padding(
@@ -1747,7 +1820,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          ScrollHeadline(
             'Ingredients',
             style: iOSTheme.title2,
           ),
@@ -1761,23 +1834,29 @@ class _RecipeScreenState extends State<RecipeScreen> {
               padding: const EdgeInsets.only(bottom: iOSTheme.smallPadding),
               child: Row(
                 children: [
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: Icon(
-                      _ingredientChecklist[name] == true
-                          ? CupertinoIcons.checkmark_circle_fill
-                          : CupertinoIcons.circle,
-                      color: _ingredientChecklist[name] == true
-                          ? CupertinoColors.systemGreen
-                          : CupertinoColors.systemGrey,
+                  PolishAnimations.subtleBreathing(
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: Icon(
+                        _ingredientChecklist[name] == true
+                            ? CupertinoIcons.checkmark_circle_fill
+                            : CupertinoIcons.circle,
+                        color: _ingredientChecklist[name] == true
+                            ? CupertinoColors.systemGreen
+                            : CupertinoColors.systemGrey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _ingredientChecklist[name] =
+                              !(_ingredientChecklist[name] ?? false);
+                        });
+                        _saveProgress();
+                      },
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _ingredientChecklist[name] =
-                            !(_ingredientChecklist[name] ?? false);
-                      });
-                      _saveProgress();
-                    },
+                    enabled: _ingredientChecklist[name] == true,
+                    scaleMin: 0.98,
+                    scaleMax: 1.02,
+                    duration: const Duration(milliseconds: 2000),
                   ),
                   const SizedBox(width: iOSTheme.mediumPadding),
                   Icon(
@@ -1819,7 +1898,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          ScrollHeadline(
             'Method',
             style: iOSTheme.title2,
           ),
@@ -1831,22 +1910,44 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
             return Padding(
               padding: const EdgeInsets.only(bottom: iOSTheme.mediumPadding),
-              child: MethodCard(
-                key: _stepCardKeys.length > index ? _stepCardKeys[index] : null,
-                data: MethodCardData(
-                  stepNumber: index + 1,
-                  title: 'Step ${index + 1}',
-                  description: step,
-                  imageAlt: 'Step ${index + 1} illustration',
-                  isCompleted: isCompleted,
-                  duration: '~2 min',
-                  difficulty: 'Easy',
-                  proTip: _getProTipForStep(step),
-                  tipCategory: _getTipCategoryForStep(step),
-                ),
-                onCheckboxChanged: (completed) =>
-                    _toggleStepCompleted(index, completed),
-              ),
+              child: isCompleted
+                  ? PolishAnimations.glowPulse(
+                      MethodCard(
+                        key: _stepCardKeys.length > index ? _stepCardKeys[index] : null,
+                        data: MethodCardData(
+                          stepNumber: index + 1,
+                          title: 'Step ${index + 1}',
+                          description: step,
+                          imageAlt: 'Step ${index + 1} illustration',
+                          isCompleted: isCompleted,
+                          duration: '~2 min',
+                          difficulty: 'Easy',
+                          proTip: _getProTipForStep(step),
+                          tipCategory: _getTipCategoryForStep(step),
+                        ),
+                        onCheckboxChanged: (completed) =>
+                            _toggleStepCompleted(index, completed),
+                      ),
+                      glowColor: const Color(0xFF87A96B),
+                      intensity: 0.3,
+                      radius: 6.0,
+                    )
+                  : MethodCard(
+                      key: _stepCardKeys.length > index ? _stepCardKeys[index] : null,
+                      data: MethodCardData(
+                        stepNumber: index + 1,
+                        title: 'Step ${index + 1}',
+                        description: step,
+                        imageAlt: 'Step ${index + 1} illustration',
+                        isCompleted: isCompleted,
+                        duration: '~2 min',
+                        difficulty: 'Easy',
+                        proTip: _getProTipForStep(step),
+                        tipCategory: _getTipCategoryForStep(step),
+                      ),
+                      onCheckboxChanged: (completed) =>
+                          _toggleStepCompleted(index, completed),
+                    ),
             );
           }),
         ],
@@ -1870,7 +1971,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          ScrollHeadline(
             'Equipment',
             style: iOSTheme.title2,
           ),
@@ -1890,7 +1991,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                     color: CupertinoColors.systemGrey,
                   ),
                   const SizedBox(width: iOSTheme.mediumPadding),
-                  Text(
+                  ScrollBodyText(
                     name,
                     style: iOSTheme.body,
                   ),
