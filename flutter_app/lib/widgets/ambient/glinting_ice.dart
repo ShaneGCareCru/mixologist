@@ -104,7 +104,7 @@ class GlintingIce extends StatefulWidget {
 }
 
 class _GlintingIceState extends State<GlintingIce>
-    with AmbientAnimationMixin<GlintingIce> {
+    with TickerProviderStateMixin, AmbientAnimationMixin<GlintingIce> {
   
   late AnimationController _masterController;
   final List<SparklePoint> _sparkles = [];
@@ -457,7 +457,7 @@ class IceCubeCluster extends StatefulWidget {
 }
 
 class _IceCubeClusterState extends State<IceCubeCluster>
-    with AmbientAnimationMixin<IceCubeCluster> {
+    with TickerProviderStateMixin, AmbientAnimationMixin<IceCubeCluster> {
   
   late AnimationController _clusterController;
   final List<double> _cubePhases = [];

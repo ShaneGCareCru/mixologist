@@ -10,6 +10,8 @@ import '../../ai_assistant/ai_assistant_page.dart';
 import '../../inventory/unified_inventory_page.dart';
 import '../../auth/login_screen.dart';
 import '../../recipe/screens/recipe_screen.dart';
+import '../../../widgets/signature/bar_tool_icons.dart';
+import '../../../widgets/theme/drink_theme_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _unifiedSearchController =
       TextEditingController();
   String? _searchError;
+  int _selectedIndex = 0;
 
   // Known cocktail names for fuzzy matching
   static const List<String> _knownCocktails = [
@@ -162,6 +165,67 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentTheme = DrinkThemeProvider.maybeOf(context);
+    final primaryColor = currentTheme?.primary ?? const Color(0xFFB8860B);
+    
+    return CupertinoTabScaffold(
+      tabBar: CupertinoTabBar(
+        backgroundColor: const Color(0xFF1C1C1E),
+        activeColor: primaryColor,
+        inactiveColor: const Color(0xFF8E8E93),
+        items: [
+          BottomNavigationBarItem(
+            icon: BarToolIcon(
+              tool: BarTool.shaker,
+              isActive: _selectedIndex == 0,
+              fillColor: primaryColor,
+              size: 24,
+            ),
+            label: 'Recipes',
+          ),
+          BottomNavigationBarItem(
+            icon: BarToolIcon(
+              tool: BarTool.jigger,
+              isActive: _selectedIndex == 1,
+              fillColor: primaryColor,
+              size: 24,
+            ),
+            label: 'Inventory',
+          ),
+          BottomNavigationBarItem(
+            icon: BarToolIcon(
+              tool: BarTool.strainer,
+              isActive: _selectedIndex == 2,
+              fillColor: primaryColor,
+              size: 24,
+            ),
+            label: 'Assistant',
+          ),
+        ],
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+      ),
+      tabBuilder: (context, index) => _buildTabContent(index),
+    );
+  }
+
+  Widget _buildTabContent(int index) {
+    switch (index) {
+      case 0:
+        return _buildRecipesTab();
+      case 1:
+        return const UnifiedInventoryPage();
+      case 2:
+        return const AIAssistantPage();
+      default:
+        return _buildRecipesTab();
+    }
+  }
+
+  Widget _buildRecipesTab() {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle:
@@ -356,6 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   Widget _buildSuggestionChip(String text) {
     return CupertinoButton(

@@ -12,6 +12,27 @@ import '../../../shared/widgets/method_card.dart';
 import '../../../shared/widgets/section_preview.dart';
 import '../../../theme/ios_theme.dart';
 
+// Polish imports
+import '../../../widgets/polish/polish_animations.dart';
+import '../../../widgets/polish/scroll_aware_text.dart';
+import '../../../widgets/polish/parallax_image.dart';
+
+// Ambient animation imports
+import '../../../widgets/ambient/ambient_animation_controller.dart';
+import '../../../widgets/ambient/rotating_garnish.dart';
+import '../../../widgets/ambient/glinting_ice.dart';
+
+// Dynamic theming imports
+import '../../../widgets/theme/drink_theme_provider.dart';
+import '../../../widgets/theme/drink_theme_engine.dart';
+
+// Smart ingredient card imports
+import '../../../widgets/ingredient_intelligence/ingredient_card.dart';
+import '../../../widgets/ingredient_intelligence/substitution_sheet.dart';
+import '../../../models/ingredient.dart';
+import '../../../services/tasting_note_service.dart';
+import '../../../services/cost_calculator.dart';
+
 class RecipeScreen extends StatefulWidget {
   final Map<String, dynamic> recipeData;
   const RecipeScreen({super.key, required this.recipeData});
@@ -27,6 +48,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
   StreamSubscription<String>? _imageStreamSubscription; // Changed type
   final http.Client _httpClient =
       http.Client(); // HTTP client for streaming request
+
+  // Ambient Animation System
+  late AmbientAnimationController _ambientController;
 
   // Epic 2: Interactive Recipe Components
   int _servingSize = 1;
@@ -289,9 +313,276 @@ class _RecipeScreenState extends State<RecipeScreen> {
     }
   }
 
+  // Helper methods for smart ingredient conversion
+  Ingredient _createIngredientFromRecipeData(Map<String, dynamic> ingredientData) {
+    final name = ingredientData['name'] ?? ingredientData.toString();
+    final amount = ingredientData['amount'] ?? '';
+    final category = _inferIngredientCategory(name);
+    final tier = _inferQualityTier(name);
+    
+    return Ingredient(
+      id: 'recipe_${name.hashCode}',
+      name: name,
+      category: category,
+      tier: tier,
+      fillLevel: _ingredientChecklist[name] == true ? 1.0 : 0.0,
+      pricePerOz: _estimateIngredientPrice(name, category),
+      substitutes: _getCommonSubstitutes(name),
+      metadata: ingredientData,
+    );
+  }
+
+  String _inferIngredientCategory(String name) {
+    final nameLower = name.toLowerCase();
+    if (nameLower.contains('whiskey') || nameLower.contains('bourbon') || nameLower.contains('scotch')) {
+      return 'Whiskey';
+    }
+    if (nameLower.contains('rum')) return 'Rum';
+    if (nameLower.contains('gin')) return 'Gin';
+    if (nameLower.contains('vodka')) return 'Vodka';
+    if (nameLower.contains('tequila')) return 'Tequila';
+    if (nameLower.contains('vermouth') || nameLower.contains('bitters')) return 'Modifiers';
+    if (nameLower.contains('juice') || nameLower.contains('syrup')) return 'Mixers';
+    if (nameLower.contains('ice') || nameLower.contains('water')) return 'Ice & Water';
+    return 'Other';
+  }
+
+  QualityTier _inferQualityTier(String name) {
+    final nameLower = name.toLowerCase();
+    // Premium indicators
+    if (nameLower.contains('aged') || nameLower.contains('premium') || 
+        nameLower.contains('reserve') || nameLower.contains('single malt')) {
+      return QualityTier.luxury;
+    }
+    // Good quality indicators
+    if (nameLower.contains('craft') || nameLower.contains('artisan') || 
+        nameLower.contains('small batch')) {
+      return QualityTier.premium;
+    }
+    // Standard quality
+    return QualityTier.standard;
+  }
+
+  double _estimateIngredientPrice(String name, String category) {
+    // Rough price estimates per ounce
+    switch (category) {
+      case 'Whiskey': return 2.5;
+      case 'Rum': return 1.8;
+      case 'Gin': return 2.0;
+      case 'Vodka': return 1.5;
+      case 'Tequila': return 2.2;
+      case 'Modifiers': return 1.0;
+      case 'Mixers': return 0.3;
+      default: return 0.5;
+    }
+  }
+
+  List<String> _getCommonSubstitutes(String name) {
+    final nameLower = name.toLowerCase();
+    if (nameLower.contains('simple syrup')) {
+      return ['Agave nectar', 'Honey syrup', 'Sugar'];
+    }
+    if (nameLower.contains('lime juice')) {
+      return ['Lemon juice', 'Fresh lime', 'Lime cordial'];
+    }
+    if (nameLower.contains('bourbon')) {
+      return ['Rye whiskey', 'Canadian whiskey', 'Tennessee whiskey'];
+    }
+    if (nameLower.contains('gin')) {
+      return ['Vodka', 'White rum', 'Blanco tequila'];
+    }
+    return [];
+  }
+
+  Unit _parseUnit(String amount) {
+    final amountLower = amount.toLowerCase();
+    if (amountLower.contains('oz')) return Unit.oz;
+    if (amountLower.contains('ml')) return Unit.ml;
+    if (amountLower.contains('cl')) return Unit.cl;
+    if (amountLower.contains('tsp')) return Unit.tsp;
+    if (amountLower.contains('tbsp')) return Unit.tbsp;
+    if (amountLower.contains('dash')) return Unit.dash;
+    if (amountLower.contains('splash')) return Unit.splash;
+    return Unit.shots;
+  }
+
+  double _parseAmount(String amount) {
+    final regex = RegExp(r'(\d+\.?\d*)');
+    final match = regex.firstMatch(amount);
+    return match != null ? double.tryParse(match.group(1)!) ?? 1.0 : 1.0;
+  }
+
+  void _showSubstitutions(Map<String, dynamic> ingredientData) {
+    final ingredient = _createIngredientFromRecipeData(ingredientData);
+    // Use the static show method for simplicity
+    SubstitutionSheet.show(
+      context,
+      ingredient.name,
+      onSubstitutionSelected: (substitution) {
+        // Could update ingredient in recipe if needed
+      },
+    );
+  }
+
+  void _showBrandRecommendations(Map<String, dynamic> ingredientData) {
+    final ingredient = _createIngredientFromRecipeData(ingredientData);
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: Text('Brand Recommendations for ${ingredient.name}'),
+        message: Text('Choose your preferred quality tier'),
+        actions: <CupertinoActionSheetAction>[
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _showBrandsByTier(ingredient, QualityTier.budget);
+            },
+            child: const Text('Budget Options'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _showBrandsByTier(ingredient, QualityTier.standard);
+            },
+            child: const Text('Standard Options'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _showBrandsByTier(ingredient, QualityTier.premium);
+            },
+            child: const Text('Premium Options'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          isDestructiveAction: true,
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
+  void _showBrandsByTier(Ingredient ingredient, QualityTier tier) {
+    // This would connect to a brand database
+    // For now, show a simple dialog
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text('${tier.name.toUpperCase()} ${ingredient.name}'),
+        content: Text('Brand recommendations for ${ingredient.category} in the ${tier.name} tier would appear here.'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper methods for ambient animation wrapping
+  Widget _buildGarnishImage(Widget child) {
+    return RotatingGarnish(
+      maxRotation: 3.0,
+      duration: const Duration(seconds: 4),
+      child: child,
+    );
+  }
+
+  Widget _buildIceElement(Widget child) {
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: GlintingIce(
+            sparklePoints: const [Offset(20, 30), Offset(40, 50)],
+            size: const Size(40, 40),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _wrapImageWithAmbientAnimation(String ingredientName, Widget imageWidget, {bool isEquipment = false}) {
+    final nameLower = ingredientName.toLowerCase();
+    
+    // Check if it's ice-related (ingredients or equipment)
+    if (nameLower.contains('ice') || nameLower.contains('frozen') || 
+        (isEquipment && (nameLower.contains('bucket') || nameLower.contains('crusher')))) {
+      return Stack(
+        children: [
+          imageWidget,
+          Positioned.fill(
+            child: GlintingIce(
+              sparklePoints: const [Offset(20, 30), Offset(40, 50), Offset(60, 20)],
+              size: const Size(100, 100),
+            ),
+          ),
+        ],
+      );
+    }
+    
+    // Check if it's garnish-related
+    if (nameLower.contains('cherry') ||
+        nameLower.contains('olive') ||
+        nameLower.contains('garnish') ||
+        nameLower.contains('mint') ||
+        nameLower.contains('lime') ||
+        nameLower.contains('lemon') ||
+        nameLower.contains('orange')) {
+      return RotatingGarnish(
+        maxRotation: 2.0,
+        duration: const Duration(seconds: 5),
+        child: imageWidget,
+      );
+    }
+    
+    // Default: return unwrapped
+    return imageWidget;
+  }
+
+  String _determineDrinkTheme() {
+    final drinkName = (widget.recipeData['name'] ?? 
+                     widget.recipeData['drink_name'] ?? '').toString().toLowerCase();
+    final ingredients = widget.recipeData['ingredients'] as List? ?? [];
+    
+    // Direct drink name matches
+    if (drinkName.contains('mojito')) return 'mojito';
+    if (drinkName.contains('margarita')) return 'margarita';
+    if (drinkName.contains('martini')) return 'martini';
+    if (drinkName.contains('bloody mary')) return 'bloody_mary';
+    if (drinkName.contains('old fashioned')) return 'old_fashioned';
+    if (drinkName.contains('gin') && (drinkName.contains('tonic') || drinkName.contains('g&t'))) {
+      return 'gin_tonic';
+    }
+    
+    // Analyze ingredients for theme hints
+    for (final ingredient in ingredients) {
+      final ingredientName = (ingredient['name'] ?? ingredient.toString()).toLowerCase();
+      if (ingredientName.contains('rum') && (drinkName.contains('mint') || ingredientName.contains('mint'))) {
+        return 'mojito';
+      }
+      if (ingredientName.contains('tequila')) return 'margarita';
+      if (ingredientName.contains('gin') && !drinkName.contains('whiskey')) return 'gin_tonic';
+      if (ingredientName.contains('whiskey') || ingredientName.contains('bourbon')) return 'old_fashioned';
+      if (ingredientName.contains('tomato') || ingredientName.contains('vodka') && drinkName.contains('bloody')) {
+        return 'bloody_mary';
+      }
+    }
+    
+    // Default fallback
+    return 'default';
+  }
+
   @override
   void initState() {
     super.initState();
+    
+    // Initialize ambient animation system
+    _ambientController = AmbientAnimationController.instance;
+    _ambientController.startAll();
+    
     _initializeIngredientChecklist();
     _initializeSpecializedImages();
     _initializeStepConnections();
@@ -935,25 +1226,36 @@ class _RecipeScreenState extends State<RecipeScreen> {
   void dispose() {
     _imageStreamSubscription?.cancel();
     _httpClient.close(); // Close the client when the widget is disposed
+    _ambientController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
+    final drinkTheme = _determineDrinkTheme();
+    final themeData = DrinkThemeEngine.getThemeForDrink(drinkTheme);
+    
+    return DrinkThemeProvider(
+      theme: themeData,
+      child: AnimatedDrinkTheme(
+        theme: themeData,
+        duration: const Duration(milliseconds: 800),
+        child: CupertinoPageScaffold(
+          navigationBar: CupertinoNavigationBar(
         middle: Text(widget.recipeData['name'] ??
             widget.recipeData['drink_name'] ??
             'Recipe'),
-        backgroundColor: CupertinoColors.systemBackground,
+        backgroundColor: themeData.primary.withOpacity(0.1),
         border: const Border(),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
-          child: const Icon(CupertinoIcons.back),
+          child: Icon(CupertinoIcons.back, color: themeData.primary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      backgroundColor: CupertinoColors.systemGroupedBackground,
+      backgroundColor: themeData.gradientColors.isNotEmpty 
+          ? themeData.gradientColors.last.withOpacity(0.05)
+          : CupertinoColors.systemGroupedBackground,
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -973,6 +1275,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
           ],
         ),
       ),
+        ),
+      ),
     );
   }
 
@@ -990,19 +1294,43 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Left side - 2/3 width for image with proper 2:3 aspect ratio
+        // Left side - 2/3 width for image with proper 2:3 aspect ratio and parallax
         if (_currentImageBytes != null)
-          Container(
-            width: imageWidth,
-            height: imageHeight,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(iOSTheme.mediumRadius),
-              image: DecorationImage(
-                image: MemoryImage(_currentImageBytes!),
-                fit: BoxFit
-                    .contain, // Use contain to show full image without cropping
+          ClipRRect(
+            borderRadius: BorderRadius.circular(iOSTheme.mediumRadius),
+            child: SizedBox(
+              width: imageWidth,
+              height: imageHeight,
+              child: ParallaxImage(
+                imageProvider: MemoryImage(_currentImageBytes!),
+                parallaxFactor: 0.3,
+                height: imageHeight,
+                width: imageWidth,
+                fit: BoxFit.contain,
               ),
             ),
+          ),
+        // Loading state with shimmer effect
+        if (_currentImageBytes == null && _imageStreamError == null)
+          PolishAnimations.shimmerEffect(
+            Container(
+              width: imageWidth,
+              height: imageHeight,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(iOSTheme.mediumRadius),
+                color: CupertinoColors.systemGrey5,
+              ),
+              child: const Center(
+                child: Icon(
+                  CupertinoIcons.photo,
+                  size: 48,
+                  color: CupertinoColors.systemGrey,
+                ),
+              ),
+            ),
+            duration: const Duration(milliseconds: 1500),
+            baseColor: CupertinoColors.systemGrey6,
+            highlightColor: CupertinoColors.systemGrey4,
           ),
         const SizedBox(width: iOSTheme.mediumPadding),
         // Right side - 1/3 width for comprehensive info (in a card)
@@ -1023,18 +1351,16 @@ class _RecipeScreenState extends State<RecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title and description
-          Text(
+          // Title with scroll-aware typography
+          ScrollHeadline(
             widget.recipeData['name'] ??
                 widget.recipeData['drink_name'] ??
                 'Recipe',
             style: iOSTheme.title2.copyWith(fontWeight: FontWeight.bold),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: iOSTheme.smallPadding),
           if (widget.recipeData['description'] != null)
-            Text(
+            ScrollBodyText(
               widget.recipeData['description'] as String,
               style: iOSTheme.caption1.copyWith(
                 color: CupertinoColors.secondaryLabel,
@@ -1078,18 +1404,23 @@ class _RecipeScreenState extends State<RecipeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            ScrollHeadline(
               'Progress',
               style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
             ),
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: _resetProgress,
-              child: Icon(
-                CupertinoIcons.refresh,
-                size: 18,
-                color: CupertinoColors.systemGrey,
+            PolishAnimations.subtleBreathing(
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: _resetProgress,
+                child: Icon(
+                  CupertinoIcons.refresh,
+                  size: 18,
+                  color: CupertinoColors.systemGrey,
+                ),
               ),
+              scaleMin: 0.95,
+              scaleMax: 1.05,
+              duration: const Duration(milliseconds: 3000),
             ),
           ],
         ),
@@ -1102,17 +1433,23 @@ class _RecipeScreenState extends State<RecipeScreen> {
         ),
         const SizedBox(height: iOSTheme.smallPadding),
 
-        // Progress bar
-        LinearProgressIndicator(
-          value: _getOverallProgress(),
-          backgroundColor: CupertinoColors.systemGrey5,
-          color: iOSTheme.whiskey,
-          minHeight: 4,
+        // Progress bar with glow effect
+        PolishAnimations.glowPulse(
+          LinearProgressIndicator(
+            value: _getOverallProgress(),
+            backgroundColor: CupertinoColors.systemGrey5,
+            color: iOSTheme.whiskey,
+            minHeight: 4,
+          ),
+          glowColor: iOSTheme.whiskey,
+          intensity: _getOverallProgress() > 0.8 ? 0.3 : 0.1,
+          radius: 6.0,
+          enabled: _getOverallProgress() > 0.5,
         ),
         const SizedBox(height: iOSTheme.mediumPadding),
 
-        // Step text below glass
-        Text(
+        // Step text below glass with scroll-aware typography
+        ScrollBodyText(
           _getProgressText(),
           style: iOSTheme.caption1.copyWith(fontWeight: FontWeight.w500),
           maxLines: 8,
@@ -1120,61 +1457,76 @@ class _RecipeScreenState extends State<RecipeScreen> {
         ),
         const SizedBox(height: iOSTheme.mediumPadding),
 
-        // Action button at bottom
+        // Action button at bottom with breathing animation
         if (isMiseEnPlace)
           SizedBox(
             width: double.infinity,
-            child: CupertinoButton(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              color: iOSTheme.whiskey,
-              borderRadius: BorderRadius.circular(8),
-              onPressed: () {
-                _toggleStepCompleted(-1, true);
-              },
-              child: Text(
-                'Ready to Start Mixing',
-                style: iOSTheme.caption1.copyWith(
-                  color: CupertinoColors.white,
-                  fontWeight: FontWeight.w600,
+            child: PolishAnimations.subtleBreathing(
+              CupertinoButton(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                color: iOSTheme.whiskey,
+                borderRadius: BorderRadius.circular(8),
+                onPressed: () {
+                  _toggleStepCompleted(-1, true);
+                },
+                child: Text(
+                  'Ready to Start Mixing',
+                  style: iOSTheme.caption1.copyWith(
+                    color: CupertinoColors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
+              scaleMin: 0.98,
+              scaleMax: 1.02,
+              duration: const Duration(milliseconds: 2500),
             ),
           ),
         if (!isMiseEnPlace && !isFlavorProfile)
           SizedBox(
             width: double.infinity,
-            child: CupertinoButton(
+            child: PolishAnimations.subtleBreathing(
+              CupertinoButton(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                color: iOSTheme.whiskey,
+                borderRadius: BorderRadius.circular(8),
+                onPressed: () {
+                  _toggleStepCompleted(currentStepIndex, true);
+                },
+                child: Text(
+                  'Mark Step ${currentStepIndex + 1} Done',
+                  style: iOSTheme.caption1.copyWith(
+                    color: CupertinoColors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              scaleMin: 0.98,
+              scaleMax: 1.02,
+              duration: const Duration(milliseconds: 2500),
+            ),
+          ),
+        if (isFlavorProfile)
+          PolishAnimations.glowPulse(
+            Container(
+              width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
-              color: iOSTheme.whiskey,
-              borderRadius: BorderRadius.circular(8),
-              onPressed: () {
-                _toggleStepCompleted(currentStepIndex, true);
-              },
+              decoration: BoxDecoration(
+                color: CupertinoColors.systemGreen,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Text(
-                'Mark Step ${currentStepIndex + 1} Done',
+                '🍹 Enjoy Your Cocktail!',
+                textAlign: TextAlign.center,
                 style: iOSTheme.caption1.copyWith(
                   color: CupertinoColors.white,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ),
-        if (isFlavorProfile)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemGreen,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '🍹 Enjoy Your Cocktail!',
-              textAlign: TextAlign.center,
-              style: iOSTheme.caption1.copyWith(
-                color: CupertinoColors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            glowColor: CupertinoColors.systemGreen,
+            intensity: 0.4,
+            radius: 8.0,
           ),
       ],
     );
@@ -1228,7 +1580,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        ScrollHeadline(
           'Quick Facts',
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
@@ -1277,12 +1629,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        ScrollHeadline(
           'History',
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: iOSTheme.smallPadding),
-        Text(
+        ScrollBodyText(
           drinkHistory.toString(),
           style: iOSTheme.caption2.copyWith(
             color: CupertinoColors.secondaryLabel,
@@ -1303,7 +1655,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        ScrollHeadline(
           'Trivia',
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
@@ -1368,7 +1720,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        ScrollHeadline(
           'Related Drinks',
           style: iOSTheme.headline.copyWith(fontWeight: FontWeight.w600),
         ),
@@ -1630,67 +1982,37 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget _buildIngredientsPreviewWidget() {
     final ingredientsRaw = widget.recipeData['ingredients'];
     final ingredients = ingredientsRaw is List ? ingredientsRaw : [];
+    
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: ingredients.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: MediaQuery.of(context).size.width > 800 ? 4 : 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 1.0,
+        crossAxisCount: MediaQuery.of(context).size.width > 800 ? 3 : 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.75, // Adjusted for smart card dimensions
       ),
       itemBuilder: (context, index) {
-        final ingredient = ingredients[index];
-        final name = ingredient['name'] ?? ingredient.toString();
-        final imageKey = 'ingredient_$name';
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              Expanded(
-                flex: 3,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: _specializedImages[imageKey] != null
-                      ? Image.memory(
-                          _specializedImages[imageKey]!,
-                          fit: BoxFit.cover,
-                        )
-                      : _imageGenerationProgress[imageKey] == true
-                          ? Container(
-                              color: Colors.grey[200],
-                              child: const Center(
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            )
-                          : Container(
-                              color: Colors.grey[100],
-                              child: const Center(
-                                child: Icon(Icons.image_not_supported,
-                                    color: Colors.grey, size: 32),
-                              ),
-                            ),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(8),
-                  child: Text(
-                    name,
-                    style: iOSTheme.body.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ],
+        final ingredientData = ingredients[index];
+        final name = ingredientData['name'] ?? ingredientData.toString();
+        final amount = ingredientData['amount'] ?? '';
+        
+        // Create smart ingredient card
+        final ingredient = _createIngredientFromRecipeData(ingredientData);
+        final parsedAmount = _parseAmount(amount);
+        final unit = _parseUnit(amount);
+        
+        return _wrapImageWithAmbientAnimation(
+          name,
+          IngredientCard(
+            ingredient: ingredient,
+            amount: parsedAmount,
+            unit: unit,
+            onTap: () => _showSubstitutions(ingredientData),
+            onLongPress: () => _showBrandRecommendations(ingredientData),
+            showCost: true,
+            showTastingNotes: true,
           ),
         );
       },
@@ -1712,23 +2034,34 @@ class _RecipeScreenState extends State<RecipeScreen> {
         if (_specializedImages[imageKey] != null) {
           child = ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: Image.memory(
-              _specializedImages[imageKey]!,
-              width: 40,
-              height: 40,
-              fit: BoxFit.cover,
+            child: _wrapImageWithAmbientAnimation(
+              name,
+              ParallaxImage(
+                imageProvider: MemoryImage(_specializedImages[imageKey]!),
+                parallaxFactor: 0.1,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              ),
+              isEquipment: true,
             ),
           );
         } else {
-          child = Container(
-            width: 40,
-            height: 40,
-            color: Colors.grey[200],
-            child: Icon(
-              Icons.build,
-              size: 20,
-              color: iOSTheme.whiskey,
+          child = PolishAnimations.shimmerEffect(
+            Container(
+              width: 40,
+              height: 40,
+              color: Colors.grey[200],
+              child: Icon(
+                Icons.build,
+                size: 20,
+                color: iOSTheme.whiskey,
+              ),
             ),
+            duration: const Duration(milliseconds: 2000),
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            enabled: false, // Only show static placeholder
           );
         }
         return Padding(
@@ -1747,7 +2080,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          ScrollHeadline(
             'Ingredients',
             style: iOSTheme.title2,
           ),
@@ -1761,23 +2094,29 @@ class _RecipeScreenState extends State<RecipeScreen> {
               padding: const EdgeInsets.only(bottom: iOSTheme.smallPadding),
               child: Row(
                 children: [
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: Icon(
-                      _ingredientChecklist[name] == true
-                          ? CupertinoIcons.checkmark_circle_fill
-                          : CupertinoIcons.circle,
-                      color: _ingredientChecklist[name] == true
-                          ? CupertinoColors.systemGreen
-                          : CupertinoColors.systemGrey,
+                  PolishAnimations.subtleBreathing(
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: Icon(
+                        _ingredientChecklist[name] == true
+                            ? CupertinoIcons.checkmark_circle_fill
+                            : CupertinoIcons.circle,
+                        color: _ingredientChecklist[name] == true
+                            ? CupertinoColors.systemGreen
+                            : CupertinoColors.systemGrey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _ingredientChecklist[name] =
+                              !(_ingredientChecklist[name] ?? false);
+                        });
+                        _saveProgress();
+                      },
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _ingredientChecklist[name] =
-                            !(_ingredientChecklist[name] ?? false);
-                      });
-                      _saveProgress();
-                    },
+                    enabled: _ingredientChecklist[name] == true,
+                    scaleMin: 0.98,
+                    scaleMax: 1.02,
+                    duration: const Duration(milliseconds: 2000),
                   ),
                   const SizedBox(width: iOSTheme.mediumPadding),
                   Icon(
@@ -1819,7 +2158,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          ScrollHeadline(
             'Method',
             style: iOSTheme.title2,
           ),
@@ -1831,22 +2170,44 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
             return Padding(
               padding: const EdgeInsets.only(bottom: iOSTheme.mediumPadding),
-              child: MethodCard(
-                key: _stepCardKeys.length > index ? _stepCardKeys[index] : null,
-                data: MethodCardData(
-                  stepNumber: index + 1,
-                  title: 'Step ${index + 1}',
-                  description: step,
-                  imageAlt: 'Step ${index + 1} illustration',
-                  isCompleted: isCompleted,
-                  duration: '~2 min',
-                  difficulty: 'Easy',
-                  proTip: _getProTipForStep(step),
-                  tipCategory: _getTipCategoryForStep(step),
-                ),
-                onCheckboxChanged: (completed) =>
-                    _toggleStepCompleted(index, completed),
-              ),
+              child: isCompleted
+                  ? PolishAnimations.glowPulse(
+                      MethodCard(
+                        key: _stepCardKeys.length > index ? _stepCardKeys[index] : null,
+                        data: MethodCardData(
+                          stepNumber: index + 1,
+                          title: 'Step ${index + 1}',
+                          description: step,
+                          imageAlt: 'Step ${index + 1} illustration',
+                          isCompleted: isCompleted,
+                          duration: '~2 min',
+                          difficulty: 'Easy',
+                          proTip: _getProTipForStep(step),
+                          tipCategory: _getTipCategoryForStep(step),
+                        ),
+                        onCheckboxChanged: (completed) =>
+                            _toggleStepCompleted(index, completed),
+                      ),
+                      glowColor: const Color(0xFF87A96B),
+                      intensity: 0.3,
+                      radius: 6.0,
+                    )
+                  : MethodCard(
+                      key: _stepCardKeys.length > index ? _stepCardKeys[index] : null,
+                      data: MethodCardData(
+                        stepNumber: index + 1,
+                        title: 'Step ${index + 1}',
+                        description: step,
+                        imageAlt: 'Step ${index + 1} illustration',
+                        isCompleted: isCompleted,
+                        duration: '~2 min',
+                        difficulty: 'Easy',
+                        proTip: _getProTipForStep(step),
+                        tipCategory: _getTipCategoryForStep(step),
+                      ),
+                      onCheckboxChanged: (completed) =>
+                          _toggleStepCompleted(index, completed),
+                    ),
             );
           }),
         ],
@@ -1870,7 +2231,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          ScrollHeadline(
             'Equipment',
             style: iOSTheme.title2,
           ),
@@ -1890,7 +2251,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                     color: CupertinoColors.systemGrey,
                   ),
                   const SizedBox(width: iOSTheme.mediumPadding),
-                  Text(
+                  ScrollBodyText(
                     name,
                     style: iOSTheme.body,
                   ),

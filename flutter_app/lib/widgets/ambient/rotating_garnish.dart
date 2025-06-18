@@ -41,7 +41,7 @@ class RotatingGarnish extends StatefulWidget {
 }
 
 class _RotatingGarnishState extends State<RotatingGarnish>
-    with AmbientAnimationMixin<RotatingGarnish> {
+    with TickerProviderStateMixin, AmbientAnimationMixin<RotatingGarnish> {
   
   late AnimationController _rotationController;
   late Animation<double> _rotationAnimation;
@@ -293,7 +293,7 @@ class SynchronizedGarnishRotation extends StatefulWidget {
 }
 
 class _SynchronizedGarnishRotationState extends State<SynchronizedGarnishRotation>
-    with AmbientAnimationMixin<SynchronizedGarnishRotation> {
+    with TickerProviderStateMixin, AmbientAnimationMixin<SynchronizedGarnishRotation> {
   
   late AnimationController _masterController;
   

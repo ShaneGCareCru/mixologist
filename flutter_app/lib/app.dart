@@ -4,26 +4,31 @@ import 'theme/ios_theme.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_text_styles.dart';
 import 'features/auth/login_screen.dart';
+import 'widgets/theme/drink_theme_provider.dart';
+import 'widgets/theme/drink_theme_engine.dart';
 
 class MixologistApp extends StatelessWidget {
   const MixologistApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ScrollConfiguration(
-      behavior: _SmoothScrollBehavior(),
-      child: CupertinoApp(
-        title: 'Mixologist',
-        theme: _buildCupertinoTheme(),
-        home: const LoginScreen(),
-        localizationsDelegates: const [
-          DefaultMaterialLocalizations.delegate,
-          DefaultCupertinoLocalizations.delegate,
-          DefaultWidgetsLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('en', 'US'),
-        ],
+    return DrinkThemeProvider(
+      theme: DrinkThemeEngine.getThemeForDrink('default'),
+      child: ScrollConfiguration(
+        behavior: _SmoothScrollBehavior(),
+        child: CupertinoApp(
+          title: 'Mixologist',
+          theme: _buildCupertinoTheme(),
+          home: const LoginScreen(),
+          localizationsDelegates: const [
+            DefaultMaterialLocalizations.delegate,
+            DefaultCupertinoLocalizations.delegate,
+            DefaultWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en', 'US'),
+          ],
+        ),
       ),
     );
   }
