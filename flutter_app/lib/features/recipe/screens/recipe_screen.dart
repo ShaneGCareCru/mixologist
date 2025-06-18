@@ -17,6 +17,22 @@ import '../../../widgets/polish/polish_animations.dart';
 import '../../../widgets/polish/scroll_aware_text.dart';
 import '../../../widgets/polish/parallax_image.dart';
 
+// Ambient animation imports
+import '../../../widgets/ambient/ambient_animation_controller.dart';
+import '../../../widgets/ambient/rotating_garnish.dart';
+import '../../../widgets/ambient/glinting_ice.dart';
+
+// Dynamic theming imports
+import '../../../widgets/theme/drink_theme_provider.dart';
+import '../../../widgets/theme/drink_theme_engine.dart';
+
+// Smart ingredient card imports
+import '../../../widgets/ingredient_intelligence/ingredient_card.dart';
+import '../../../widgets/ingredient_intelligence/substitution_sheet.dart';
+import '../../../models/ingredient.dart';
+import '../../../services/tasting_note_service.dart';
+import '../../../services/cost_calculator.dart';
+
 class RecipeScreen extends StatefulWidget {
   final Map<String, dynamic> recipeData;
   const RecipeScreen({super.key, required this.recipeData});
@@ -32,6 +48,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
   StreamSubscription<String>? _imageStreamSubscription; // Changed type
   final http.Client _httpClient =
       http.Client(); // HTTP client for streaming request
+
+  // Ambient Animation System
+  late AmbientAnimationController _ambientController;
 
   // Epic 2: Interactive Recipe Components
   int _servingSize = 1;
@@ -294,9 +313,276 @@ class _RecipeScreenState extends State<RecipeScreen> {
     }
   }
 
+  // Helper methods for smart ingredient conversion
+  Ingredient _createIngredientFromRecipeData(Map<String, dynamic> ingredientData) {
+    final name = ingredientData['name'] ?? ingredientData.toString();
+    final amount = ingredientData['amount'] ?? '';
+    final category = _inferIngredientCategory(name);
+    final tier = _inferQualityTier(name);
+    
+    return Ingredient(
+      id: 'recipe_${name.hashCode}',
+      name: name,
+      category: category,
+      tier: tier,
+      fillLevel: _ingredientChecklist[name] == true ? 1.0 : 0.0,
+      pricePerOz: _estimateIngredientPrice(name, category),
+      substitutes: _getCommonSubstitutes(name),
+      metadata: ingredientData,
+    );
+  }
+
+  String _inferIngredientCategory(String name) {
+    final nameLower = name.toLowerCase();
+    if (nameLower.contains('whiskey') || nameLower.contains('bourbon') || nameLower.contains('scotch')) {
+      return 'Whiskey';
+    }
+    if (nameLower.contains('rum')) return 'Rum';
+    if (nameLower.contains('gin')) return 'Gin';
+    if (nameLower.contains('vodka')) return 'Vodka';
+    if (nameLower.contains('tequila')) return 'Tequila';
+    if (nameLower.contains('vermouth') || nameLower.contains('bitters')) return 'Modifiers';
+    if (nameLower.contains('juice') || nameLower.contains('syrup')) return 'Mixers';
+    if (nameLower.contains('ice') || nameLower.contains('water')) return 'Ice & Water';
+    return 'Other';
+  }
+
+  QualityTier _inferQualityTier(String name) {
+    final nameLower = name.toLowerCase();
+    // Premium indicators
+    if (nameLower.contains('aged') || nameLower.contains('premium') || 
+        nameLower.contains('reserve') || nameLower.contains('single malt')) {
+      return QualityTier.luxury;
+    }
+    // Good quality indicators
+    if (nameLower.contains('craft') || nameLower.contains('artisan') || 
+        nameLower.contains('small batch')) {
+      return QualityTier.premium;
+    }
+    // Standard quality
+    return QualityTier.standard;
+  }
+
+  double _estimateIngredientPrice(String name, String category) {
+    // Rough price estimates per ounce
+    switch (category) {
+      case 'Whiskey': return 2.5;
+      case 'Rum': return 1.8;
+      case 'Gin': return 2.0;
+      case 'Vodka': return 1.5;
+      case 'Tequila': return 2.2;
+      case 'Modifiers': return 1.0;
+      case 'Mixers': return 0.3;
+      default: return 0.5;
+    }
+  }
+
+  List<String> _getCommonSubstitutes(String name) {
+    final nameLower = name.toLowerCase();
+    if (nameLower.contains('simple syrup')) {
+      return ['Agave nectar', 'Honey syrup', 'Sugar'];
+    }
+    if (nameLower.contains('lime juice')) {
+      return ['Lemon juice', 'Fresh lime', 'Lime cordial'];
+    }
+    if (nameLower.contains('bourbon')) {
+      return ['Rye whiskey', 'Canadian whiskey', 'Tennessee whiskey'];
+    }
+    if (nameLower.contains('gin')) {
+      return ['Vodka', 'White rum', 'Blanco tequila'];
+    }
+    return [];
+  }
+
+  Unit _parseUnit(String amount) {
+    final amountLower = amount.toLowerCase();
+    if (amountLower.contains('oz')) return Unit.oz;
+    if (amountLower.contains('ml')) return Unit.ml;
+    if (amountLower.contains('cl')) return Unit.cl;
+    if (amountLower.contains('tsp')) return Unit.tsp;
+    if (amountLower.contains('tbsp')) return Unit.tbsp;
+    if (amountLower.contains('dash')) return Unit.dash;
+    if (amountLower.contains('splash')) return Unit.splash;
+    return Unit.shots;
+  }
+
+  double _parseAmount(String amount) {
+    final regex = RegExp(r'(\d+\.?\d*)');
+    final match = regex.firstMatch(amount);
+    return match != null ? double.tryParse(match.group(1)!) ?? 1.0 : 1.0;
+  }
+
+  void _showSubstitutions(Map<String, dynamic> ingredientData) {
+    final ingredient = _createIngredientFromRecipeData(ingredientData);
+    // Use the static show method for simplicity
+    SubstitutionSheet.show(
+      context,
+      ingredient.name,
+      onSubstitutionSelected: (substitution) {
+        // Could update ingredient in recipe if needed
+      },
+    );
+  }
+
+  void _showBrandRecommendations(Map<String, dynamic> ingredientData) {
+    final ingredient = _createIngredientFromRecipeData(ingredientData);
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: Text('Brand Recommendations for ${ingredient.name}'),
+        message: Text('Choose your preferred quality tier'),
+        actions: <CupertinoActionSheetAction>[
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _showBrandsByTier(ingredient, QualityTier.budget);
+            },
+            child: const Text('Budget Options'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _showBrandsByTier(ingredient, QualityTier.standard);
+            },
+            child: const Text('Standard Options'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _showBrandsByTier(ingredient, QualityTier.premium);
+            },
+            child: const Text('Premium Options'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          isDestructiveAction: true,
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
+  void _showBrandsByTier(Ingredient ingredient, QualityTier tier) {
+    // This would connect to a brand database
+    // For now, show a simple dialog
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text('${tier.name.toUpperCase()} ${ingredient.name}'),
+        content: Text('Brand recommendations for ${ingredient.category} in the ${tier.name} tier would appear here.'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper methods for ambient animation wrapping
+  Widget _buildGarnishImage(Widget child) {
+    return RotatingGarnish(
+      maxRotation: 3.0,
+      duration: const Duration(seconds: 4),
+      child: child,
+    );
+  }
+
+  Widget _buildIceElement(Widget child) {
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: GlintingIce(
+            sparklePoints: const [Offset(20, 30), Offset(40, 50)],
+            size: const Size(40, 40),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _wrapImageWithAmbientAnimation(String ingredientName, Widget imageWidget, {bool isEquipment = false}) {
+    final nameLower = ingredientName.toLowerCase();
+    
+    // Check if it's ice-related (ingredients or equipment)
+    if (nameLower.contains('ice') || nameLower.contains('frozen') || 
+        (isEquipment && (nameLower.contains('bucket') || nameLower.contains('crusher')))) {
+      return Stack(
+        children: [
+          imageWidget,
+          Positioned.fill(
+            child: GlintingIce(
+              sparklePoints: const [Offset(20, 30), Offset(40, 50), Offset(60, 20)],
+              size: const Size(100, 100),
+            ),
+          ),
+        ],
+      );
+    }
+    
+    // Check if it's garnish-related
+    if (nameLower.contains('cherry') ||
+        nameLower.contains('olive') ||
+        nameLower.contains('garnish') ||
+        nameLower.contains('mint') ||
+        nameLower.contains('lime') ||
+        nameLower.contains('lemon') ||
+        nameLower.contains('orange')) {
+      return RotatingGarnish(
+        maxRotation: 2.0,
+        duration: const Duration(seconds: 5),
+        child: imageWidget,
+      );
+    }
+    
+    // Default: return unwrapped
+    return imageWidget;
+  }
+
+  String _determineDrinkTheme() {
+    final drinkName = (widget.recipeData['name'] ?? 
+                     widget.recipeData['drink_name'] ?? '').toString().toLowerCase();
+    final ingredients = widget.recipeData['ingredients'] as List? ?? [];
+    
+    // Direct drink name matches
+    if (drinkName.contains('mojito')) return 'mojito';
+    if (drinkName.contains('margarita')) return 'margarita';
+    if (drinkName.contains('martini')) return 'martini';
+    if (drinkName.contains('bloody mary')) return 'bloody_mary';
+    if (drinkName.contains('old fashioned')) return 'old_fashioned';
+    if (drinkName.contains('gin') && (drinkName.contains('tonic') || drinkName.contains('g&t'))) {
+      return 'gin_tonic';
+    }
+    
+    // Analyze ingredients for theme hints
+    for (final ingredient in ingredients) {
+      final ingredientName = (ingredient['name'] ?? ingredient.toString()).toLowerCase();
+      if (ingredientName.contains('rum') && (drinkName.contains('mint') || ingredientName.contains('mint'))) {
+        return 'mojito';
+      }
+      if (ingredientName.contains('tequila')) return 'margarita';
+      if (ingredientName.contains('gin') && !drinkName.contains('whiskey')) return 'gin_tonic';
+      if (ingredientName.contains('whiskey') || ingredientName.contains('bourbon')) return 'old_fashioned';
+      if (ingredientName.contains('tomato') || ingredientName.contains('vodka') && drinkName.contains('bloody')) {
+        return 'bloody_mary';
+      }
+    }
+    
+    // Default fallback
+    return 'default';
+  }
+
   @override
   void initState() {
     super.initState();
+    
+    // Initialize ambient animation system
+    _ambientController = AmbientAnimationController.instance;
+    _ambientController.startAll();
+    
     _initializeIngredientChecklist();
     _initializeSpecializedImages();
     _initializeStepConnections();
@@ -940,25 +1226,36 @@ class _RecipeScreenState extends State<RecipeScreen> {
   void dispose() {
     _imageStreamSubscription?.cancel();
     _httpClient.close(); // Close the client when the widget is disposed
+    _ambientController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
+    final drinkTheme = _determineDrinkTheme();
+    final themeData = DrinkThemeEngine.getThemeForDrink(drinkTheme);
+    
+    return DrinkThemeProvider(
+      theme: themeData,
+      child: AnimatedDrinkTheme(
+        theme: themeData,
+        duration: const Duration(milliseconds: 800),
+        child: CupertinoPageScaffold(
+          navigationBar: CupertinoNavigationBar(
         middle: Text(widget.recipeData['name'] ??
             widget.recipeData['drink_name'] ??
             'Recipe'),
-        backgroundColor: CupertinoColors.systemBackground,
+        backgroundColor: themeData.primary.withOpacity(0.1),
         border: const Border(),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
-          child: const Icon(CupertinoIcons.back),
+          child: Icon(CupertinoIcons.back, color: themeData.primary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      backgroundColor: CupertinoColors.systemGroupedBackground,
+      backgroundColor: themeData.gradientColors.isNotEmpty 
+          ? themeData.gradientColors.last.withOpacity(0.05)
+          : CupertinoColors.systemGroupedBackground,
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -976,6 +1273,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
               ),
             ),
           ],
+        ),
+      ),
         ),
       ),
     );
@@ -1683,80 +1982,37 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget _buildIngredientsPreviewWidget() {
     final ingredientsRaw = widget.recipeData['ingredients'];
     final ingredients = ingredientsRaw is List ? ingredientsRaw : [];
+    
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: ingredients.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: MediaQuery.of(context).size.width > 800 ? 4 : 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 1.0,
+        crossAxisCount: MediaQuery.of(context).size.width > 800 ? 3 : 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.75, // Adjusted for smart card dimensions
       ),
       itemBuilder: (context, index) {
-        final ingredient = ingredients[index];
-        final name = ingredient['name'] ?? ingredient.toString();
-        final imageKey = 'ingredient_$name';
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              Expanded(
-                flex: 3,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: _specializedImages[imageKey] != null
-                      ? ParallaxImage(
-                          imageProvider: MemoryImage(_specializedImages[imageKey]!),
-                          parallaxFactor: 0.2,
-                          height: double.infinity,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        )
-                      : _imageGenerationProgress[imageKey] == true
-                          ? PolishAnimations.shimmerEffect(
-                              Container(
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                ),
-                              ),
-                              duration: const Duration(milliseconds: 1500),
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                            )
-                          : PolishAnimations.shimmerEffect(
-                              Container(
-                                color: Colors.grey[100],
-                                child: const Center(
-                                  child: Icon(Icons.image_not_supported,
-                                      color: Colors.grey, size: 32),
-                                ),
-                              ),
-                              duration: const Duration(milliseconds: 2000),
-                              baseColor: Colors.grey[200]!,
-                              highlightColor: Colors.white,
-                              enabled: false, // Only shimmer when loading
-                            ),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(8),
-                  child: ScrollBodyText(
-                    name,
-                    style: iOSTheme.body.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ],
+        final ingredientData = ingredients[index];
+        final name = ingredientData['name'] ?? ingredientData.toString();
+        final amount = ingredientData['amount'] ?? '';
+        
+        // Create smart ingredient card
+        final ingredient = _createIngredientFromRecipeData(ingredientData);
+        final parsedAmount = _parseAmount(amount);
+        final unit = _parseUnit(amount);
+        
+        return _wrapImageWithAmbientAnimation(
+          name,
+          IngredientCard(
+            ingredient: ingredient,
+            amount: parsedAmount,
+            unit: unit,
+            onTap: () => _showSubstitutions(ingredientData),
+            onLongPress: () => _showBrandRecommendations(ingredientData),
+            showCost: true,
+            showTastingNotes: true,
           ),
         );
       },
@@ -1778,12 +2034,16 @@ class _RecipeScreenState extends State<RecipeScreen> {
         if (_specializedImages[imageKey] != null) {
           child = ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: ParallaxImage(
-              imageProvider: MemoryImage(_specializedImages[imageKey]!),
-              parallaxFactor: 0.1,
-              width: 40,
-              height: 40,
-              fit: BoxFit.cover,
+            child: _wrapImageWithAmbientAnimation(
+              name,
+              ParallaxImage(
+                imageProvider: MemoryImage(_specializedImages[imageKey]!),
+                parallaxFactor: 0.1,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              ),
+              isEquipment: true,
             ),
           );
         } else {

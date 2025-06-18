@@ -390,8 +390,7 @@ class ThemeTransitionOrchestrator {
 }
 
 /// Mixin for widgets that need custom theme transition animations
-mixin ThemeTransitionMixin<T extends StatefulWidget> on State<T> 
-    with TickerProviderStateMixin {
+mixin ThemeTransitionMixin<T extends StatefulWidget> on State<T>, TickerProviderStateMixin {
   
   late AnimationController themeTransitionController;
   late Animation<double> themeTransitionAnimation;
