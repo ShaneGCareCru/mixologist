@@ -109,6 +109,8 @@ class _GlintingIceState extends State<GlintingIce>
   late AnimationController _masterController;
   final List<SparklePoint> _sparkles = [];
   final math.Random _random = math.Random();
+  int _frameSkipCounter = 0;
+  static const int _frameSkipInterval = 2; // Update every 2nd frame for performance
   
   @override
   void initState() {
@@ -119,7 +121,7 @@ class _GlintingIceState extends State<GlintingIce>
 
   void _setupAnimation() {
     _masterController = createAmbientController(
-      duration: const Duration(milliseconds: 100), // High frequency for smooth updates
+      duration: const Duration(milliseconds: 500), // Reduced frequency for better performance
       debugLabel: 'GlintingIce',
     );
   }
@@ -150,7 +152,7 @@ class _GlintingIceState extends State<GlintingIce>
   }
 
   void _addRandomSparkles() {
-    final randomCount = 3 + _random.nextInt(4); // 3 to 6 random sparkles
+    final randomCount = 2 + _random.nextInt(2); // 2 to 3 random sparkles (reduced for performance)
     
     for (int i = 0; i < randomCount; i++) {
       _sparkles.add(SparklePoint(
@@ -205,7 +207,14 @@ class _GlintingIceState extends State<GlintingIce>
   }
 
   void _updateSparkles() {
-    const deltaTime = 100.0; // 100ms updates
+    // Implement frame skipping for performance
+    _frameSkipCounter++;
+    if (_frameSkipCounter < _frameSkipInterval) {
+      return; // Skip this frame
+    }
+    _frameSkipCounter = 0;
+    
+    const deltaTime = 500.0; // Match controller duration
     
     for (final sparkle in _sparkles) {
       sparkle.update(deltaTime);
@@ -318,8 +327,13 @@ class _IceGlintPainter extends CustomPainter {
   bool _sparklesChanged(List<SparklePoint> oldSparkles) {
     if (oldSparkles.length != sparkles.length) return true;
     
+    // Only check for significant opacity changes to reduce repaint frequency
     for (int i = 0; i < sparkles.length; i++) {
-      if (oldSparkles[i].currentOpacity != sparkles[i].currentOpacity) {
+      final oldOpacity = oldSparkles[i].currentOpacity;
+      final newOpacity = sparkles[i].currentOpacity;
+      
+      // Only repaint if opacity changed by more than 5% to reduce unnecessary repaints
+      if ((oldOpacity - newOpacity).abs() > 0.05) {
         return true;
       }
     }
@@ -467,7 +481,7 @@ class _IceCubeClusterState extends State<IceCubeCluster>
     super.initState();
     
     _clusterController = createAmbientController(
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 6), // Slower for less frequent updates
       debugLabel: 'IceCubeCluster',
     );
     

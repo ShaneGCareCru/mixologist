@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 enum DrinkProgress {
   emptyGlass(0),
@@ -183,12 +184,34 @@ class _GlassPainter extends CustomPainter {
         ..color = Colors.green[400]!
         ..style = PaintingStyle.fill;
       
-      // Simple garnish circle on rim
-      canvas.drawCircle(
-        Offset(centerX + glassWidth / 3, startY),
-        3,
-        garnishPaint,
-      );
+      // Enhanced lime wheel garnish on rim - proportional to larger glass
+      final garnishCenter = Offset(centerX + glassWidth / 3, startY);
+      final garnishRadius = 18.0; // Increased from 12.0 to be more proportional
+      
+      // Draw outer lime wheel (green rim)
+      canvas.drawCircle(garnishCenter, garnishRadius, garnishPaint);
+      
+      // Draw inner lighter green center
+      final innerPaint = Paint()
+        ..color = Colors.green[200]!
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(garnishCenter, garnishRadius * 0.7, innerPaint);
+      
+      // Draw lime wheel segments (spokes)
+      final spokePaint = Paint()
+        ..color = Colors.green[600]!
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke;
+      
+      for (int i = 0; i < 8; i++) {
+        final angle = (i * 45) * (3.14159 / 180); // Convert degrees to radians
+        final startX = garnishCenter.dx + (garnishRadius * 0.3) * math.cos(angle);
+        final startY = garnishCenter.dy + (garnishRadius * 0.3) * math.sin(angle);
+        final endX = garnishCenter.dx + (garnishRadius * 0.9) * math.cos(angle);
+        final endY = garnishCenter.dy + (garnishRadius * 0.9) * math.sin(angle);
+        
+        canvas.drawLine(Offset(startX, startY), Offset(endX, endY), spokePaint);
+      }
     }
   }
 

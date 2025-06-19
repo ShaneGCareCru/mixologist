@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'animation_performance_monitor.dart';
 
 /// Centralized controller for managing all ambient animations in the app
 class AmbientAnimationController with ChangeNotifier {
@@ -18,6 +19,12 @@ class AmbientAnimationController with ChangeNotifier {
 
   /// List of all animation controllers managed by this system
   final List<AnimationController> _controllers = [];
+  
+  /// Shared controllers for common animation types
+  final Map<String, AnimationController> _sharedControllers = {};
+  
+  /// Maximum number of controllers allowed to run simultaneously
+  static const int _maxConcurrentControllers = 15;
   
   /// Whether ambient animations are currently active
   bool _isActive = true;
@@ -53,6 +60,14 @@ class AmbientAnimationController with ChangeNotifier {
     // Start performance monitoring
     _startPerformanceMonitoring();
     
+    // Initialize and start the advanced performance monitor
+    AnimationPerformanceMonitor.instance.startMonitoring();
+    AnimationPerformanceMonitor.instance.setAutomaticOptimization(true);
+    
+    // Add performance callbacks
+    AnimationPerformanceMonitor.instance.addPerformanceWarningCallback(_onPerformanceWarning);
+    AnimationPerformanceMonitor.instance.addPerformanceCriticalCallback(_onPerformanceCritical);
+    
     // Listen for app lifecycle changes
     WidgetsBinding.instance.addObserver(_AppLifecycleObserver(this));
   }
@@ -60,6 +75,13 @@ class AmbientAnimationController with ChangeNotifier {
   /// Register an animation controller with the ambient system
   void registerController(AnimationController controller) {
     if (!_controllers.contains(controller)) {
+      // Check if we've reached the maximum number of controllers
+      if (_controllers.length >= _maxConcurrentControllers) {
+        debugPrint('AmbientAnimationController: Maximum controllers reached, queuing animation');
+        // For now, just skip registration. Could implement queuing later.
+        return;
+      }
+      
       _controllers.add(controller);
       
       // Add frame counting listener
@@ -199,7 +221,9 @@ class AmbientAnimationController with ChangeNotifier {
     final timeDiff = now.difference(_lastFrameTime).inMilliseconds;
     
     if (timeDiff > 0) {
-      _currentFPS = 1000.0 / timeDiff;
+      // Use a running average for more stable FPS calculation
+      final instantFPS = 1000.0 / timeDiff;
+      _currentFPS = (_currentFPS * 0.9) + (instantFPS * 0.1);
       _lastFrameTime = now;
     }
   }
@@ -214,12 +238,18 @@ class AmbientAnimationController with ChangeNotifier {
 
   /// Check performance and adjust animations if needed
   void _checkPerformance() {
-    // If FPS drops below 30, consider pausing some animations
+    // If FPS drops below 30, automatically pause animations
     if (_currentFPS < 30.0 && _isActive && !_isPaused) {
-      debugPrint('AmbientAnimationController: Low FPS detected ($_currentFPS), consider reducing animations');
+      debugPrint('AmbientAnimationController: Low FPS detected ($_currentFPS), pausing animations');
+      pauseAll();
       
-      // Could implement automatic reduction here
-      // For now, just log the performance issue
+      // Resume after a delay to see if performance improves
+      Future.delayed(const Duration(seconds: 5), () {
+        if (_currentFPS >= 45.0) {
+          debugPrint('AmbientAnimationController: Performance improved, resuming animations');
+          resumeAll();
+        }
+      });
     }
     
     // Reset frame counter
@@ -239,10 +269,65 @@ class AmbientAnimationController with ChangeNotifier {
     }
   }
 
+  /// Handle performance warning from the performance monitor
+  void _onPerformanceWarning() {
+    debugPrint('AmbientAnimationController: Performance warning - reducing animation intensity');
+    
+    // Reduce the number of active controllers by pausing some
+    final controllersToReduce = (_controllers.length * 0.3).round();
+    for (int i = 0; i < controllersToReduce && i < _controllers.length; i++) {
+      if (_controllers[i].isAnimating) {
+        _controllers[i].stop();
+      }
+    }
+  }
+
+  /// Handle critical performance issues from the performance monitor
+  void _onPerformanceCritical() {
+    debugPrint('AmbientAnimationController: Critical performance issue - pausing all animations');
+    pauseAll();
+  }
+
   /// Dispose all resources
+  /// Get or create a shared controller for common animation types
+  AnimationController? getSharedController(String type, Duration duration, TickerProvider vsync) {
+    final key = '${type}_${duration.inMilliseconds}';
+    
+    if (_sharedControllers.containsKey(key)) {
+      return _sharedControllers[key];
+    }
+    
+    // Create shared controller if we haven't reached the limit
+    if (_controllers.length + _sharedControllers.length < _maxConcurrentControllers) {
+      final controller = AnimationController(
+        duration: duration,
+        vsync: vsync,
+        debugLabel: 'Shared_$key',
+      );
+      
+      _sharedControllers[key] = controller;
+      registerController(controller);
+      
+      return controller;
+    }
+    
+    return null; // No shared controller available
+  }
+
   @override
   void dispose() {
     _performanceTimer?.cancel();
+    
+    // Stop advanced performance monitoring
+    AnimationPerformanceMonitor.instance.removePerformanceWarningCallback(_onPerformanceWarning);
+    AnimationPerformanceMonitor.instance.removePerformanceCriticalCallback(_onPerformanceCritical);
+    AnimationPerformanceMonitor.instance.stopMonitoring();
+    
+    // Dispose shared controllers
+    for (final controller in _sharedControllers.values) {
+      controller.dispose();
+    }
+    _sharedControllers.clear();
     
     // Stop all controllers but don't dispose them (they're managed elsewhere)
     for (final controller in _controllers) {
@@ -289,7 +374,20 @@ mixin AmbientAnimationMixin<T extends StatefulWidget> on State<T>, TickerProvide
   AnimationController createAmbientController({
     required Duration duration,
     String? debugLabel,
+    bool tryShared = false,
   }) {
+    // Try to use shared controller for common animation types
+    if (tryShared && debugLabel != null) {
+      final shared = AmbientAnimationController.instance.getSharedController(
+        debugLabel, 
+        duration, 
+        this,
+      );
+      if (shared != null) {
+        return shared;
+      }
+    }
+    
     final controller = AnimationController(
       duration: duration,
       vsync: this,

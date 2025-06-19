@@ -132,22 +132,36 @@ class _LiquidDropAnimationState extends State<LiquidDropAnimation>
   
   /// Calculate the bezier curve position for the drop
   Offset _calculateDropPosition(double t) {
+    // Clamp t to valid range to prevent curve endpoint errors
+    final clampedT = t.clamp(0.0, 1.0);
+    
+    // Ensure valid positions
+    if (widget.startPosition == widget.glassPosition) {
+      return widget.startPosition; // No animation needed
+    }
+    
     // Control point for the bezier curve (creates arc)
     final controlPoint = Offset(
       (widget.startPosition.dx + widget.glassPosition.dx) / 2,
       min(widget.startPosition.dy, widget.glassPosition.dy) - 50,
     );
     
-    // Quadratic bezier curve calculation
-    final x = pow(1 - t, 2) * widget.startPosition.dx +
-        2 * (1 - t) * t * controlPoint.dx +
-        pow(t, 2) * widget.glassPosition.dx;
-    
-    final y = pow(1 - t, 2) * widget.startPosition.dy +
-        2 * (1 - t) * t * controlPoint.dy +
-        pow(t, 2) * widget.glassPosition.dy;
-    
-    return Offset(x, y);
+    try {
+      // Quadratic bezier curve calculation with clamped values
+      final x = pow(1 - clampedT, 2) * widget.startPosition.dx +
+          2 * (1 - clampedT) * clampedT * controlPoint.dx +
+          pow(clampedT, 2) * widget.glassPosition.dx;
+      
+      final y = pow(1 - clampedT, 2) * widget.startPosition.dy +
+          2 * (1 - clampedT) * clampedT * controlPoint.dy +
+          pow(clampedT, 2) * widget.glassPosition.dy;
+      
+      return Offset(x.toDouble(), y.toDouble());
+    } catch (e) {
+      debugPrint('🚨 Bezier curve error: $e, t=$clampedT');
+      // Linear interpolation fallback
+      return Offset.lerp(widget.startPosition, widget.glassPosition, clampedT) ?? widget.startPosition;
+    }
   }
   
   /// Calculate drop scale based on progress (gets slightly larger as it falls)

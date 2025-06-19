@@ -71,6 +71,7 @@ class _RotatingGarnishState extends State<RotatingGarnish>
     _rotationController = createAmbientController(
       duration: effectiveDuration,
       debugLabel: 'RotatingGarnish',
+      tryShared: true, // Try to use shared controller for common rotation patterns
     );
     
     _rotationAnimation = Tween<double>(

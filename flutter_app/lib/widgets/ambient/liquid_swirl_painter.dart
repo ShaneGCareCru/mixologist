@@ -14,6 +14,11 @@ class LiquidSwirlPainter extends CustomPainter {
     this.waveCount = 3,
     this.showMeniscus = true,
   });
+  
+  // Cache for expensive path calculations
+  static Path? _cachedBasePath;
+  static double? _cachedFillLevel;
+  static Size? _cachedSize;
 
   /// The glass shape containing the liquid
   final GlassShape glassShape;
@@ -40,8 +45,18 @@ class LiquidSwirlPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (fillLevel <= 0) return;
 
-    // Get base liquid path
-    final baseLiquidPath = glassShape.getLiquidPath(size, fillLevel);
+    // Get base liquid path with caching
+    Path baseLiquidPath;
+    if (_cachedBasePath != null && 
+        _cachedFillLevel == fillLevel && 
+        _cachedSize == size) {
+      baseLiquidPath = _cachedBasePath!;
+    } else {
+      baseLiquidPath = glassShape.getLiquidPath(size, fillLevel);
+      _cachedBasePath = baseLiquidPath;
+      _cachedFillLevel = fillLevel;
+      _cachedSize = size;
+    }
     
     // Create swirl-distorted liquid path
     final swirlPath = _createSwirlPath(size, baseLiquidPath);
@@ -69,8 +84,8 @@ class LiquidSwirlPainter extends CustomPainter {
     for (final metric in pathMetrics) {
       final points = <Offset>[];
       
-      // Sample points along the path
-      for (double t = 0.0; t <= 1.0; t += 0.02) {
+      // Sample points along the path (reduced sampling for performance)
+      for (double t = 0.0; t <= 1.0; t += 0.05) {
         final distance = t * metric.length;
         final tangent = metric.getTangentForOffset(distance);
         
@@ -351,10 +366,16 @@ class LiquidSwirlPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant LiquidSwirlPainter oldDelegate) {
+    // Only repaint if there are significant changes to reduce unnecessary repaints
+    const animationThreshold = 0.02; // 2% change threshold
+    const intensityThreshold = 0.05; // 5% change threshold
+    
     return oldDelegate.fillLevel != fillLevel ||
-           oldDelegate.animationValue != animationValue ||
-           oldDelegate.intensity != intensity ||
-           oldDelegate.primaryColor != primaryColor;
+           (oldDelegate.animationValue - animationValue).abs() > animationThreshold ||
+           (oldDelegate.intensity - intensity).abs() > intensityThreshold ||
+           oldDelegate.primaryColor != primaryColor ||
+           oldDelegate.waveCount != waveCount ||
+           oldDelegate.showMeniscus != showMeniscus;
   }
 }
 

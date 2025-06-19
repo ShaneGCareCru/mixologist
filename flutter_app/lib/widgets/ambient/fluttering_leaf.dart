@@ -320,7 +320,7 @@ class _FlutteringSprigState extends State<FlutteringSprig>
     super.initState();
     
     _windController = createAmbientController(
-      duration: const Duration(milliseconds: 2500),
+      duration: const Duration(milliseconds: 4000), // Slower for better performance
       debugLabel: 'FlutteringSprig',
     );
     

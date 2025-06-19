@@ -33,6 +33,12 @@ import '../../../models/ingredient.dart';
 import '../../../services/tasting_note_service.dart';
 import '../../../services/cost_calculator.dart';
 
+// Phase 3: Micro-Interaction Integration imports
+import '../../../services/haptic_service.dart';
+import '../../../widgets/animations/liquid_drop_animation.dart';
+import '../../../widgets/animations/cocktail_shaker_animation.dart';
+// import '../../../services/interaction_feedback.dart'; // Disabled for Cupertino compatibility
+
 class RecipeScreen extends StatefulWidget {
   final Map<String, dynamic> recipeData;
   const RecipeScreen({super.key, required this.recipeData});
@@ -75,29 +81,55 @@ class _RecipeScreenState extends State<RecipeScreen> {
   bool _isLoadingRelatedCocktail = false;
 
   DrinkProgress get _currentDrinkProgress {
-    // Check if Mise En Place is complete
-    if (_stepCompletion[-1] != true) {
-      return DrinkProgress.emptyGlass;
-    }
-
-    final stepsRaw =
-        widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
-    final steps = stepsRaw is List ? stepsRaw : [];
-    int completedRecipeSteps = 0;
-    for (int i = 0; i < steps.length; i++) {
-      if (_stepCompletion[i] == true) {
-        completedRecipeSteps++;
+    try {
+      // Check if Mise En Place is complete
+      if (_stepCompletion[-1] != true) {
+        return DrinkProgress.emptyGlass;
       }
-    }
-    final totalRecipeSteps = steps.length;
 
-    if (completedRecipeSteps == 0) return DrinkProgress.ingredientsAdded;
-    if (completedRecipeSteps < totalRecipeSteps * 0.4)
-      return DrinkProgress.ingredientsAdded;
-    if (completedRecipeSteps < totalRecipeSteps * 0.8)
-      return DrinkProgress.mixed;
-    if (completedRecipeSteps < totalRecipeSteps) return DrinkProgress.garnished;
-    return DrinkProgress.complete;
+      final stepsRaw =
+          widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+      final steps = stepsRaw is List ? stepsRaw : [];
+      int completedRecipeSteps = 0;
+      for (int i = 0; i < steps.length; i++) {
+        if (_stepCompletion[i] == true) {
+          completedRecipeSteps++;
+        }
+      }
+      final totalRecipeSteps = steps.length;
+
+      // Debug logging to track progress
+      debugPrint('🍹 Progress Debug: $completedRecipeSteps/$totalRecipeSteps steps completed');
+      debugPrint('🍹 Mise En Place: ${_stepCompletion[-1] == true ? "✅" : "❌"}');
+
+      // Calculate individual step progress for immediate visual feedback
+      final progressPercent = completedRecipeSteps / totalRecipeSteps;
+      debugPrint('🍹 Progress: ${(progressPercent * 100).toStringAsFixed(1)}% complete ($completedRecipeSteps/$totalRecipeSteps steps)');
+      
+      // For recipes with 5 steps: 1/5=20%, 2/5=40%, 3/5=60%, 4/5=80%, 5/5=100%
+      // Adjusted thresholds to show visual change at each step
+      if (completedRecipeSteps == 0) {
+        debugPrint('🍹 Progress: ingredientsAdded (0 steps)');
+        return DrinkProgress.ingredientsAdded;
+      }
+      if (progressPercent <= 0.4) {  // Changed from 0.25 to 0.4 (covers 1-2 steps of 5)
+        debugPrint('🍹 Progress: ingredientsAdded (≤40%)');
+        return DrinkProgress.ingredientsAdded;
+      }
+      if (progressPercent <= 0.7) {  // Changed from 0.6 to 0.7 (covers step 3 of 5)
+        debugPrint('🍹 Progress: mixed (≤70%)');
+        return DrinkProgress.mixed;
+      }
+      if (progressPercent < 1.0) {   // Covers step 4 of 5
+        debugPrint('🍹 Progress: garnished (<100%)');
+        return DrinkProgress.garnished;
+      }
+      debugPrint('🍹 Progress: complete (100%)');
+      return DrinkProgress.complete;
+    } catch (e) {
+      debugPrint('🚨 Error in _currentDrinkProgress: $e');
+      return DrinkProgress.emptyGlass; // Safe fallback
+    }
   }
 
   String _getProgressText() {
@@ -228,10 +260,343 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   void _toggleStepCompleted(int stepIndex, bool? completed) {
-    setState(() {
-      _stepCompletion[stepIndex] = completed;
-    });
-    _saveProgress();
+    try {
+      debugPrint('🎯 Step Toggle: Step $stepIndex → ${completed == true ? "✅ Complete" : "❌ Incomplete"}');
+      setState(() {
+        _stepCompletion[stepIndex] = completed;
+      });
+      _saveProgress();
+      
+      // Force glass update after state change
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            // Trigger glass refresh
+          });
+        }
+      });
+    } catch (e) {
+      debugPrint('🚨 Error in _toggleStepCompleted: $e');
+    }
+  }
+
+  // Phase 3.1: Enhanced ingredient checking with haptics and animations
+  void _onIngredientChecked(String ingredient, bool checked) {
+    try {
+      setState(() {
+        _ingredientChecklist[ingredient] = checked;
+      });
+      
+      if (checked) {
+        // Trigger liquid drop animation with error boundary
+        try {
+          _showLiquidDropAnimation(ingredient);
+        } catch (e) {
+          debugPrint('🚨 Liquid drop animation error: $e');
+        }
+        
+        // Haptic feedback - with error handling to prevent ScaffoldMessenger issues
+        try {
+          HapticService.instance.ingredientCheck();
+        } catch (e) {
+          debugPrint('🚨 Haptic service error: $e');
+        }
+        
+        // Update glass fill with error boundary
+        try {
+          _updateGlassFill();
+        } catch (e) {
+          debugPrint('🚨 Glass fill update error: $e');
+        }
+      }
+      
+      _saveProgress();
+    } catch (e) {
+      debugPrint('🚨 Error in _onIngredientChecked: $e');
+      // Continue execution gracefully
+    }
+  }
+  
+  void _showLiquidDropAnimation(String ingredient) {
+    try {
+      // Get ingredient color from the theme or default mapping
+      final color = _getIngredientColor(ingredient);
+      final startPosition = _getIngredientPosition(ingredient);
+      final glassPosition = _getGlassPosition();
+      
+      showCupertinoDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Container(
+          color: Colors.transparent,
+          child: LiquidDropAnimation(
+            startPosition: startPosition,
+            glassPosition: glassPosition,
+            liquidColor: color,
+            dropSize: 18.0, // Larger drops for the bigger glass (was 12.0 default)
+            duration: const Duration(milliseconds: 1000), // Slightly slower for better visibility
+            onAnimationComplete: () {
+              try {
+                if (mounted && Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                  _triggerGlassFillIncrement();
+                }
+              } catch (e) {
+                debugPrint('🚨 Animation completion error: $e');
+              }
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('🚨 Error showing liquid drop animation: $e');
+    }
+  }
+  
+  Color _getIngredientColor(String ingredient) {
+    final nameLower = ingredient.toLowerCase();
+    
+    // Alcohol colors
+    if (nameLower.contains('whiskey') || nameLower.contains('bourbon')) return const Color(0xFFD4A574);
+    if (nameLower.contains('gin')) return const Color(0xFFE8F5E8);
+    if (nameLower.contains('vodka')) return const Color(0xFFF5F5F5);
+    if (nameLower.contains('rum')) return const Color(0xFFDEB887);
+    if (nameLower.contains('tequila')) return const Color(0xFFF5F5DC);
+    
+    // Liqueur colors
+    if (nameLower.contains('triple sec')) return const Color(0xFFFFE4B5);
+    if (nameLower.contains('cointreau')) return const Color(0xFFFFD700);
+    if (nameLower.contains('aperol')) return const Color(0xFFFF4500);
+    if (nameLower.contains('campari')) return const Color(0xFFDC143C);
+    
+    // Juice colors
+    if (nameLower.contains('lime')) return const Color(0xFF32CD32);
+    if (nameLower.contains('lemon')) return const Color(0xFFFFFF00);
+    if (nameLower.contains('orange')) return const Color(0xFFFF8C00);
+    if (nameLower.contains('cranberry')) return const Color(0xFFDC143C);
+    
+    // Default amber for unknown ingredients
+    return const Color(0xFFB8860B);
+  }
+  
+  Offset _getIngredientPosition(String ingredient) {
+    // Try to get position from ingredient icon keys
+    final key = _ingredientIconKeys[ingredient];
+    if (key?.currentContext != null) {
+      final RenderBox renderBox = key!.currentContext!.findRenderObject() as RenderBox;
+      final position = renderBox.localToGlobal(Offset.zero);
+      return Offset(position.dx + renderBox.size.width / 2, position.dy + renderBox.size.height / 2);
+    }
+    
+    // Default position if key not found (middle left of screen)
+    return const Offset(100, 300);
+  }
+  
+  Offset _getGlassPosition() {
+    // Position for the larger glass visualization - adjusted for 120x180 size
+    // Center horizontally, positioned where the glass appears in the UI
+    return const Offset(200, 200); // Moved down to account for larger glass
+  }
+  
+  void _updateGlassFill() {
+    // Force refresh of the drink progress glass with current state
+    if (mounted) {
+      setState(() {
+        // This setState triggers rebuild of DrinkProgressGlass with updated progress
+        // The _currentDrinkProgress getter will recalculate based on current step completion
+      });
+      
+      // Debug current progress state
+      final progress = _currentDrinkProgress;
+      debugPrint('🥃 Glass fill updated: ${progress.toString()}');
+    }
+  }
+  
+  void _triggerGlassFillIncrement() {
+    // Optional: Add visual effect when ingredient is added to glass
+    // For now, this is handled by the existing glass progress system
+  }
+  
+  // Phase 3.1: Enhanced step completion with animations and haptics  
+  void _onStepCompleted(int stepIndex) {
+    try {
+      debugPrint('🎯 Enhanced Step Complete: Step $stepIndex');
+      
+      final stepsRaw = widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+      final steps = stepsRaw is List ? stepsRaw : [];
+      
+      if (stepIndex >= 0 && stepIndex < steps.length) {
+        final stepText = steps[stepIndex].toString();
+        debugPrint('🎯 Step text: "$stepText"');
+        
+        // Cocktail shaker animation for mixing steps
+        if (_isShakingStep(stepText)) {
+          debugPrint('🍸 Triggering shaker animation');
+          _showCocktailShakerAnimation();
+        }
+        
+        // Success haptic - with error handling to prevent ScaffoldMessenger issues
+        try {
+          HapticService.instance.stepComplete();
+        } catch (e) {
+          debugPrint('Haptic service error: $e');
+        }
+      } else {
+        debugPrint('🚨 Invalid step index: $stepIndex (total steps: ${steps.length})');
+      }
+      
+      setState(() {
+        _stepCompletion[stepIndex] = true;
+      });
+      
+      _saveProgress();
+      
+      // Force glass update after completion
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            // Trigger glass refresh with new progress
+          });
+        }
+      });
+      
+      // Check if recipe is complete
+      _checkRecipeCompletion();
+    } catch (e) {
+      debugPrint('🚨 Error in _onStepCompleted: $e');
+      // Still try to mark step as complete even if animations fail
+      try {
+        setState(() {
+          _stepCompletion[stepIndex] = true;
+        });
+        _saveProgress();
+      } catch (e2) {
+        debugPrint('🚨 Critical error in step completion fallback: $e2');
+      }
+    }
+  }
+  
+  bool _isShakingStep(String stepText) {
+    final stepLower = stepText.toLowerCase();
+    return stepLower.contains('shake') || stepLower.contains('shaking');
+  }
+  
+  void _showCocktailShakerAnimation() {
+    try {
+      showCupertinoDialog(
+        context: context,
+        barrierDismissible: true, // Allow tap to dismiss
+        builder: (context) => GestureDetector(
+          onTap: () {
+            try {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+            } catch (e) {
+              debugPrint('🚨 Shaker dialog tap dismissal error: $e');
+            }
+          },
+          child: Container(
+            color: Colors.black54,
+            child: CocktailShakerAnimation(
+              shakeCount: 6, // Reduced from 10 for faster completion
+              shakeDuration: const Duration(seconds: 2), // Reduced from 3 seconds
+              onShakeComplete: () {
+                try {
+                  // Single dismissal mechanism to avoid conflicts
+                  if (mounted && Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                } catch (e) {
+                  debugPrint('🚨 Shaker animation completion error: $e');
+                }
+              },
+            ),
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('🚨 Error showing cocktail shaker animation: $e');
+    }
+  }
+  
+  void _checkRecipeCompletion() {
+    final stepsRaw = widget.recipeData['steps'] ?? widget.recipeData['method'] ?? [];
+    final steps = stepsRaw is List ? stepsRaw : [];
+    
+    // Check if all steps are completed
+    bool allStepsComplete = true;
+    for (int i = 0; i < steps.length; i++) {
+      if (_stepCompletion[i] != true) {
+        allStepsComplete = false;
+        break;
+      }
+    }
+    
+    if (allStepsComplete && _stepCompletion[-1] == true) {
+      _onRecipeComplete();
+    }
+  }
+  
+  void _onRecipeComplete() {
+    // Final success haptic pattern - with error handling to prevent ScaffoldMessenger issues
+    try {
+      HapticService.instance.recipeFinish();
+    } catch (e) {
+      debugPrint('Haptic service error: $e');
+    }
+    
+    // Show completion celebration
+    _showCompletionCelebration();
+  }
+  
+  void _showCompletionCelebration() {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('🍹 Cocktail Complete!'),
+        content: const Text('Congratulations! Your cocktail is ready. Cheers!'),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _shareRecipe();
+            },
+            child: const Text('Share Recipe'),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  void _shareRecipe() {
+    // Glass clink haptic for sharing - with error handling to prevent ScaffoldMessenger issues
+    try {
+      HapticService.instance.glassClink();
+    } catch (e) {
+      debugPrint('Haptic service error: $e');
+    }
+    
+    // TODO: Implement actual sharing functionality
+    // Show a simple CupertinoDialog instead of SnackBar for Cupertino compatibility
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('🥂'),
+        content: const Text('Recipe shared!'),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   String? _getProTipForStep(String stepText) {
@@ -484,8 +849,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
   // Helper methods for ambient animation wrapping
   Widget _buildGarnishImage(Widget child) {
     return RotatingGarnish(
-      maxRotation: 3.0,
-      duration: const Duration(seconds: 4),
+      maxRotation: 3.0, // Reduced rotation for better performance
+      duration: const Duration(seconds: 5), // Slower for better performance
       child: child,
     );
   }
@@ -496,12 +861,66 @@ class _RecipeScreenState extends State<RecipeScreen> {
         child,
         Positioned.fill(
           child: GlintingIce(
-            sparklePoints: const [Offset(20, 30), Offset(40, 50)],
-            size: const Size(40, 40),
+            sparklePoints: const [Offset(20, 30), Offset(40, 50)], // Reduced sparkle points
+            size: const Size(60, 60), // Smaller ice effects for better performance
+            glintIntensity: 0.7, // Reduced intensity
           ),
         ),
       ],
     );
+  }
+
+  // Build ingredient image widget with proper sizing and fallbacks
+  Widget _buildIngredientImage(String ingredientName) {
+    final imageKey = 'ingredient_$ingredientName';
+    final imageData = _specializedImages[imageKey];
+    
+    if (imageData != null) {
+      // Display actual ingredient image - larger for better visibility
+      return Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: CupertinoColors.systemGrey4, width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: _wrapImageWithAmbientAnimation(
+            ingredientName,
+            ParallaxImage(
+              imageProvider: MemoryImage(imageData),
+              parallaxFactor: 0.1,
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      );
+    } else {
+      // Fallback to icon with loading indicator if image is being generated
+      final isGenerating = _imageGenerationProgress[imageKey] == true;
+      
+      return Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: isGenerating ? CupertinoColors.systemGrey6 : CupertinoColors.systemGrey5,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: CupertinoColors.systemGrey4, width: 1),
+        ),
+        child: isGenerating
+            ? const Center(
+                child: CupertinoActivityIndicator(radius: 8),
+              )
+            : Icon(
+                _getIngredientIcon(ingredientName),
+                size: 24, // Larger icon to match container
+                color: CupertinoColors.systemGrey2,
+              ),
+      );
+    }
   }
 
   Widget _wrapImageWithAmbientAnimation(String ingredientName, Widget imageWidget, {bool isEquipment = false}) {
@@ -515,8 +934,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
           imageWidget,
           Positioned.fill(
             child: GlintingIce(
-              sparklePoints: const [Offset(20, 30), Offset(40, 50), Offset(60, 20)],
-              size: const Size(100, 100),
+              sparklePoints: const [Offset(15, 20), Offset(30, 35)], // Reduced sparkle points
+              size: const Size(50, 50), // Smaller size for better performance
+              glintIntensity: 0.6, // Reduced intensity
             ),
           ),
         ],
@@ -532,8 +952,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
         nameLower.contains('lemon') ||
         nameLower.contains('orange')) {
       return RotatingGarnish(
-        maxRotation: 2.0,
-        duration: const Duration(seconds: 5),
+        maxRotation: 2.5, // Reduced rotation for better performance
+        duration: const Duration(seconds: 6), // Slower rotation for better performance
         child: imageWidget,
       );
     }
@@ -581,11 +1001,16 @@ class _RecipeScreenState extends State<RecipeScreen> {
     
     // Initialize ambient animation system
     _ambientController = AmbientAnimationController.instance;
-    _ambientController.startAll();
+    _ambientController.resumeAll(); // Use resumeAll to handle multiple screens properly
     
     _initializeIngredientChecklist();
     _initializeSpecializedImages();
     _initializeStepConnections();
+    
+    // Proactively start generating ingredient images
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoGenerateIngredientImages();
+    });
     _loadCachedImages(); // Check for existing cached images
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _restoreExpandedFromHash());
@@ -1226,7 +1651,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
   void dispose() {
     _imageStreamSubscription?.cancel();
     _httpClient.close(); // Close the client when the widget is disposed
-    _ambientController.dispose();
+    
+    // Don't dispose the singleton ambient controller - just stop animations for this screen
+    // _ambientController.dispose(); // This was causing "used after being disposed" errors
+    _ambientController.pauseAll(); // Instead, pause animations when leaving the screen
+    
     super.dispose();
   }
 
@@ -1426,10 +1855,37 @@ class _RecipeScreenState extends State<RecipeScreen> {
         ),
         const SizedBox(height: iOSTheme.smallPadding),
 
-        // Glass at top, centered
+        // Glass at top, centered - larger size to showcase Phase 3 animations
         Center(
-          child: DrinkProgressGlass(
-              progress: _currentDrinkProgress, width: 40, height: 60),
+          child: Builder(
+            builder: (context) {
+              try {
+                return DrinkProgressGlass(
+                  progress: _currentDrinkProgress, 
+                  width: 120, 
+                  height: 180,
+                );
+              } catch (e) {
+                debugPrint('🚨 Error rendering glass: $e');
+                // Fallback glass rendering
+                return Container(
+                  width: 120,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: CupertinoColors.systemGrey4),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      CupertinoIcons.drop,
+                      size: 40,
+                      color: CupertinoColors.systemGrey,
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
         ),
         const SizedBox(height: iOSTheme.smallPadding),
 
@@ -1468,6 +1924,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 borderRadius: BorderRadius.circular(8),
                 onPressed: () {
                   _toggleStepCompleted(-1, true);
+                  // Also trigger haptic feedback for starting the recipe
+                  try {
+                    HapticService.instance.selection();
+                  } catch (e) {
+                    debugPrint('Haptic service error: $e');
+                  }
                 },
                 child: Text(
                   'Ready to Start Mixing',
@@ -1491,7 +1953,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 color: iOSTheme.whiskey,
                 borderRadius: BorderRadius.circular(8),
                 onPressed: () {
-                  _toggleStepCompleted(currentStepIndex, true);
+                  _onStepCompleted(currentStepIndex);
                 },
                 child: Text(
                   'Mark Step ${currentStepIndex + 1} Done',
@@ -2106,11 +2568,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
                             : CupertinoColors.systemGrey,
                       ),
                       onPressed: () {
-                        setState(() {
-                          _ingredientChecklist[name] =
-                              !(_ingredientChecklist[name] ?? false);
-                        });
-                        _saveProgress();
+                        final newValue = !(_ingredientChecklist[name] ?? false);
+                        _onIngredientChecked(name, newValue);
                       },
                     ),
                     enabled: _ingredientChecklist[name] == true,
@@ -2119,11 +2578,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
                     duration: const Duration(milliseconds: 2000),
                   ),
                   const SizedBox(width: iOSTheme.mediumPadding),
-                  Icon(
-                    _getIngredientIcon(name),
-                    size: 20,
-                    color: CupertinoColors.systemGrey,
-                  ),
+                  // Display actual ingredient image instead of generic icon
+                  _buildIngredientImage(name),
                   const SizedBox(width: iOSTheme.mediumPadding),
                   Expanded(
                     child: Text(
@@ -2185,8 +2641,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
                           proTip: _getProTipForStep(step),
                           tipCategory: _getTipCategoryForStep(step),
                         ),
-                        onCheckboxChanged: (completed) =>
-                            _toggleStepCompleted(index, completed),
+                        onCheckboxChanged: (completed) {
+                          if (completed == true) {
+                            _onStepCompleted(index);
+                          } else {
+                            _toggleStepCompleted(index, completed);
+                          }
+                        },
                       ),
                       glowColor: const Color(0xFF87A96B),
                       intensity: 0.3,
@@ -2205,8 +2666,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
                         proTip: _getProTipForStep(step),
                         tipCategory: _getTipCategoryForStep(step),
                       ),
-                      onCheckboxChanged: (completed) =>
-                          _toggleStepCompleted(index, completed),
+                      onCheckboxChanged: (completed) {
+                        if (completed == true) {
+                          _onStepCompleted(index);
+                        } else {
+                          _toggleStepCompleted(index, completed);
+                        }
+                      },
                     ),
             );
           }),
