@@ -11,6 +11,7 @@ import '../../../theme/ios_theme.dart';
 import '../../../shared/widgets/ios_card.dart';
 import '../../../shared/widgets/shimmer_components.dart';
 import '../../../shared/widgets/motion_transitions.dart';
+import '../../../shared/widgets/animated_scroll_view_item.dart';
 
 class UnifiedInventoryPage extends StatefulWidget {
   const UnifiedInventoryPage({super.key});
@@ -27,13 +28,14 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
   String? _error;
   String _searchQuery = '';
   String _selectedCategory = 'all';
-  bool _isBackBarView = true; // Toggle between shelf view and list view
+  String _viewMode = 'scroll'; // 'shelf', 'list', 'scroll' view modes
 
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
+    print('🚀 INVENTORY PAGE INITIALIZED - View Mode: $_viewMode');
     _loadInventory();
   }
 
@@ -282,25 +284,15 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
           children: [
             CupertinoButton(
               padding: EdgeInsets.zero,
-              child: Icon(
-                _isBackBarView ? CupertinoIcons.list_bullet : CupertinoIcons.square_grid_2x2,
-                size: 20,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isBackBarView = !_isBackBarView;
-                });
-              }, minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
-            ),
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: _loadInventory, minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
+              onPressed: _loadInventory, 
+              minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
               child: const Icon(CupertinoIcons.refresh, size: 20),
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
               child: const Icon(CupertinoIcons.add, size: 20),
-              onPressed: () => _showAddItemDialog(), minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
+              onPressed: () => _showAddItemDialog(), 
+              minimumSize: Size(iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
             ),
           ],
         ),
@@ -326,6 +318,60 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
                 ],
               ),
             ),
+
+          // View Mode Selector
+          Builder(
+            builder: (context) {
+              print('🎛️ RENDERING VIEW MODE SELECTOR - Current: $_viewMode');
+              return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: CupertinoColors.systemBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: CupertinoColors.systemGrey4),
+            ),
+            child: Row(
+              children: [
+                const Text(
+                  'View: ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: CupertinoSlidingSegmentedControl<String>(
+                    groupValue: _viewMode,
+                    children: const {
+                      'shelf': Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('Grid'),
+                      ),
+                      'scroll': Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('Scroll'),
+                      ),
+                      'list': Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('List'),
+                      ),
+                    },
+                    onValueChanged: (value) {
+                      if (value != null) {
+                        print('🔄 VIEW MODE CHANGED TO: $value');
+                        setState(() {
+                          _viewMode = value;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ],
+            );
+            },
+          ),
 
           // Search and Filter
           Padding(
@@ -471,9 +517,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
                               textAlign: TextAlign.center,
                             ),
                           )
-                        : _isBackBarView
-                            ? _buildShelfView()
-                            : _buildListView(),
+                        : _buildCurrentView(),
           ),
         ],
       ),
@@ -531,30 +575,32 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
           navigationBar: CupertinoNavigationBar(
             middle: Text(IngredientCategory.getDisplayName(category)),
           ),
-          child: SafeArea(child: GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.8,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                Expanded(
+                  child: HorizontalInventoryScroll(
+                    items: items.map((item) => BottleCard(
+                      item: item,
+                      onUpdate: () {
+                        _loadInventory();
+                        Navigator.of(context).pop(); // Close category view
+                      },
+                      onDelete: () {
+                        _loadInventory();
+                        Navigator.of(context).pop(); // Close category view
+                      },
+                    )).toList(),
+                    itemWidth: 160,
+                    itemHeight: 220,
+                    animationDuration: const Duration(milliseconds: 1000),
+                  ),
+                ),
+              ],
             ),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return BottleCard(
-                item: item,
-                onUpdate: () {
-                  _loadInventory();
-                  Navigator.of(context).pop(); // Close category view
-                },
-                onDelete: () {
-                  _loadInventory();
-                  Navigator.of(context).pop(); // Close category view
-                },
-              );
-            },
-          )),
+          ),
         ),
       ),
     );
@@ -570,6 +616,71 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
           item: item,
           onUpdate: _loadInventory,
           onDelete: _loadInventory,
+        );
+      },
+    );
+  }
+
+  Widget _buildCurrentView() {
+    print('📱 BUILDING CURRENT VIEW: $_viewMode');
+    switch (_viewMode) {
+      case 'shelf':
+        print('🗂️ Building Shelf View');
+        return _buildShelfView();
+      case 'list':
+        print('📝 Building List View');
+        return _buildListView();
+      case 'scroll':
+        print('📜 Building Scroll View');
+        return _buildScrollView();
+      default:
+        print('❓ Unknown view mode: $_viewMode, defaulting to scroll');
+        return _buildScrollView();
+    }
+  }
+
+  Widget _buildScrollView() {
+    // Group items by category for the horizontal scroll view
+    Map<String, List<InventoryItem>> categorizedItems = {};
+    for (final item in _filteredItems) {
+      final category = item.category;
+      categorizedItems.putIfAbsent(category, () => []).add(item);
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 16),
+      itemCount: categorizedItems.keys.length,
+      itemBuilder: (context, index) {
+        final category = categorizedItems.keys.elementAt(index);
+        final items = categorizedItems[category]!;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Category header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                IngredientCategory.getDisplayName(category),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            // Horizontal animated scroll view
+            HorizontalInventoryScroll(
+              items: items.map((item) => BottleCard(
+                item: item,
+                onUpdate: _loadInventory,
+                onDelete: _loadInventory,
+              )).toList(),
+              itemWidth: 140,
+              itemHeight: 200,
+              animationDuration: const Duration(milliseconds: 800),
+            ),
+            const SizedBox(height: 16),
+          ],
         );
       },
     );

@@ -218,8 +218,10 @@ class _InventoryItemCardState extends State<InventoryItemCard> {
           children: [
             Text(IngredientCategory.getDisplayName(widget.item.category)),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
+                Flexible(
+                  child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: _quantityColor.withOpacity(0.2),
@@ -234,13 +236,17 @@ class _InventoryItemCardState extends State<InventoryItemCard> {
                     ),
                   ),
                 ),
+                ),
                 if (widget.item.brand != null) ...[
                   const SizedBox(width: 8),
-                  Text(
-                    widget.item.brand!,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
+                  Flexible(
+                    child: Text(
+                      widget.item.brand!,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
