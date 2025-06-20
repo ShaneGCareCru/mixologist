@@ -1,6 +1,142 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../theme/ios_theme.dart';
+
+/// Custom painter for martini glass shape
+class MartiniGlassPainter extends CustomPainter {
+  final Color color;
+  
+  MartiniGlassPainter({required this.color});
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    
+    final double centerX = size.width / 2;
+    final double rimWidth = size.width * 0.85;
+    final double bowlHeight = size.height * 0.55;
+    
+    // Draw the martini glass bowl with curved sides for more realistic look
+    final path = Path();
+    
+    // Start from left rim
+    path.moveTo(centerX - rimWidth / 2, 0);
+    // Top rim line
+    path.lineTo(centerX + rimWidth / 2, 0);
+    // Curved right side to bottom point
+    path.quadraticBezierTo(
+      centerX + rimWidth / 4, bowlHeight * 0.3,
+      centerX, bowlHeight
+    );
+    // Curved left side back to start
+    path.quadraticBezierTo(
+      centerX - rimWidth / 4, bowlHeight * 0.3,
+      centerX - rimWidth / 2, 0
+    );
+    
+    canvas.drawPath(path, paint);
+    
+    // Elegant thin stem
+    final stemWidth = size.width * 0.04;
+    final stemHeight = size.height * 0.3;
+    final stemTop = bowlHeight;
+    
+    canvas.drawRect(
+      Rect.fromLTWH(
+        centerX - stemWidth / 2, 
+        stemTop, 
+        stemWidth, 
+        stemHeight
+      ),
+      paint,
+    );
+    
+    // Round base with proper proportions
+    final baseHeight = size.height * 0.12;
+    final baseWidth = size.width * 0.45;
+    final baseTop = stemTop + stemHeight;
+    
+    canvas.drawOval(
+      Rect.fromLTWH(
+        centerX - baseWidth / 2,
+        baseTop,
+        baseWidth,
+        baseHeight,
+      ),
+      paint,
+    );
+  }
+  
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+/// Custom painter for cocktail shaker
+class ShakerPainter extends CustomPainter {
+  final Color color;
+  
+  ShakerPainter({required this.color});
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    
+    final centerX = size.width / 2;
+    
+    // Shaker strainer/cap (more realistic proportions)
+    final capRect = Rect.fromLTWH(
+      centerX - size.width * 0.25,
+      0,
+      size.width * 0.5,
+      size.height * 0.12,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(capRect, const Radius.circular(6)),
+      paint,
+    );
+    
+    // Shaker body with smooth curves (Boston shaker style)
+    final bodyPath = Path();
+    final topWidth = size.width * 0.65;
+    final midWidth = size.width * 0.75;
+    final bottomWidth = size.width * 0.7;
+    final bodyTop = size.height * 0.12;
+    final bodyHeight = size.height * 0.88;
+    final midPoint = bodyTop + bodyHeight * 0.3;
+    
+    // Create curved shaker body
+    bodyPath.moveTo(centerX - topWidth / 2, bodyTop);
+    bodyPath.lineTo(centerX + topWidth / 2, bodyTop);
+    
+    // Curve out to mid section
+    bodyPath.quadraticBezierTo(
+      centerX + midWidth / 2, midPoint,
+      centerX + bottomWidth / 2, bodyTop + bodyHeight
+    );
+    
+    // Bottom curve
+    bodyPath.quadraticBezierTo(
+      centerX, bodyTop + bodyHeight + 5,
+      centerX - bottomWidth / 2, bodyTop + bodyHeight
+    );
+    
+    // Curve back up left side
+    bodyPath.quadraticBezierTo(
+      centerX - midWidth / 2, midPoint,
+      centerX - topWidth / 2, bodyTop
+    );
+    
+    canvas.drawPath(bodyPath, paint);
+  }
+  
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
 
 /// Base shimmer widget that provides consistent styling
 class MixologistShimmer extends StatelessWidget {
@@ -353,8 +489,8 @@ class RecipeGenerationShimmer extends StatelessWidget {
 
   Widget _buildMixingStation(BuildContext context) {
     return Container(
-      height: 220,
-      padding: const EdgeInsets.all(24),
+      height: 180,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: iOSTheme.adaptiveColor(
           context,
@@ -367,264 +503,169 @@ class RecipeGenerationShimmer extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Elegant martini glass
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Glass rim (wider, more elegant)
-              MixologistShimmer(
-                child: Container(
-                  width: 70,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey4,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
+          // Elegant martini glass using CustomPainter
+          Expanded(
+            flex: 2,
+            child: MixologistShimmer(
+              child: CustomPaint(
+                size: const Size(60, 140),
+                painter: MartiniGlassPainter(color: CupertinoColors.systemGrey4),
               ),
-              const SizedBox(height: 2),
-              // Glass bowl (V-shape for martini)
-              MixologistShimmer(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Left side of V
-                    Transform.rotate(
-                      angle: 0.4,
-                      child: Container(
-                        width: 35,
-                        height: 6,
-                        color: CupertinoColors.systemGrey4,
+            ),
+          ),
+          
+          // Professional cocktail shaker using CustomPainter
+          Expanded(
+            flex: 2,
+            child: MixologistShimmer(
+              child: CustomPaint(
+                size: const Size(50, 130),
+                painter: ShakerPainter(color: CupertinoColors.systemGrey4),
+              ),
+            ),
+          ),
+          
+          // Spirit bottles (simplified to fit)
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Tall spirit bottle (whiskey/gin style)
+                MixologistShimmer(
+                  child: Column(
+                    children: [
+                      // Bottle cap/cork
+                      Container(
+                        width: 10,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.systemGrey4,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
                       ),
-                    ),
-                    // Right side of V
-                    Transform.rotate(
-                      angle: -0.4,
-                      child: Container(
-                        width: 35,
-                        height: 6,
-                        color: CupertinoColors.systemGrey4,
-                      ),
-                    ),
-                    // Bowl fill area
-                    Positioned(
-                      top: 15,
-                      child: Container(
-                        width: 50,
-                        height: 40,
+                      // Bottle neck (tapered)
+                      Container(
+                        width: 8,
+                        height: 18,
                         decoration: const BoxDecoration(
                           color: CupertinoColors.systemGrey4,
                           borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(25),
-                            bottomRight: Radius.circular(25),
+                            topLeft: Radius.circular(2),
+                            topRight: Radius.circular(2),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              // Thin elegant stem
-              MixologistShimmer(
-                child: Container(
-                  width: 2,
-                  height: 50,
-                  color: CupertinoColors.systemGrey4,
-                ),
-              ),
-              const SizedBox(height: 2),
-              // Round base
-              MixologistShimmer(
-                child: Container(
-                  width: 28,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey4,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          // Professional cocktail shaker
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Shaker cap/strainer
-              MixologistShimmer(
-                child: Container(
-                  width: 35,
-                  height: 15,
-                  decoration: const BoxDecoration(
-                    color: CupertinoColors.systemGrey4,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(17),
-                      topRight: Radius.circular(17),
-                    ),
-                  ),
-                ),
-              ),
-              // Shaker top (slightly tapered)
-              MixologistShimmer(
-                child: Container(
-                  width: 42,
-                  height: 25,
-                  decoration: const BoxDecoration(
-                    color: CupertinoColors.systemGrey4,
-                  ),
-                ),
-              ),
-              // Shaker body (traditional Boston shaker shape)
-              MixologistShimmer(
-                child: Container(
-                  width: 45,
-                  height: 90,
-                  decoration: const BoxDecoration(
-                    color: CupertinoColors.systemGrey4,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(15),
-                      bottomRight: Radius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          // Spirit bottles with realistic shapes
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Tall spirit bottle (whiskey/vodka style)
-              Column(
-                children: [
-                  // Bottle cap
-                  MixologistShimmer(
-                    child: Container(
-                      width: 14,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: CupertinoColors.systemGrey4,
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                    ),
-                  ),
-                  // Bottle neck
-                  MixologistShimmer(
-                    child: Container(
-                      width: 12,
-                      height: 25,
-                      color: CupertinoColors.systemGrey4,
-                    ),
-                  ),
-                  // Bottle shoulder
-                  MixologistShimmer(
-                    child: Container(
-                      width: 22,
-                      height: 8,
-                      color: CupertinoColors.systemGrey4,
-                    ),
-                  ),
-                  // Bottle body
-                  MixologistShimmer(
-                    child: Container(
-                      width: 20,
-                      height: 70,
-                      decoration: const BoxDecoration(
-                        color: CupertinoColors.systemGrey4,
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(4),
-                          bottomRight: Radius.circular(4),
+                      // Bottle shoulder (wider transition)
+                      Container(
+                        width: 16,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: CupertinoColors.systemGrey4,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              
-              // Liqueur bottle (shorter, rounder)
-              Column(
-                children: [
-                  // Cork/cap
-                  MixologistShimmer(
-                    child: Container(
-                      width: 12,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: CupertinoColors.systemGrey4,
-                        borderRadius: BorderRadius.circular(6),
+                      // Bottle body (classic spirit bottle shape)
+                      Container(
+                        width: 16,
+                        height: 42,
+                        decoration: const BoxDecoration(
+                          color: CupertinoColors.systemGrey4,
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(3),
+                            bottomRight: Radius.circular(3),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  // Short neck
-                  MixologistShimmer(
-                    child: Container(
-                      width: 10,
-                      height: 15,
-                      color: CupertinoColors.systemGrey4,
-                    ),
-                  ),
-                  // Round body (liqueur style)
-                  MixologistShimmer(
-                    child: Container(
-                      width: 18,
-                      height: 45,
-                      decoration: BoxDecoration(
-                        color: CupertinoColors.systemGrey4,
-                        borderRadius: BorderRadius.circular(9),
+                ),
+                const SizedBox(height: 8),
+                
+                // Liqueur bottle (rounder, shorter)
+                MixologistShimmer(
+                  child: Column(
+                    children: [
+                      // Cork/cap (smaller)
+                      Container(
+                        width: 8,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.systemGrey4,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                    ),
+                      // Short neck
+                      Container(
+                        width: 6,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: CupertinoColors.systemGrey4,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(1),
+                            topRight: Radius.circular(1),
+                          ),
+                        ),
+                      ),
+                      // Round body (liqueur style - wider and rounder)
+                      Container(
+                        width: 14,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.systemGrey4,
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
           
-          // Bar tools
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Jigger (measuring tool)
-              MixologistShimmer(
-                child: Container(
-                  width: 16,
-                  height: 30,
-                  decoration: const BoxDecoration(
-                    color: CupertinoColors.systemGrey4,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                      bottomLeft: Radius.circular(6),
-                      bottomRight: Radius.circular(6),
+          // Bar tools (simplified)
+          Expanded(
+            flex: 1,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Jigger
+                MixologistShimmer(
+                  child: Container(
+                    width: 14,
+                    height: 25,
+                    decoration: const BoxDecoration(
+                      color: CupertinoColors.systemGrey4,
+                      borderRadius: BorderRadius.all(Radius.circular(7)),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              // Bar spoon (long thin)
-              MixologistShimmer(
-                child: Container(
-                  width: 2,
-                  height: 80,
-                  color: CupertinoColors.systemGrey4,
-                ),
-              ),
-              const SizedBox(height: 4),
-              // Spoon bowl
-              MixologistShimmer(
-                child: Container(
-                  width: 8,
-                  height: 12,
-                  decoration: const BoxDecoration(
+                const SizedBox(height: 20),
+                // Bar spoon
+                MixologistShimmer(
+                  child: Container(
+                    width: 2,
+                    height: 60,
                     color: CupertinoColors.systemGrey4,
-                    borderRadius: BorderRadius.all(Radius.circular(4)),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                // Spoon bowl
+                MixologistShimmer(
+                  child: Container(
+                    width: 6,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: CupertinoColors.systemGrey4,
+                      borderRadius: BorderRadius.all(Radius.circular(3)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
