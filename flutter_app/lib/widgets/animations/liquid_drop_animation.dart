@@ -2,8 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../services/haptic_service.dart';
 
-/// Animated liquid drop that follows a bezier curve path from start to glass position
-/// with gravity acceleration and splash effect on landing
+/// DISABLED: Static liquid drop that immediately triggers callbacks without animation
+/// Previously caused "Invalid curve endpoint at 0" errors
 class LiquidDropAnimation extends StatefulWidget {
   final Offset startPosition;
   final Offset glassPosition;
@@ -28,260 +28,31 @@ class LiquidDropAnimation extends StatefulWidget {
   State<LiquidDropAnimation> createState() => _LiquidDropAnimationState();
 }
 
-class _LiquidDropAnimationState extends State<LiquidDropAnimation>
-    with TickerProviderStateMixin {
-  late AnimationController _dropController;
-  late AnimationController _splashController;
-  late Animation<double> _dropProgress;
-  late Animation<double> _splashScale;
-  late Animation<double> _splashOpacity;
-  
-  bool _dropLanded = false;
-  bool _showSplash = false;
-  
+class _LiquidDropAnimationState extends State<LiquidDropAnimation> {
   @override
   void initState() {
     super.initState();
     
-    // Main drop animation controller
-    _dropController = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    
-    // Splash animation controller
-    _splashController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    
-    // Drop progress with easing that simulates gravity
-    _dropProgress = CurvedAnimation(
-      parent: _dropController,
-      curve: Curves.easeIn, // Gravity acceleration
-    );
-    
-    // Splash scale animation
-    _splashScale = Tween<double>(
-      begin: 0.0,
-      end: 2.0,
-    ).animate(CurvedAnimation(
-      parent: _splashController,
-      curve: Curves.easeOut,
-    ));
-    
-    // Splash opacity animation
-    _splashOpacity = Tween<double>(
-      begin: 0.8,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _splashController,
-      curve: Curves.easeOut,
-    ));
-    
-    // Listen for drop completion
-    _dropController.addStatusListener((status) {
-      if (status == AnimationStatus.completed && !_dropLanded) {
-        _onDropLanded();
-      }
+    // DISABLED: Immediately trigger callbacks without animation
+    // This eliminates the bezier curve calculations that caused errors
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _triggerCallbacks();
     });
-    
-    // Listen for splash completion
-    _splashController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _onAnimationComplete();
-      }
-    });
-    
-    // Start the animation
-    _startAnimation();
   }
   
-  void _startAnimation() {
-    _dropController.forward();
-  }
-  
-  void _onDropLanded() async {
-    if (_dropLanded) return;
-    
-    setState(() {
-      _dropLanded = true;
-      _showSplash = true;
-    });
-    
+  void _triggerCallbacks() async {
     // Trigger haptic feedback
     await HapticService.instance.ingredientCheck();
     
-    // Call the callback
+    // Call the callbacks immediately
     widget.onDropLanded?.call();
-    
-    // Start splash animation
-    _splashController.forward();
-  }
-  
-  void _onAnimationComplete() {
     widget.onAnimationComplete?.call();
   }
   
   @override
-  void dispose() {
-    _dropController.dispose();
-    _splashController.dispose();
-    super.dispose();
-  }
-  
-  /// Calculate the bezier curve position for the drop
-  Offset _calculateDropPosition(double t) {
-    // Clamp t to valid range to prevent curve endpoint errors
-    final clampedT = t.clamp(0.0, 1.0);
-    
-    // Ensure valid positions
-    if (widget.startPosition == widget.glassPosition) {
-      return widget.startPosition; // No animation needed
-    }
-    
-    // Control point for the bezier curve (creates arc)
-    final controlPoint = Offset(
-      (widget.startPosition.dx + widget.glassPosition.dx) / 2,
-      min(widget.startPosition.dy, widget.glassPosition.dy) - 50,
-    );
-    
-    try {
-      // Quadratic bezier curve calculation with clamped values
-      final x = pow(1 - clampedT, 2) * widget.startPosition.dx +
-          2 * (1 - clampedT) * clampedT * controlPoint.dx +
-          pow(clampedT, 2) * widget.glassPosition.dx;
-      
-      final y = pow(1 - clampedT, 2) * widget.startPosition.dy +
-          2 * (1 - clampedT) * clampedT * controlPoint.dy +
-          pow(clampedT, 2) * widget.glassPosition.dy;
-      
-      return Offset(x.toDouble(), y.toDouble());
-    } catch (e) {
-      debugPrint('🚨 Bezier curve error: $e, t=$clampedT');
-      // Linear interpolation fallback
-      return Offset.lerp(widget.startPosition, widget.glassPosition, clampedT) ?? widget.startPosition;
-    }
-  }
-  
-  /// Calculate drop scale based on progress (gets slightly larger as it falls)
-  double _calculateDropScale(double t) {
-    return 1.0 + (t * 0.2); // Grows 20% during fall
-  }
-  
-  /// Calculate drop opacity (fades slightly as it approaches glass)
-  double _calculateDropOpacity(double t) {
-    return 1.0 - (t * 0.1); // Slight fade
-  }
-  
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_dropController, _splashController]),
-      builder: (context, child) {
-        return Stack(
-          children: [
-            // Main liquid drop
-            if (!_dropLanded)
-              Positioned(
-                left: _calculateDropPosition(_dropProgress.value).dx - widget.dropSize / 2,
-                top: _calculateDropPosition(_dropProgress.value).dy - widget.dropSize / 2,
-                child: Transform.scale(
-                  scale: _calculateDropScale(_dropProgress.value),
-                  child: Opacity(
-                    opacity: _calculateDropOpacity(_dropProgress.value),
-                    child: Container(
-                      width: widget.dropSize,
-                      height: widget.dropSize,
-                      decoration: BoxDecoration(
-                        color: widget.liquidColor,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: widget.liquidColor.withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          // Highlight to make it look more liquid-like
-                          Positioned(
-                            top: 2,
-                            left: 3,
-                            child: Container(
-                              width: 3,
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.6),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            
-            // Splash effect
-            if (_showSplash)
-              Positioned(
-                left: widget.glassPosition.dx - (widget.dropSize * _splashScale.value) / 2,
-                top: widget.glassPosition.dy - (widget.dropSize * _splashScale.value) / 2,
-                child: Transform.scale(
-                  scale: _splashScale.value,
-                  child: Opacity(
-                    opacity: _splashOpacity.value,
-                    child: Container(
-                      width: widget.dropSize,
-                      height: widget.dropSize,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: widget.liquidColor.withOpacity(0.6),
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            
-            // Additional splash ripples
-            if (_showSplash)
-              ...List.generate(3, (index) {
-                final delay = index * 0.1;
-                final adjustedProgress = (_splashController.value - delay).clamp(0.0, 1.0);
-                
-                return Positioned(
-                  left: widget.glassPosition.dx - (widget.dropSize * (1 + adjustedProgress * 2)) / 2,
-                  top: widget.glassPosition.dy - (widget.dropSize * (1 + adjustedProgress * 2)) / 2,
-                  child: Transform.scale(
-                    scale: 1 + adjustedProgress * 2,
-                    child: Opacity(
-                      opacity: (1 - adjustedProgress) * 0.3,
-                      child: Container(
-                        width: widget.dropSize,
-                        height: widget.dropSize,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: widget.liquidColor.withOpacity(0.4),
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-          ],
-        );
-      },
-    );
+    // DISABLED: Return empty container - all animation removed
+    return const SizedBox.shrink();
   }
 }
 
@@ -305,58 +76,17 @@ class LiquidDropWrapper extends StatefulWidget {
 }
 
 class _LiquidDropWrapperState extends State<LiquidDropWrapper> {
-  final GlobalKey _childKey = GlobalKey();
-  bool _isAnimating = false;
-  
-  void _handleTap(TapDownDetails details) async {
-    if (_isAnimating) return;
-    
-    setState(() {
-      _isAnimating = true;
-    });
-    
-    // Get the position of the tap
-    final RenderBox? renderBox = _childKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    
-    final localPosition = details.localPosition;
-    final globalPosition = renderBox.localToGlobal(localPosition);
-    
-    // Calculate glass position (bottom center of the widget)
-    final glassPosition = renderBox.localToGlobal(
-      Offset(renderBox.size.width / 2, renderBox.size.height * 0.8),
-    );
-    
-    // Show overlay with drop animation
-    final overlay = Overlay.of(context);
-    late OverlayEntry overlayEntry;
-    
-    overlayEntry = OverlayEntry(
-      builder: (context) => LiquidDropAnimation(
-        startPosition: globalPosition,
-        glassPosition: glassPosition,
-        liquidColor: widget.liquidColor,
-        onAnimationComplete: () {
-          overlayEntry.remove();
-          setState(() {
-            _isAnimating = false;
-          });
-          widget.onDropComplete?.call();
-        },
-      ),
-    );
-    
-    overlay.insert(overlayEntry);
-    
-    // Call the tap callback
+  void _handleTap() async {
+    // DISABLED: Simply trigger haptic and callbacks without animation
+    await HapticService.instance.ingredientCheck();
     widget.onTap?.call();
+    widget.onDropComplete?.call();
   }
   
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      key: _childKey,
-      onTapDown: _handleTap,
+      onTap: _handleTap,
       child: widget.child,
     );
   }

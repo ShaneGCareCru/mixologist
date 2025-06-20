@@ -73,21 +73,16 @@ class _AnimatedDrinkThemeState extends State<AnimatedDrinkTheme>
   void _updateAnimations() {
     final previousTheme = _previousTheme ?? _currentTheme;
     
+    // DISABLED: Static animations to prevent curve endpoint errors
     _primaryAnimation = ColorTween(
-      begin: previousTheme.primary,
-      end: _currentTheme.primary,
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: widget.curve,
-    ));
+      begin: _currentTheme.primary,
+      end: _currentTheme.primary, // Static color
+    ).animate(_primaryController);
     
     _accentAnimation = ColorTween(
-      begin: previousTheme.accent,
-      end: _currentTheme.accent,
-    ).animate(CurvedAnimation(
-      parent: _accentController,
-      curve: widget.curve,
-    ));
+      begin: _currentTheme.accent,
+      end: _currentTheme.accent, // Static color
+    ).animate(_accentController);
     
     // Create animations for each gradient color
     _gradientAnimations = List.generate(
@@ -97,13 +92,11 @@ class _AnimatedDrinkThemeState extends State<AnimatedDrinkTheme>
             ? previousTheme.gradientColors[index]
             : previousTheme.gradientColors.last;
         
+        // DISABLED: Static gradient to prevent curve errors
         return ColorTween(
-          begin: beginColor,
-          end: _currentTheme.gradientColors[index],
-        ).animate(CurvedAnimation(
-          parent: _gradientController,
-          curve: widget.curve,
-        ));
+          begin: _currentTheme.gradientColors[index],
+          end: _currentTheme.gradientColors[index], // Static color
+        ).animate(_gradientController);
       },
     );
   }
@@ -207,16 +200,10 @@ class StaggeredColorTransition extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<Color?>(
-      tween: ColorTween(end: color),
-      duration: duration,
-      curve: curve,
-      builder: (context, animatedColor, child) {
-        return AnimatedContainer(
-          duration: delay,
-          child: this.child,
-        );
-      },
+    // DISABLED: Static color to prevent curve errors
+    return AnimatedContainer(
+      duration: delay,
+      child: this.child,
     ).animate(
       delay: delay,
       effects: [
@@ -345,16 +332,11 @@ class AnimatedThemeIcon extends StatelessWidget {
     final theme = DrinkThemeProvider.of(context);
     final color = useAccentColor ? theme.accent : theme.primary;
     
-    return TweenAnimationBuilder<Color?>(
-      tween: ColorTween(end: color),
-      duration: duration,
-      builder: (context, animatedColor, child) {
-        return Icon(
-          icon,
-          color: animatedColor,
-          size: size,
-        );
-      },
+    // DISABLED: Static icon color to prevent curve errors
+    return Icon(
+      icon,
+      color: color,
+      size: size,
     );
   }
 }
@@ -402,10 +384,8 @@ mixin ThemeTransitionMixin<T extends StatefulWidget> on State<T>, TickerProvider
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    themeTransitionAnimation = CurvedAnimation(
-      parent: themeTransitionController,
-      curve: Curves.easeInOutCubic,
-    );
+    // DISABLED: Static animation to prevent curve errors
+    themeTransitionAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(themeTransitionController);
   }
   
   @override
@@ -455,13 +435,11 @@ class _ThemeChangeRippleState extends State<ThemeChangeRipple>
       duration: widget.duration,
       vsync: this,
     );
+    // DISABLED: Static ripple to prevent curve errors
     _rippleAnimation = Tween<double>(
       begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _rippleController,
-      curve: Curves.easeOutQuart,
-    ));
+      end: 0.0, // No ripple animation
+    ).animate(_rippleController);
   }
   
   @override

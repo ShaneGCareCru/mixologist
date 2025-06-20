@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'ambient_animation_controller.dart';
 
-/// Widget for creating wind-like flutter effects on mint leaves and similar garnishes
+/// DISABLED: Static leaf widget without flutter animations
+/// Previously caused curve and performance issues
 class FlutteringLeaf extends StatefulWidget {
   const FlutteringLeaf({
     super.key,
@@ -44,120 +45,17 @@ class FlutteringLeaf extends StatefulWidget {
   State<FlutteringLeaf> createState() => _FlutteringLeafState();
 }
 
-class _FlutteringLeafState extends State<FlutteringLeaf>
-    with AmbientAnimationMixin<FlutteringLeaf> {
-  
-  late AnimationController _flutterController;
-  late Animation<double> _primaryWave;
-  late Animation<double> _secondaryWave;
-  late Animation<double> _rotationWave;
-  
-  double _randomPhase = 0.0;
-  
+class _FlutteringLeafState extends State<FlutteringLeaf> {
   @override
   void initState() {
     super.initState();
-    _setupAnimations();
-  }
-
-  void _setupAnimations() {
-    final random = math.Random();
-    _randomPhase = random.nextDouble() * 2 * math.pi;
-    
-    _flutterController = createAmbientController(
-      duration: widget.duration,
-      debugLabel: 'FlutteringLeaf',
-    );
-    
-    // Primary wave for main flutter movement
-    _primaryWave = Tween<double>(
-      begin: 0.0,
-      end: 2 * math.pi,
-    ).animate(CurvedAnimation(
-      parent: _flutterController,
-      curve: Curves.easeInOut,
-    ));
-    
-    // Secondary wave for complex movement
-    _secondaryWave = Tween<double>(
-      begin: 0.0,
-      end: 3 * math.pi,
-    ).animate(CurvedAnimation(
-      parent: _flutterController,
-      curve: Curves.easeInOutSine,
-    ));
-    
-    // Rotation wave for twisting effect
-    _rotationWave = Tween<double>(
-      begin: 0.0,
-      end: 4 * math.pi,
-    ).animate(CurvedAnimation(
-      parent: _flutterController,
-      curve: Curves.easeInOutCubic,
-    ));
-  }
-
-  /// Calculate flutter transformation values
-  FlutterTransform _calculateFlutterTransform() {
-    final primaryValue = _primaryWave.value + _randomPhase;
-    final secondaryValue = _secondaryWave.value + _randomPhase * 0.7;
-    final rotationValue = _rotationWave.value + _randomPhase * 0.5;
-    
-    // Calculate translation components
-    final xTranslation = math.sin(primaryValue) * widget.maxTranslation * widget.windIntensity;
-    final yTranslation = math.sin(secondaryValue * 0.8) * widget.maxTranslation * 0.5 * widget.windIntensity;
-    
-    // Calculate rotation
-    final rotation = math.sin(rotationValue * 0.6) * widget.maxRotation * widget.windIntensity;
-    
-    // Calculate shadow offset based on movement
-    final shadowOffsetX = xTranslation * 0.3;
-    final shadowOffsetY = math.abs(yTranslation) * 0.5 + 2;
-    
-    // Calculate scale variation for breathing effect
-    final scale = 1.0 + (math.sin(primaryValue * 1.5) * 0.05 * widget.windIntensity);
-    
-    return FlutterTransform(
-      translation: Offset(xTranslation, yTranslation),
-      rotation: rotation * (math.pi / 180), // Convert to radians
-      scale: scale,
-      shadowOffset: Offset(shadowOffsetX, shadowOffsetY),
-    );
+    // DISABLED: No animation setup to prevent curve errors
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) {
-      return _buildLeaf();
-    }
-
-    return AnimatedBuilder(
-      animation: _flutterController,
-      builder: (context, child) {
-        final transform = _calculateFlutterTransform();
-        
-        return Transform.translate(
-          offset: transform.translation,
-          child: Transform.rotate(
-            angle: transform.rotation,
-            child: Transform.scale(
-              scale: transform.scale,
-              child: Stack(
-                children: [
-                  // Shadow
-                  Transform.translate(
-                    offset: transform.shadowOffset,
-                    child: _buildLeafShadow(),
-                  ),
-                  // Main leaf
-                  _buildLeaf(),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    // DISABLED: Static leaf without animations
+    return _buildLeaf();
   }
 
   /// Build the main leaf widget
@@ -309,63 +207,22 @@ class FlutteringSprig extends StatefulWidget {
   State<FlutteringSprig> createState() => _FlutteringSprigState();
 }
 
-class _FlutteringSprigState extends State<FlutteringSprig>
-    with AmbientAnimationMixin<FlutteringSprig> {
-  
-  late AnimationController _windController;
-  final List<double> _leafPhases = [];
-  
-  @override
-  void initState() {
-    super.initState();
-    
-    _windController = createAmbientController(
-      duration: const Duration(milliseconds: 4000), // Slower for better performance
-      debugLabel: 'FlutteringSprig',
-    );
-    
-    // Generate random phases for each leaf
-    final random = math.Random();
-    for (int i = 0; i < widget.leafCount; i++) {
-      _leafPhases.add(random.nextDouble() * 2 * math.pi);
-    }
-  }
-
+class _FlutteringSprigState extends State<FlutteringSprig> {
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _windController,
-      builder: (context, child) {
-        return Column(
-          children: List.generate(widget.leafCount, (index) {
-            // Calculate phase for this leaf
-            final basePhase = _leafPhases[index];
-            final syncPhase = _windController.value * 2 * math.pi;
-            final leafPhase = (basePhase * (1 - widget.synchronization)) + 
-                             (syncPhase * widget.synchronization);
-            
-            // Calculate individual leaf transform
-            final xOffset = math.sin(leafPhase) * 2 * widget.windIntensity;
-            final rotation = math.sin(leafPhase * 1.3) * 5 * widget.windIntensity;
-            
-            return Padding(
-              padding: EdgeInsets.only(bottom: widget.spacing),
-              child: Transform.translate(
-                offset: Offset(xOffset, 0),
-                child: Transform.rotate(
-                  angle: rotation * (math.pi / 180),
-                  child: FlutteringLeaf(
-                    leafAssetPath: null,
-                    size: widget.leafSize,
-                    windIntensity: widget.windIntensity * 0.7, // Reduce individual intensity
-                    enabled: widget.enabled,
-                  ),
-                ),
-              ),
-            );
-          }),
+    // DISABLED: Static sprig without animations
+    return Column(
+      children: List.generate(widget.leafCount, (index) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: widget.spacing),
+          child: FlutteringLeaf(
+            leafAssetPath: null,
+            size: widget.leafSize,
+            windIntensity: 0.0, // No wind
+            enabled: false, // Disabled
+          ),
         );
-      },
+      }),
     );
   }
 }

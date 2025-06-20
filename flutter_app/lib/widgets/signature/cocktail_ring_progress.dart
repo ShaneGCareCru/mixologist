@@ -79,47 +79,27 @@ class _CocktailRingProgressState extends State<CocktailRingProgress>
       vsync: this,
     );
     
+    // DISABLED: Static animations to prevent curve endpoint errors
     _progressAnimation = Tween<double>(
-      begin: 0.0,
-      end: widget.progress,
-    ).animate(CurvedAnimation(
-      parent: _progressController,
-      curve: Curves.easeOutCubic,
-    ));
+      begin: widget.progress,
+      end: widget.progress, // Static progress value
+    ).animate(_progressController);
     
     _pulseAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+      end: 1.0, // No pulsing
+    ).animate(_pulseController);
     
     _dropletsAnimation = Tween<double>(
       begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _dropletsController,
-      curve: Curves.linear,
-    ));
+      end: 0.0, // No droplets animation
+    ).animate(_dropletsController);
     
-    if (widget.animated) {
-      _progressController.forward();
-    } else {
-      _progressController.value = 1.0;
-    }
+    // DISABLED: No animations to prevent curve errors
+    _progressController.value = 1.0;
     
-    if (widget.showDroplets) {
-      _dropletsController.repeat();
-    }
-    
-    _progressAnimation.addListener(() {
-      if (_progressAnimation.value >= 0.99 && !_hasTriggeredComplete) {
-        _hasTriggeredComplete = true;
-        _pulseController.repeat(reverse: true);
-        widget.onComplete?.call();
-      }
-    });
+    // DISABLED: No droplets animation
+    // No animation listeners to prevent curve usage
   }
   
   @override
@@ -127,20 +107,13 @@ class _CocktailRingProgressState extends State<CocktailRingProgress>
     super.didUpdateWidget(oldWidget);
     
     if (oldWidget.progress != widget.progress) {
+      // DISABLED: Static progress update without curve animation
       _progressAnimation = Tween<double>(
-        begin: _progressAnimation.value,
-        end: widget.progress,
-      ).animate(CurvedAnimation(
-        parent: _progressController,
-        curve: Curves.easeOutCubic,
-      ));
+        begin: widget.progress,
+        end: widget.progress, // Static value
+      ).animate(_progressController);
       
-      _progressController.reset();
-      if (widget.animated) {
-        _progressController.forward();
-      } else {
-        _progressController.value = 1.0;
-      }
+      _progressController.value = 1.0; // Set to complete immediately
     }
   }
   

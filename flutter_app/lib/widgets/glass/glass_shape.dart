@@ -36,11 +36,8 @@ class MargaritaGlass extends GlassShape {
     // Top rim (wide)
     path.lineTo(center + rimWidth / 2, size.height * 0.1);
     
-    // Right side tapering down to bowl
-    path.quadraticBezierTo(
-      center + bowlWidth / 2, size.height * 0.3,
-      center + bowlWidth / 2, size.height * 0.7,
-    );
+    // DISABLED: Simple straight line to prevent curve errors
+    path.lineTo(center + bowlWidth / 2, size.height * 0.7);
     
     // Bottom of bowl (rounded)
     path.arcToPoint(
@@ -49,11 +46,8 @@ class MargaritaGlass extends GlassShape {
       clockwise: false,
     );
     
-    // Left side back to rim
-    path.quadraticBezierTo(
-      center - bowlWidth / 2, size.height * 0.3,
-      center - rimWidth / 2, size.height * 0.1,
-    );
+    // DISABLED: Simple straight line to prevent curve errors
+    path.lineTo(center - rimWidth / 2, size.height * 0.1);
     
     path.close();
     return path;
@@ -76,15 +70,9 @@ class MargaritaGlass extends GlassShape {
     
     path.moveTo(center - liquidWidth / 2, bottomY);
     
-    // Draw liquid surface (slightly curved)
-    path.quadraticBezierTo(
-      center, topY - 2,
-      center + liquidWidth / 2, topY,
-    );
-    path.quadraticBezierTo(
-      center, topY + 2,
-      center - liquidWidth / 2, topY,
-    );
+    // DISABLED: Simple flat liquid surface to prevent curve endpoint errors
+    path.lineTo(center + liquidWidth / 2, topY);
+    path.lineTo(center - liquidWidth / 2, topY);
     
     // Bottom arc
     path.arcToPoint(

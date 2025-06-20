@@ -5,6 +5,8 @@ import 'dart:async';
 import 'dart:collection';
 import 'ambient_animation_controller.dart';
 
+/// DISABLED: Performance monitoring disabled to prevent performance overhead
+
 /// Performance metrics data structure
 class PerformanceMetrics {
   const PerformanceMetrics({
@@ -106,32 +108,14 @@ class AnimationPerformanceMonitor with ChangeNotifier {
 
   /// Start performance monitoring
   void startMonitoring() {
-    if (_isMonitoring) return;
-    
-    _isMonitoring = true;
-    _frameDropCount = 0;
-    _frameTimes.clear();
-    _frameIntervals.clear();
-    
-    // Start periodic metrics calculation
-    _monitoringTimer = Timer.periodic(_monitoringInterval, (_) {
-      _calculateMetrics();
-    });
-    
-    debugPrint('AnimationPerformanceMonitor: Started monitoring');
-    notifyListeners();
+    // DISABLED: Performance monitoring disabled to prevent overhead
+    debugPrint('🚫 AnimationPerformanceMonitor: monitoring disabled');
   }
 
-  /// Stop performance monitoring
+  /// DISABLED: Stop performance monitoring
   void stopMonitoring() {
-    if (!_isMonitoring) return;
-    
-    _isMonitoring = false;
-    _monitoringTimer?.cancel();
-    _monitoringTimer = null;
-    
-    debugPrint('AnimationPerformanceMonitor: Stopped monitoring');
-    notifyListeners();
+    // DISABLED: No monitoring to stop
+    debugPrint('🚫 AnimationPerformanceMonitor: stop monitoring disabled');
   }
 
   /// Enable or disable automatic optimization

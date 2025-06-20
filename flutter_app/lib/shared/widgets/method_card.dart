@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:vibration/vibration.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../services/debug_logger.dart';
 
 enum HapticFeedbackType {
   light,
@@ -100,13 +101,11 @@ class _MethodCardState extends State<MethodCard>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
+    // DISABLED: Static animation to prevent curve endpoint errors
     _swipeAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: const Offset(0.1, 0),
-    ).animate(CurvedAnimation(
-      parent: _swipeAnimationController,
-      curve: Curves.easeInOut,
-    ));
+      end: Offset.zero, // Static - no movement
+    ).animate(_swipeAnimationController);
     
   }
 
@@ -139,19 +138,21 @@ class _MethodCardState extends State<MethodCard>
   }
 
   void _animateSwipeComplete() {
+    // DISABLED: Skip animation, trigger completion directly
     setState(() {
       _isSwipeInProgress = true;
     });
     
-    _swipeAnimationController.forward().then((_) {
-      widget.onCompleted?.call();
-      _swipeAnimationController.reverse().then((_) {
-        if (mounted) {
-          setState(() {
-            _isSwipeInProgress = false;
-          });
-        }
-      });
+    // Trigger completion immediately without animation
+    widget.onCompleted?.call();
+    
+    // Reset state immediately
+    Future.microtask(() {
+      if (mounted) {
+        setState(() {
+          _isSwipeInProgress = false;
+        });
+      }
     });
   }
 
@@ -443,10 +444,8 @@ class _MethodCardState extends State<MethodCard>
                       ),
                   ],
                 ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: ConstrainedBox(
+                // DISABLED: Static size to prevent curve errors
+                ConstrainedBox(
                     constraints: _expanded
                         ? const BoxConstraints()
                         : const BoxConstraints(maxHeight: 0),
@@ -494,7 +493,6 @@ class _MethodCardState extends State<MethodCard>
                             ),
                           )
                         : const SizedBox.shrink(),
-                  ),
                 ),
                 // Keyboard shortcuts hint
                 if (widget.enableKeyboardNavigation)
@@ -512,8 +510,29 @@ class _MethodCardState extends State<MethodCard>
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
                       onTap: () {
+                        final logger = DebugLogger.instance;
+                        logger.logUserAction(
+                          'Method Card Checkbox Tapped',
+                          details: {
+                            'stepNumber': widget.data.stepNumber,
+                            'currentState': widget.data.isCompleted,
+                            'newState': !widget.data.isCompleted,
+                            'stepTitle': widget.data.title,
+                            'hasCallback': widget.onCheckboxChanged != null,
+                          }
+                        );
+                        
                         if (widget.onCheckboxChanged != null) {
+                          logger.logSystem('Invoking onCheckboxChanged callback', details: {
+                            'stepNumber': widget.data.stepNumber,
+                            'newValue': !widget.data.isCompleted,
+                          });
                           widget.onCheckboxChanged!(!widget.data.isCompleted);
+                        } else {
+                          logger.logError('onCheckboxChanged callback is null', 
+                            component: 'MethodCard',
+                            details: {'stepNumber': widget.data.stepNumber}
+                          );
                         }
                       },
                       child: Container(
@@ -563,15 +582,8 @@ class _MethodCardState extends State<MethodCard>
             _handleSwipeLeft();
           }
         },
-        child: AnimatedBuilder(
-          animation: _swipeAnimation,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: _swipeAnimation.value * MediaQuery.of(context).size.width,
-              child: cardContent,
-            );
-          },
-        ),
+        // DISABLED: Static card without animation
+        child: cardContent,
       );
     }
 

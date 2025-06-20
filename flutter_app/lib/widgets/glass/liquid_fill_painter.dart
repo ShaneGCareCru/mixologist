@@ -163,56 +163,11 @@ class LiquidFillPainter extends CustomPainter {
     canvas.drawRect(rect, paint);
   }
 
-  /// Draw the meniscus curve at the liquid surface
+  /// DISABLED: Draw the meniscus curve at the liquid surface
   void _drawMeniscus(Canvas canvas, Size size) {
-    final liquidPath = glassShape.getLiquidPath(size, totalFillLevel);
-    final pathMetrics = liquidPath.computeMetrics();
-    
-    if (pathMetrics.isEmpty) return;
-    
-    // Find the top edge of the liquid
-    final metric = pathMetrics.first;
-    final topPoints = <Offset>[];
-    
-    // Sample points along the top edge
-    for (double t = 0.2; t <= 0.8; t += 0.1) {
-      final tangent = metric.getTangentForOffset(metric.length * t);
-      if (tangent != null) {
-        topPoints.add(tangent.position);
-      }
-    }
-    
-    if (topPoints.length < 2) return;
-    
-    // Draw meniscus curve
-    final meniscusPath = Path();
-    meniscusPath.moveTo(topPoints.first.dx, topPoints.first.dy);
-    
-    for (int i = 1; i < topPoints.length; i++) {
-      final point = topPoints[i];
-      final prevPoint = topPoints[i - 1];
-      
-      // Create slight curve for meniscus effect
-      final controlPoint = Offset(
-        (prevPoint.dx + point.dx) / 2,
-        math.min(prevPoint.dy, point.dy) - 2,
-      );
-      
-      meniscusPath.quadraticBezierTo(
-        controlPoint.dx,
-        controlPoint.dy,
-        point.dx,
-        point.dy,
-      );
-    }
-    
-    final meniscusPaint = Paint()
-      ..color = Colors.white.withOpacity(0.4)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    
-    canvas.drawPath(meniscusPath, meniscusPaint);
+    // DISABLED: Meniscus curve disabled to prevent "Invalid curve endpoint" errors
+    // The quadraticBezierTo calls were causing curve endpoint errors during step interactions
+    return;
   }
 
   @override

@@ -112,18 +112,13 @@ class _SmartProgressBarState extends State<SmartProgressBar>
       vsync: this,
     );
     
-    _progressAnimation = CurvedAnimation(
-      parent: _progressController,
-      curve: Curves.easeInOut,
-    );
+    // DISABLED: Static animations to prevent curve endpoint errors
+    _progressAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(_progressController);
     
     _pulseAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+      end: 1.0, // No pulsing
+    ).animate(_pulseController);
     
     _updateProgress();
     _startPulseAnimation();
@@ -138,20 +133,20 @@ class _SmartProgressBarState extends State<SmartProgressBar>
   }
   
   void _updateProgress() {
+    // DISABLED: No progress animation to prevent curve errors
     if (widget.steps.isEmpty) return;
     
-    final progress = widget.currentStep / widget.steps.length;
-    _progressController.animateTo(progress);
+    // Set progress immediately without animation
+    _progressController.value = 1.0;
     
     // Check if recipe is complete
     if (widget.currentStep >= widget.steps.length) {
-      _pulseController.stop();
       widget.onComplete?.call();
     }
   }
   
   void _startPulseAnimation() {
-    _pulseController.repeat(reverse: true);
+    // DISABLED: No pulse animation
   }
   
   @override

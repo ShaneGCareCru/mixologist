@@ -3,7 +3,8 @@ import 'dart:math' as math;
 import '../glass/glass_shape.dart';
 import 'ambient_animation_controller.dart';
 
-/// Custom painter for creating subtle liquid swirl effects
+/// DISABLED: Static liquid painter without curve-based swirl effects
+/// Previously caused "Invalid curve endpoint at 0" errors
 class LiquidSwirlPainter extends CustomPainter {
   const LiquidSwirlPainter({
     required this.glassShape,
@@ -45,32 +46,15 @@ class LiquidSwirlPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (fillLevel <= 0) return;
 
-    // Get base liquid path with caching
-    Path baseLiquidPath;
-    if (_cachedBasePath != null && 
-        _cachedFillLevel == fillLevel && 
-        _cachedSize == size) {
-      baseLiquidPath = _cachedBasePath!;
-    } else {
-      baseLiquidPath = glassShape.getLiquidPath(size, fillLevel);
-      _cachedBasePath = baseLiquidPath;
-      _cachedFillLevel = fillLevel;
-      _cachedSize = size;
-    }
+    // DISABLED: Simple static liquid without curves or swirls
+    final liquidPath = glassShape.getLiquidPath(size, fillLevel);
     
-    // Create swirl-distorted liquid path
-    final swirlPath = _createSwirlPath(size, baseLiquidPath);
+    // Simple fill without effects
+    final liquidPaint = Paint()
+      ..color = primaryColor.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
     
-    // Paint the main liquid with swirl
-    _paintLiquidWithSwirl(canvas, size, swirlPath);
-    
-    // Add surface distortion effects
-    _paintSurfaceDistortion(canvas, size);
-    
-    // Paint animated meniscus if enabled
-    if (showMeniscus) {
-      _paintAnimatedMeniscus(canvas, size);
-    }
+    canvas.drawPath(liquidPath, liquidPaint);
   }
 
   /// Create a path with swirl distortion applied
@@ -404,43 +388,25 @@ class LiquidSwirlEffect extends StatefulWidget {
   State<LiquidSwirlEffect> createState() => _LiquidSwirlEffectState();
 }
 
-class _LiquidSwirlEffectState extends State<LiquidSwirlEffect>
-    with AmbientAnimationMixin<LiquidSwirlEffect> {
-  
-  late AnimationController _swirlController;
-  
-  @override  
-  void initState() {
-    super.initState();
-    
-    _swirlController = createAmbientController(
-      duration: widget.duration,
-      debugLabel: 'LiquidSwirlEffect',
-    );
-  }
-
+class _LiquidSwirlEffectState extends State<LiquidSwirlEffect> {
   @override
   Widget build(BuildContext context) {
     if (!widget.enabled || widget.fillLevel <= 0) {
       return SizedBox.fromSize(size: widget.size);
     }
 
+    // DISABLED: Static painter without animation
     return SizedBox.fromSize(
       size: widget.size,
-      child: AnimatedBuilder(
-        animation: _swirlController,
-        builder: (context, child) {
-          return CustomPaint(
-            painter: LiquidSwirlPainter(
-              glassShape: widget.glassShape,
-              fillLevel: widget.fillLevel,
-              animationValue: _swirlController.value,
-              primaryColor: widget.liquidColor,
-              intensity: widget.intensity,
-            ),
-            size: widget.size,
-          );
-        },
+      child: CustomPaint(
+        painter: LiquidSwirlPainter(
+          glassShape: widget.glassShape,
+          fillLevel: widget.fillLevel,
+          animationValue: 0.0, // Static value
+          primaryColor: widget.liquidColor,
+          intensity: 0.0, // No intensity
+        ),
+        size: widget.size,
       ),
     );
   }

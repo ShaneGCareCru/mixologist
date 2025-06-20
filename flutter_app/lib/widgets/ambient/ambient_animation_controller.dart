@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:async';
 import 'animation_performance_monitor.dart';
 
-/// Centralized controller for managing all ambient animations in the app
+/// DISABLED: Centralized controller that does nothing to prevent performance issues
 class AmbientAnimationController with ChangeNotifier {
   static AmbientAnimationController? _instance;
   
@@ -35,13 +34,19 @@ class AmbientAnimationController with ChangeNotifier {
   /// Whether animations are reduced for accessibility
   bool _isReducedMotion = false;
   
-  /// Performance metrics
-  int _frameCount = 0;
-  DateTime _lastFrameTime = DateTime.now();
+  /// Performance metrics - optimized for better tracking
+  final List<double> _fpsHistory = [];
+  DateTime _lastPerformanceCheck = DateTime.now();
   double _currentFPS = 60.0;
+  double _averageFPS = 60.0;
+  int _lowFPSCount = 0;
   
   /// Timer for performance monitoring
   Timer? _performanceTimer;
+  
+  /// Performance thresholds
+  static const double _fpsWarningThreshold = 30.0;
+  static const double _fpsCriticalThreshold = 20.0;
   
   /// Listeners for animation lifecycle events
   final List<VoidCallback> _startListeners = [];
@@ -53,7 +58,9 @@ class AmbientAnimationController with ChangeNotifier {
   bool get isPaused => _isPaused;
   bool get isReducedMotion => _isReducedMotion;
   double get currentFPS => _currentFPS;
+  double get averageFPS => _averageFPS;
   int get controllerCount => _controllers.length;
+  bool get isPerformanceDegraded => _averageFPS < _fpsWarningThreshold;
 
   /// Initialize the controller and set up performance monitoring
   void _initializeController() {
@@ -107,54 +114,20 @@ class AmbientAnimationController with ChangeNotifier {
 
   /// Start all registered animations
   void startAll() {
-    if (_isPaused || !_isActive) return;
-    
-    for (final controller in _controllers) {
-      if (!controller.isAnimating) {
-        controller.repeat();
-      }
-    }
-    
-    // Notify listeners
-    for (final listener in _startListeners) {
-      listener();
-    }
-    
-    notifyListeners();
+    // DISABLED: No animation starting to prevent performance issues
+    debugPrint('🚫 AmbientAnimationController: startAll() disabled');
   }
 
-  /// Pause all animations (for battery saving or background)
+  /// DISABLED: Pause all animations 
   void pauseAll() {
-    _isPaused = true;
-    
-    for (final controller in _controllers) {
-      if (controller.isAnimating) {
-        controller.stop();
-      }
-    }
-    
-    // Notify listeners
-    for (final listener in _pauseListeners) {
-      listener();
-    }
-    
-    notifyListeners();
+    // DISABLED: No animations to pause
+    debugPrint('🚫 AmbientAnimationController: pauseAll() disabled');
   }
 
-  /// Resume all animations
+  /// DISABLED: Resume all animations
   void resumeAll() {
-    _isPaused = false;
-    
-    if (_isActive) {
-      startAll();
-    }
-    
-    // Notify listeners
-    for (final listener in _resumeListeners) {
-      listener();
-    }
-    
-    notifyListeners();
+    // DISABLED: No animations to resume
+    debugPrint('🚫 AmbientAnimationController: resumeAll() disabled');
   }
 
   /// Enable or disable ambient animations
@@ -214,17 +187,32 @@ class AmbientAnimationController with ChangeNotifier {
     _resumeListeners.remove(listener);
   }
 
-  /// Called on each animation frame to track performance
+  /// Called on each animation frame to track performance - optimized
   void _onAnimationFrame() {
-    _frameCount++;
     final now = DateTime.now();
-    final timeDiff = now.difference(_lastFrameTime).inMilliseconds;
+    final timeDiff = now.difference(_lastPerformanceCheck).inMilliseconds;
     
-    if (timeDiff > 0) {
-      // Use a running average for more stable FPS calculation
+    // Only update FPS calculation every 500ms to reduce overhead
+    if (timeDiff >= 500) {
       final instantFPS = 1000.0 / timeDiff;
-      _currentFPS = (_currentFPS * 0.9) + (instantFPS * 0.1);
-      _lastFrameTime = now;
+      
+      // Add to rolling window (keep last 10 measurements)
+      _fpsHistory.add(instantFPS);
+      if (_fpsHistory.length > 10) {
+        _fpsHistory.removeAt(0);
+      }
+      
+      // Calculate average FPS from history
+      _averageFPS = _fpsHistory.reduce((a, b) => a + b) / _fpsHistory.length;
+      _currentFPS = instantFPS;
+      _lastPerformanceCheck = now;
+      
+      // Track low FPS occurrences
+      if (_averageFPS < _fpsWarningThreshold) {
+        _lowFPSCount++;
+      } else {
+        _lowFPSCount = 0;
+      }
     }
   }
 
@@ -236,24 +224,40 @@ class AmbientAnimationController with ChangeNotifier {
     });
   }
 
-  /// Check performance and adjust animations if needed
+  /// Check performance and adjust animations if needed - optimized
   void _checkPerformance() {
-    // If FPS drops below 30, automatically pause animations
-    if (_currentFPS < 30.0 && _isActive && !_isPaused) {
-      debugPrint('AmbientAnimationController: Low FPS detected ($_currentFPS), pausing animations');
-      pauseAll();
-      
-      // Resume after a delay to see if performance improves
-      Future.delayed(const Duration(seconds: 5), () {
-        if (_currentFPS >= 45.0) {
-          debugPrint('AmbientAnimationController: Performance improved, resuming animations');
-          resumeAll();
+    // Only act on sustained low performance (not brief dips)
+    if (_lowFPSCount >= 3 && _isActive && !_isPaused) {
+      if (_averageFPS < _fpsCriticalThreshold) {
+        // Critical: pause all animations
+        debugPrint('🚨 AmbientAnimationController: Critical FPS ($_averageFPS), pausing all animations');
+        pauseAll();
+        
+        // Resume after longer delay for critical issues
+        Future.delayed(const Duration(seconds: 8), () {
+          if (_averageFPS >= 35.0) {
+            debugPrint('✅ AmbientAnimationController: Performance recovered, resuming');
+            resumeAll();
+          }
+        });
+      } else if (_averageFPS < _fpsWarningThreshold) {
+        // Warning: reduce animation count by pausing 30% of controllers
+        final controllersToReduce = (_controllers.length * 0.3).round();
+        debugPrint('⚠️ AmbientAnimationController: Low FPS ($_averageFPS), reducing $controllersToReduce controllers');
+        
+        for (int i = 0; i < controllersToReduce && i < _controllers.length; i++) {
+          _controllers[i].stop();
         }
-      });
+        
+        // Auto-resume when performance improves
+        Future.delayed(const Duration(seconds: 5), () {
+          if (_averageFPS >= 40.0) {
+            debugPrint('✅ AmbientAnimationController: Performance improved, resuming reduced animations');
+            startAll();
+          }
+        });
+      }
     }
-    
-    // Reset frame counter
-    _frameCount = 0;
   }
 
   /// Handle app going to background
@@ -361,6 +365,7 @@ class _AppLifecycleObserver with WidgetsBindingObserver {
         controller._onAppResumed();
         break;
       case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
         break;
     }
   }

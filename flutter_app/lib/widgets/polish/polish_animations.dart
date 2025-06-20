@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+/// DISABLED: Static polish effects without animations to prevent curve errors
 /// Premium polish animation collection for the "1% that makes 99% of the impression"
 /// Includes shimmer effects, glow pulses, breathing animations, and easing curves
 class PolishAnimations {
-  /// Shimmer effect for loading states and emphasis
+  /// DISABLED: Static shimmer (no animation)
   static Widget shimmerEffect(
     Widget child, {
     Duration duration = const Duration(milliseconds: 1500),
@@ -13,15 +14,8 @@ class PolishAnimations {
     ShimmerDirection direction = ShimmerDirection.leftToRight,
     bool enabled = true,
   }) {
-    if (!enabled) return child;
-    
-    return _ShimmerWidget(
-      duration: duration,
-      baseColor: baseColor,
-      highlightColor: highlightColor,
-      direction: direction,
-      child: child,
-    );
+    // DISABLED: Return child without shimmer animation
+    return child;
   }
   
   /// Glow pulse effect for active elements and focus states

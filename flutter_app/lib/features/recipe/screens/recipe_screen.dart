@@ -39,6 +39,9 @@ import '../../../widgets/animations/liquid_drop_animation.dart';
 import '../../../widgets/animations/cocktail_shaker_animation.dart';
 // import '../../../services/interaction_feedback.dart'; // Disabled for Cupertino compatibility
 
+// Debug logging
+import '../../../services/debug_logger.dart';
+
 class RecipeScreen extends StatefulWidget {
   final Map<String, dynamic> recipeData;
   const RecipeScreen({super.key, required this.recipeData});
@@ -260,23 +263,99 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   void _toggleStepCompleted(int stepIndex, bool? completed) {
+    final logger = DebugLogger.instance;
+    final scopedLogger = logger.createScopedLogger('ToggleStepCompleted');
+    
     try {
-      debugPrint('🎯 Step Toggle: Step $stepIndex → ${completed == true ? "✅ Complete" : "❌ Incomplete"}');
+      // Log the step toggle action
+      logger.logStepAction(
+        'Step Toggle Initiated',
+        stepNumber: stepIndex,
+        completed: completed,
+        details: {
+          'previousState': _stepCompletion[stepIndex],
+          'newState': completed,
+          'totalSteps': widget.recipeData['steps']?.length ?? 0,
+        }
+      );
+
+      // Log state before change
+      final beforeState = {
+        'stepCompletion': Map<String, dynamic>.from(_stepCompletion.map((k, v) => MapEntry(k.toString(), v))),
+        'currentProgress': _currentDrinkProgress.toString(),
+      };
+      
+      scopedLogger.step('Setting State', details: beforeState);
+      
+      // Perform state change with detailed logging
       setState(() {
+        logger.logStateChange(
+          'stepCompletion[$stepIndex]',
+          _stepCompletion[stepIndex],
+          completed,
+          component: 'RecipeScreen',
+          details: {'actionType': 'user_interaction'}
+        );
         _stepCompletion[stepIndex] = completed;
       });
+
+      scopedLogger.step('State Set - Saving Progress');
       _saveProgress();
       
-      // Force glass update after state change
+      // Log state after change
+      final afterState = {
+        'stepCompletion': Map<String, dynamic>.from(_stepCompletion.map((k, v) => MapEntry(k.toString(), v))),
+        'currentProgress': _currentDrinkProgress.toString(),
+      };
+      
+      logger.logGuiState(
+        'RecipeScreen',
+        'Step Toggle Complete',
+        before: beforeState,
+        after: afterState,
+      );
+
+      scopedLogger.step('Scheduling Glass Update');
+      
+      // Force glass update after state change with detailed logging
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        logger.logSystem('PostFrameCallback Executing', details: {
+          'mounted': mounted,
+          'stepIndex': stepIndex,
+          'completed': completed,
+        });
+        
         if (mounted) {
+          logger.logGuiState('RecipeScreen', 'Triggering Glass Refresh');
           setState(() {
             // Trigger glass refresh
+            logger.logAnimation('GlassRefresh', 'Triggered', 
+              target: 'DrinkProgressGlass',
+              details: {'fillLevel': _currentDrinkProgress.toString()}
+            );
           });
+        } else {
+          logger.logError('Widget not mounted during PostFrameCallback', 
+            component: 'RecipeScreen',
+            details: {'stepIndex': stepIndex}
+          );
         }
       });
-    } catch (e) {
-      debugPrint('🚨 Error in _toggleStepCompleted: $e');
+
+      scopedLogger.complete(result: 'Success');
+      
+    } catch (e, stackTrace) {
+      logger.logError(
+        'Error in _toggleStepCompleted: $e',
+        component: 'RecipeScreen',
+        stackTrace: stackTrace,
+        details: {
+          'stepIndex': stepIndex,
+          'completed': completed,
+          'currentState': _stepCompletion[stepIndex],
+        }
+      );
+      scopedLogger.error('Exception thrown: $e', stackTrace: stackTrace);
     }
   }
 
@@ -999,21 +1078,58 @@ class _RecipeScreenState extends State<RecipeScreen> {
   void initState() {
     super.initState();
     
-    // Initialize ambient animation system
-    _ambientController = AmbientAnimationController.instance;
-    _ambientController.resumeAll(); // Use resumeAll to handle multiple screens properly
+    // Force immediate debug test
+    debugPrint('🔍 DEBUG #1 TEST: RecipeScreen initState called');
     
-    _initializeIngredientChecklist();
-    _initializeSpecializedImages();
-    _initializeStepConnections();
+    final logger = DebugLogger.instance;
+    final scopedLogger = logger.createScopedLogger('RecipeScreen.initState');
     
-    // Proactively start generating ingredient images
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _autoGenerateIngredientImages();
-    });
-    _loadCachedImages(); // Check for existing cached images
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _restoreExpandedFromHash());
+    try {
+      logger.logWidgetLifecycle('RecipeScreen', 'initState', details: {
+        'recipeData': {
+          'name': widget.recipeData['name'] ?? 'Unknown',
+          'hasSteps': (widget.recipeData['steps'] ?? []).isNotEmpty,
+          'hasIngredients': (widget.recipeData['ingredients'] ?? []).isNotEmpty,
+          'stepCount': (widget.recipeData['steps'] ?? []).length,
+        }
+      });
+
+      scopedLogger.step('Initializing ambient animation system');
+      // Initialize ambient animation system
+      _ambientController = AmbientAnimationController.instance;
+      _ambientController.resumeAll(); // Use resumeAll to handle multiple screens properly
+      
+      scopedLogger.step('Initializing ingredient checklist');
+      _initializeIngredientChecklist();
+      
+      scopedLogger.step('Initializing specialized images');
+      _initializeSpecializedImages();
+      
+      scopedLogger.step('Initializing step connections');
+      _initializeStepConnections();
+      
+      scopedLogger.step('Scheduling post-frame callbacks');
+      // Proactively start generating ingredient images
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        logger.logSystem('Auto-generating ingredient images callback executing');
+        _autoGenerateIngredientImages();
+      });
+      _loadCachedImages(); // Check for existing cached images
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        logger.logSystem('Restoring expanded state from hash callback executing');
+        _restoreExpandedFromHash();
+      });
+
+      scopedLogger.complete(result: 'RecipeScreen initialized successfully');
+      
+    } catch (e, stackTrace) {
+      logger.logError('Error during RecipeScreen initialization: $e', 
+        component: 'RecipeScreen', 
+        stackTrace: stackTrace
+      );
+      scopedLogger.error('Initialization failed: $e', stackTrace: stackTrace);
+      rethrow;
+    }
   }
 
   @override

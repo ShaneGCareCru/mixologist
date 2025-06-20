@@ -2,8 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../services/haptic_service.dart';
 
-/// Animated cocktail shaker widget that performs shaking motion with rotation,
-/// optional ice sound effects, and condensation appearance
+/// DISABLED: Static cocktail shaker that triggers haptics without complex animations
+/// Previously caused performance issues and curve errors
 class CocktailShakerAnimation extends StatefulWidget {
   final int shakeCount;
   final Duration shakeDuration;
@@ -28,99 +28,13 @@ class CocktailShakerAnimation extends StatefulWidget {
   State<CocktailShakerAnimation> createState() => _CocktailShakerAnimationState();
 }
 
-class _CocktailShakerAnimationState extends State<CocktailShakerAnimation>
-    with TickerProviderStateMixin {
-  late AnimationController _shakeController;
-  late AnimationController _rotationController;
-  late AnimationController _condensationController;
-  
-  late Animation<double> _shakeAnimation;
-  late Animation<double> _rotationAnimation;
-  late Animation<double> _condensationOpacity;
-  late Animation<double> _condensationScale;
-  
+class _CocktailShakerAnimationState extends State<CocktailShakerAnimation> {
   bool _isShaking = false;
   
   @override
   void initState() {
     super.initState();
-    
-    // Main shake animation controller
-    _shakeController = AnimationController(
-      duration: widget.shakeDuration,
-      vsync: this,
-    );
-    
-    // Rotation animation controller (faster than shake)
-    _rotationController = AnimationController(
-      duration: Duration(milliseconds: widget.shakeDuration.inMilliseconds ~/ 3),
-      vsync: this,
-    );
-    
-    // Condensation animation controller
-    _condensationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    
-    // Shake animation with oscillation
-    _shakeAnimation = Tween<double>(
-      begin: 0.0,
-      end: widget.shakeCount.toDouble(),
-    ).animate(CurvedAnimation(
-      parent: _shakeController,
-      curve: Curves.linear,
-    ));
-    
-    // Rotation animation
-    _rotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 4.0, // 4 full rotations
-    ).animate(CurvedAnimation(
-      parent: _rotationController,
-      curve: Curves.easeInOut,
-    ));
-    
-    // Condensation opacity
-    _condensationOpacity = Tween<double>(
-      begin: 0.0,
-      end: 0.6,
-    ).animate(CurvedAnimation(
-      parent: _condensationController,
-      curve: Curves.easeIn,
-    ));
-    
-    // Condensation scale
-    _condensationScale = Tween<double>(
-      begin: 0.8,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _condensationController,
-      curve: Curves.easeOut,
-    ));
-    
-    // Listen for animation completion
-    _shakeController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _onShakeComplete();
-      }
-    });
-    
-    // Add haptic feedback during shaking
-    if (widget.enableHaptics) {
-      _shakeController.addListener(_handleHapticFeedback);
-    }
-  }
-  
-  void _handleHapticFeedback() {
-    // Trigger haptic feedback at specific intervals during shake
-    final progress = _shakeController.value;
-    final shakePhase = (_shakeAnimation.value % 1.0);
-    
-    // Trigger haptic on each shake peak
-    if (shakePhase < 0.1 && progress > 0.1) {
-      HapticService.instance.selection();
-    }
+    // DISABLED: No animation controllers to prevent curve errors
   }
   
   void _onShakeComplete() {
@@ -135,7 +49,7 @@ class _CocktailShakerAnimationState extends State<CocktailShakerAnimation>
     widget.onShakeComplete?.call();
   }
   
-  /// Start the shaking animation
+  /// Start the shaking animation - DISABLED: Just trigger haptics
   void startShaking() {
     if (_isShaking) return;
     
@@ -143,116 +57,35 @@ class _CocktailShakerAnimationState extends State<CocktailShakerAnimation>
       _isShaking = true;
     });
     
-    // Start all animations
-    _shakeController.forward(from: 0);
-    _rotationController.repeat();
-    _condensationController.forward(from: 0);
-    
-    // Play haptic pattern for shaking
+    // DISABLED: Just play haptics immediately and complete
     if (widget.enableHaptics) {
       HapticService.instance.cocktailShake();
     }
+    
+    // Complete immediately after haptics
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _onShakeComplete();
+    });
   }
   
-  /// Stop the shaking animation
+  /// Stop the shaking animation - DISABLED: Just set state
   void stopShaking() {
-    _shakeController.stop();
-    _rotationController.stop();
-    _condensationController.reverse();
-    
     setState(() {
       _isShaking = false;
     });
   }
   
-  /// Reset the animation to initial state
+  /// Reset the animation to initial state - DISABLED: Just set state
   void reset() {
-    _shakeController.reset();
-    _rotationController.reset();
-    _condensationController.reset();
-    
     setState(() {
       _isShaking = false;
     });
-  }
-  
-  @override
-  void dispose() {
-    _shakeController.dispose();
-    _rotationController.dispose();
-    _condensationController.dispose();
-    super.dispose();
-  }
-  
-  /// Calculate shake offset based on animation value
-  Offset _calculateShakeOffset() {
-    if (!_isShaking) return Offset.zero;
-    
-    final shakeValue = _shakeAnimation.value;
-    final intensity = widget.shakeIntensity;
-    
-    // Create figure-8 shake pattern
-    final x = sin(shakeValue * 2 * pi) * intensity;
-    final y = sin(shakeValue * pi) * intensity * 0.5;
-    
-    return Offset(x, y);
-  }
-  
-  /// Calculate rotation angle
-  double _calculateRotation() {
-    if (!_isShaking) return 0.0;
-    return _rotationAnimation.value * 2 * pi;
   }
   
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        _shakeController,
-        _rotationController,
-        _condensationController,
-      ]),
-      builder: (context, child) {
-        return Transform.translate(
-          offset: _calculateShakeOffset(),
-          child: Transform.rotate(
-            angle: _calculateRotation(),
-            child: Stack(
-              children: [
-                // Main shaker content
-                widget.child ?? _buildDefaultShaker(),
-                
-                // Condensation effect overlay
-                if (_isShaking)
-                  Positioned.fill(
-                    child: Opacity(
-                      opacity: _condensationOpacity.value,
-                      child: Transform.scale(
-                        scale: _condensationScale.value,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            gradient: RadialGradient(
-                              center: const Alignment(0.3, -0.5),
-                              colors: [
-                                Colors.white.withOpacity(0.1),
-                                Colors.white.withOpacity(0.05),
-                                Colors.transparent,
-                              ],
-                              stops: const [0.0, 0.7, 1.0],
-                            ),
-                          ),
-                          child: _buildCondensationDroplets(),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    // DISABLED: Static shaker without animations
+    return widget.child ?? _buildDefaultShaker();
   }
   
   /// Build default shaker appearance if no child provided
