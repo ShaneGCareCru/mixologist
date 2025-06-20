@@ -29,18 +29,48 @@ class MixologistApp extends StatelessWidget {
   }
 
   CupertinoThemeData _buildCupertinoTheme() {
-    return const CupertinoThemeData(
+    return CupertinoThemeData(
       primaryColor: iOSTheme.whiskey,
       primaryContrastingColor: CupertinoColors.white,
       barBackgroundColor: CupertinoColors.systemBackground,
       scaffoldBackgroundColor: CupertinoColors.systemGroupedBackground,
       textTheme: CupertinoTextThemeData(
         primaryColor: iOSTheme.whiskey,
-        textStyle: iOSTheme.body,
-        actionTextStyle: iOSTheme.headline,
-        tabLabelTextStyle: iOSTheme.caption1,
-        navTitleTextStyle: iOSTheme.headline,
-        navLargeTitleTextStyle: iOSTheme.largeTitle,
+        textStyle: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w400,
+          letterSpacing: -0.1,
+          height: 1.4,
+          inherit: false,
+        ),
+        actionTextStyle: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.1,
+          height: 1.4,
+          inherit: false,
+        ),
+        tabLabelTextStyle: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+          letterSpacing: -0.1,
+          height: 1.4,
+          inherit: false,
+        ),
+        navTitleTextStyle: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.1,
+          height: 1.4,
+          inherit: false,
+        ),
+        navLargeTitleTextStyle: const TextStyle(
+          fontSize: 34,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+          height: 1.2,
+          inherit: false,
+        ),
       ),
     );
   }

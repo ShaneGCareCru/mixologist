@@ -104,17 +104,20 @@ class _InventoryShelfState extends State<InventoryShelf> {
                   ),
                 ),
                 if (widget.items.length > 4 && widget.onSeeAll != null)
-                  InkWell(
-                    onTap: widget.onSeeAll,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: Text(
-                        'See All ▸',
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: widget.onSeeAll,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: Text(
+                          'See All ▸',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ),
