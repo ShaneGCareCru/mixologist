@@ -7,6 +7,7 @@ import 'package:fuzzy/fuzzy.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import '../../../theme/ios_theme.dart';
 import '../../../shared/widgets/loading_screen.dart';
+import '../../../shared/widgets/spring_button.dart';
 import '../../ai_assistant/ai_assistant_page.dart';
 import '../../inventory/unified_inventory_page.dart';
 import '../../auth/login_screen.dart';
@@ -390,10 +391,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSuggestionChip(String text) {
-    return CupertinoButton(
+    return SpringButton(
+      backgroundColor: const Color(0xFF2C2C2E),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      color: const Color(0xFF2C2C2E),
       borderRadius: BorderRadius.circular(20),
+      scaleOnPress: 0.93,
+      springDuration: const Duration(milliseconds: 140),
       onPressed: () {
         _unifiedSearchController.text = text;
         _performUnifiedSearch();

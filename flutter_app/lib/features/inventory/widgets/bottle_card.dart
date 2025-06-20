@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/inventory_models.dart';
 import '../services/inventory_service.dart';
+import '../../../shared/widgets/spring_button.dart';
 
 class BottleCard extends StatefulWidget {
   final InventoryItem item;
@@ -291,9 +292,10 @@ class _BottleCardState extends State<BottleCard> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return BottleSpringCard(
       onTap: _showDetailsDialog,
       onLongPress: _showQuickUpdateDialog,
+      enabled: !_isUpdating,
       child: Card(
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

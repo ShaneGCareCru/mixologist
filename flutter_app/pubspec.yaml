@@ -32,6 +32,7 @@ dependencies:
   # Animation packages
   animated_text_kit: ^4.2.2
   shimmer: ^3.0.0
+  spring: ^2.0.2
 
 
 flutter:
