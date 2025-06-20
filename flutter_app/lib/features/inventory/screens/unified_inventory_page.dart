@@ -10,6 +10,7 @@ import '../widgets/inventory_shelf.dart';
 import '../../../theme/ios_theme.dart';
 import '../../../shared/widgets/ios_card.dart';
 import '../../../shared/widgets/shimmer_components.dart';
+import '../../../shared/widgets/motion_transitions.dart';
 
 class UnifiedInventoryPage extends StatefulWidget {
   const UnifiedInventoryPage({super.key});
@@ -332,41 +333,49 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: 'Search inventory...',
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                      },
+                  child: CupertinoTextField(
+                    placeholder: 'Search inventory...',
+                    prefix: const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Icon(CupertinoIcons.search, size: 20),
                     ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
                   ),
                 ),
                 const SizedBox(width: 16),
-                Material(
-                  color: Colors.transparent,
-                  child: DropdownButton<String>(
-                    value: _selectedCategory,
-                    items: [
-                      const DropdownMenuItem(value: 'all', child: Text('All Categories')),
-                      ...IngredientCategory.all.map(
-                        (category) => DropdownMenuItem(
-                          value: category,
-                          child: Text(IngredientCategory.getDisplayName(category)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: iOSTheme.adaptiveColor(
+                      context,
+                      CupertinoColors.systemGrey5,
+                      iOSTheme.darkSecondaryBackground,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedCategory,
+                      isDense: true,
+                      items: [
+                        const DropdownMenuItem(value: 'all', child: Text('All Categories')),
+                        ...IngredientCategory.all.map(
+                          (category) => DropdownMenuItem(
+                            value: category,
+                            child: Text(IngredientCategory.getDisplayName(category)),
+                          ),
                         ),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value ?? 'all';
-                      });
-                    },
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCategory = value ?? 'all';
+                        });
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -381,18 +390,30 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: CupertinoButton.filled(
                     onPressed: _isAnalyzing ? null : _takePhoto,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Scan with Camera'),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(CupertinoIcons.camera, size: 18),
+                        SizedBox(width: 8),
+                        Text('Scan with Camera'),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: CupertinoButton.filled(
                     onPressed: _isAnalyzing ? null : _pickFromGallery,
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Pick from Gallery'),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(CupertinoIcons.photo, size: 18),
+                        SizedBox(width: 8),
+                        Text('Pick from Gallery'),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -435,7 +456,8 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text('Error: $_error'),
-                            ElevatedButton(
+                            const SizedBox(height: 16),
+                            CupertinoButton.filled(
                               onPressed: _loadInventory,
                               child: const Text('Retry'),
                             ),
@@ -504,12 +526,12 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
 
   void _showCategoryView(String category, List<InventoryItem> items) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: Text(IngredientCategory.getDisplayName(category)),
+      MotionTransitions.sharedAxisPageRoute(
+        page: CupertinoPageScaffold(
+          navigationBar: CupertinoNavigationBar(
+            middle: Text(IngredientCategory.getDisplayName(category)),
           ),
-          body: GridView.builder(
+          child: SafeArea(child: GridView.builder(
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
@@ -532,7 +554,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
                 },
               );
             },
-          ),
+          )),
         ),
       ),
     );

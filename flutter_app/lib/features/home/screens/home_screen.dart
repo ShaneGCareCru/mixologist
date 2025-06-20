@@ -7,6 +7,8 @@ import 'package:fuzzy/fuzzy.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../../theme/ios_theme.dart';
+import '../../../shared/widgets/motion_transitions.dart';
+import 'package:animations/animations.dart';
 import '../../../shared/widgets/loading_screen.dart';
 import '../../../shared/widgets/spring_button.dart';
 import '../../ai_assistant/ai_assistant_page.dart';
@@ -195,8 +197,9 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) {
           Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => RecipeScreen(recipeData: recipeData)),
+            MotionTransitions.fadeThroughPageRoute(
+              page: RecipeScreen(recipeData: recipeData),
+            ),
           );
         }
       } else {
@@ -241,8 +244,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
               onPressed: () {
                 Navigator.of(context).push(
-                  CupertinoPageRoute(
-                    builder: (context) => const AIAssistantPage(),
+                  MotionTransitions.sharedAxisPageRoute(
+                    page: const AIAssistantPage(),
+                    transitionType: SharedAxisTransitionType.horizontal,
                   ),
                 );
               },
@@ -255,8 +259,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   iOSTheme.minimumTouchTarget, iOSTheme.minimumTouchTarget),
               onPressed: () {
                 Navigator.of(context).push(
-                  CupertinoPageRoute(
-                    builder: (context) => const UnifiedInventoryPage(),
+                  MotionTransitions.sharedAxisPageRoute(
+                    page: const UnifiedInventoryPage(),
+                    transitionType: SharedAxisTransitionType.horizontal,
                   ),
                 );
               },
@@ -359,28 +364,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               onSubmitted: (_) => _performUnifiedSearch(),
                             ),
                             if (_unifiedSearchController.text.isEmpty)
-                              Positioned(
+                              const Positioned(
                                 left: 20,
                                 top: 0,
                                 bottom: 0,
                                 child: IgnorePointer(
                                   child: Center(
-                                    child: DefaultTextStyle(
-                                      style: const TextStyle(
+                                    child: Text(
+                                      'Search for cocktails...',
+                                      style: TextStyle(
                                         color: Color(0xFF8E8E93),
                                         fontSize: 16,
-                                      ),
-                                      child: AnimatedTextKit(
-                                        animatedTexts: [
-                                          FadeAnimatedText('aperol spritz'),
-                                          FadeAnimatedText('something fruity'),
-                                          FadeAnimatedText('whiskey sour'),
-                                          FadeAnimatedText('a summer vibe'),
-                                          FadeAnimatedText('gin and tonic'),
-                                          FadeAnimatedText('surprise me'),
-                                        ],
-                                        repeatForever: true,
-                                        pause: const Duration(milliseconds: 1500),
                                       ),
                                     ),
                                   ),
