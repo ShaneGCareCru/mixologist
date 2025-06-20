@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import '../../theme/ios_theme.dart';
 
 /// iOS-style search bar that replaces Material's SearchAnchor
 class iOSSearchBar extends StatefulWidget {
   final TextEditingController controller;
   final String placeholder;
+  final List<String>? animatedPlaceholders; // Optional animated placeholders
   final List<String> suggestions;
   final Function(String)? onSubmitted;
   final Function(String)? onSuggestionTapped;
@@ -13,6 +15,7 @@ class iOSSearchBar extends StatefulWidget {
     super.key,
     required this.controller,
     required this.placeholder,
+    this.animatedPlaceholders,
     this.suggestions = const [],
     this.onSubmitted,
     this.onSuggestionTapped,
@@ -69,19 +72,21 @@ class _iOSSearchBarState extends State<iOSSearchBar> {
             ),
             borderRadius: BorderRadius.circular(iOSTheme.smallRadius),
           ),
-          child: CupertinoTextField(
-            controller: widget.controller,
-            placeholder: widget.placeholder,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(),
-            prefix: const Padding(
-              padding: EdgeInsets.only(left: 8),
-              child: Icon(
-                CupertinoIcons.search,
-                color: CupertinoColors.placeholderText,
-                size: 18,
-              ),
-            ),
+          child: Stack(
+            children: [
+              CupertinoTextField(
+                controller: widget.controller,
+                placeholder: widget.animatedPlaceholders == null ? widget.placeholder : null,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: const BoxDecoration(),
+                prefix: const Padding(
+                  padding: EdgeInsets.only(left: 8),
+                  child: Icon(
+                    CupertinoIcons.search,
+                    color: CupertinoColors.placeholderText,
+                    size: 18,
+                  ),
+                ),
             suffix: widget.controller.text.isNotEmpty
                 ? CupertinoButton(
                     padding: EdgeInsets.zero,
@@ -118,6 +123,33 @@ class _iOSSearchBarState extends State<iOSSearchBar> {
               }
             },
           ),
+          if (widget.animatedPlaceholders != null && widget.controller.text.isEmpty)
+            Positioned(
+              left: 34,
+              top: 0,
+              bottom: 0,
+              right: 40,
+              child: IgnorePointer(
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: AnimatedTextKit(
+                    animatedTexts: widget.animatedPlaceholders!
+                        .map((text) => TyperAnimatedText(
+                              text,
+                              textStyle: iOSTheme.body.copyWith(
+                                color: CupertinoColors.placeholderText,
+                              ),
+                              speed: const Duration(milliseconds: 50),
+                            ))
+                        .toList(),
+                    repeatForever: true,
+                    pause: const Duration(milliseconds: 1000),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         if (_showSuggestions) ...[
           const SizedBox(height: 8),

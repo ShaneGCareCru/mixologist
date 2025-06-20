@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:fuzzy/fuzzy.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import '../../../theme/ios_theme.dart';
 import '../../../shared/widgets/loading_screen.dart';
 import '../../ai_assistant/ai_assistant_page.dart';
@@ -78,6 +79,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _fuzzyMatcher = Fuzzy<String>(_knownCocktails);
+    _unifiedSearchController.addListener(() {
+      setState(() {}); // Rebuild to show/hide animated placeholder
+    });
   }
 
   Future<void> _performUnifiedSearch() async {
@@ -273,21 +277,49 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: CupertinoTextField(
-                          controller: _unifiedSearchController,
-                          placeholder: 'aperol spritz',
-                          placeholderStyle: const TextStyle(
-                            color: Color(0xFF8E8E93),
-                            fontSize: 16,
-                          ),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                          decoration: const BoxDecoration(),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 16),
-                          onSubmitted: (_) => _performUnifiedSearch(),
+                        child: Stack(
+                          children: [
+                            CupertinoTextField(
+                              controller: _unifiedSearchController,
+                              placeholder: null,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                              decoration: const BoxDecoration(),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 16),
+                              onSubmitted: (_) => _performUnifiedSearch(),
+                            ),
+                            if (_unifiedSearchController.text.isEmpty)
+                              Positioned(
+                                left: 20,
+                                top: 0,
+                                bottom: 0,
+                                child: IgnorePointer(
+                                  child: Center(
+                                    child: DefaultTextStyle(
+                                      style: const TextStyle(
+                                        color: Color(0xFF8E8E93),
+                                        fontSize: 16,
+                                      ),
+                                      child: AnimatedTextKit(
+                                        animatedTexts: [
+                                          FadeAnimatedText('aperol spritz'),
+                                          FadeAnimatedText('something fruity'),
+                                          FadeAnimatedText('whiskey sour'),
+                                          FadeAnimatedText('a summer vibe'),
+                                          FadeAnimatedText('gin and tonic'),
+                                          FadeAnimatedText('surprise me'),
+                                        ],
+                                        repeatForever: true,
+                                        pause: const Duration(milliseconds: 1500),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       Padding(
