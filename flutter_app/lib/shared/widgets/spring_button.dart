@@ -49,7 +49,7 @@ class _SpringButtonState extends State<SpringButton>
       end: widget.scaleOnPress,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.elasticOut,
+      curve: Curves.bounceOut, // More dramatic bounce effect
     ));
   }
 
@@ -62,6 +62,7 @@ class _SpringButtonState extends State<SpringButton>
   void _handleTapDown(TapDownDetails details) {
     if (!widget.enabled || widget.onPressed == null) return;
     
+    print('SpringButton: Tap down detected, starting animation');
     setState(() {
       _isPressed = true;
     });
@@ -80,6 +81,7 @@ class _SpringButtonState extends State<SpringButton>
   void _handleTapEnd() {
     if (!_isPressed) return;
     
+    print('SpringButton: Tap end detected, reversing animation');
     setState(() {
       _isPressed = false;
     });
@@ -218,16 +220,16 @@ class _BottleSpringCardState extends State<BottleSpringCard>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 180),
+      duration: const Duration(milliseconds: 500), // Longer duration
       vsync: this,
     );
     
     _scaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 0.95,
+      end: 0.85, // More dramatic scale for bottles
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeOutBack,
+      curve: Curves.bounceOut, // More dramatic bounce effect
     ));
   }
 

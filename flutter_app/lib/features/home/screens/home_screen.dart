@@ -13,6 +13,64 @@ import '../../inventory/unified_inventory_page.dart';
 import '../../auth/login_screen.dart';
 import '../../recipe/screens/recipe_screen.dart';
 
+class TapDownButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onPressed;
+  final Color? backgroundColor;
+  final EdgeInsetsGeometry? padding;
+  final BorderRadius? borderRadius;
+
+  const TapDownButton({
+    super.key,
+    required this.child,
+    this.onPressed,
+    this.backgroundColor,
+    this.padding,
+    this.borderRadius,
+  });
+
+  @override
+  State<TapDownButton> createState() => _TapDownButtonState();
+}
+
+class _TapDownButtonState extends State<TapDownButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) {
+        print('TapDownButton: Tap detected!');
+        setState(() {
+          _isPressed = true;
+        });
+      },
+      onTapUp: (_) {
+        setState(() {
+          _isPressed = false;
+        });
+        widget.onPressed?.call();
+      },
+      onTapCancel: () {
+        setState(() {
+          _isPressed = false;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.bounceOut,
+        transform: Matrix4.identity()..scale(_isPressed ? 0.85 : 1.0),
+        padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: widget.backgroundColor ?? Colors.blue,
+          borderRadius: widget.borderRadius ?? BorderRadius.circular(20),
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -391,12 +449,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSuggestionChip(String text) {
-    return SpringButton(
+    return TapDownButton(
       backgroundColor: const Color(0xFF2C2C2E),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       borderRadius: BorderRadius.circular(20),
-      scaleOnPress: 0.93,
-      springDuration: const Duration(milliseconds: 140),
       onPressed: () {
         _unifiedSearchController.text = text;
         _performUnifiedSearch();
