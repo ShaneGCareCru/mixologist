@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'models/inventory_models.dart';
 import 'services/inventory_service.dart';
 import 'widgets/inventory_item_card.dart';
@@ -514,29 +515,41 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
           appBar: AppBar(
             title: Text(IngredientCategory.getDisplayName(category)),
           ),
-          body: GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.8,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+          body: AnimationLimiter(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.8,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return AnimationConfiguration.staggeredGrid(
+                  position: index,
+                  duration: const Duration(milliseconds: 375),
+                  columnCount: 2,
+                  child: SlideAnimation(
+                    verticalOffset: 50.0,
+                    child: FadeInAnimation(
+                      child: BottleCard(
+                        item: item,
+                        onUpdate: () {
+                          _loadInventory();
+                          Navigator.of(context).pop(); // Close category view
+                        },
+                        onDelete: () {
+                          _loadInventory();
+                          Navigator.of(context).pop(); // Close category view
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return BottleCard(
-                item: item,
-                onUpdate: () {
-                  _loadInventory();
-                  Navigator.of(context).pop(); // Close category view
-                },
-                onDelete: () {
-                  _loadInventory();
-                  Navigator.of(context).pop(); // Close category view
-                },
-              );
-            },
           ),
         ),
       ),
@@ -544,17 +557,28 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
   }
 
   Widget _buildListView() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _filteredItems.length,
-      itemBuilder: (context, index) {
-        final item = _filteredItems[index];
-        return InventoryItemCard(
-          item: item,
-          onUpdate: _loadInventory,
-          onDelete: _loadInventory,
-        );
-      },
+    return AnimationLimiter(
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _filteredItems.length,
+        itemBuilder: (context, index) {
+          final item = _filteredItems[index];
+          return AnimationConfiguration.staggeredList(
+            position: index,
+            duration: const Duration(milliseconds: 375),
+            child: SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(
+                child: InventoryItemCard(
+                  item: item,
+                  onUpdate: _loadInventory,
+                  onDelete: _loadInventory,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

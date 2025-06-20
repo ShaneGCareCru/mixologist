@@ -16,6 +16,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../models/inventory_models.dart';
 import 'bottle_card.dart';
 
@@ -123,30 +124,41 @@ class _InventoryShelfState extends State<InventoryShelf> {
           ),
           SizedBox(
             height: _shelfHeight,
-            child: ListView.builder(
-              key: PageStorageKey(widget.title),
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              physics: Theme.of(context).platform == TargetPlatform.iOS
-                  ? const BouncingScrollPhysics()
-                  : const ClampingScrollPhysics(),
-              cacheExtent: _cacheExtentMultiplier * _itemWidth,
-              itemCount: widget.items.length,
-              itemExtent: _itemWidth,
-              itemBuilder: (context, index) {
-                final item = widget.items[index];
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: index == 0 ? 16 : 8,
-                    right: index == widget.items.length - 1 ? 16 : 8,
-                  ),
-                  child: EnhancedBottleCard(
-                    item: item,
-                    onUpdate: widget.onUpdate,
-                    onDelete: widget.onDelete,
-                  ),
-                );
-              },
+            child: AnimationLimiter(
+              child: ListView.builder(
+                key: PageStorageKey(widget.title),
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                physics: Theme.of(context).platform == TargetPlatform.iOS
+                    ? const BouncingScrollPhysics()
+                    : const ClampingScrollPhysics(),
+                cacheExtent: _cacheExtentMultiplier * _itemWidth,
+                itemCount: widget.items.length,
+                itemExtent: _itemWidth,
+                itemBuilder: (context, index) {
+                  final item = widget.items[index];
+                  return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 375),
+                    child: SlideAnimation(
+                      horizontalOffset: 50.0,
+                      child: FadeInAnimation(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: index == 0 ? 16 : 8,
+                            right: index == widget.items.length - 1 ? 16 : 8,
+                          ),
+                          child: EnhancedBottleCard(
+                            item: item,
+                            onUpdate: widget.onUpdate,
+                            onDelete: widget.onDelete,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:fuzzy/fuzzy.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../../theme/ios_theme.dart';
 import '../../../shared/widgets/loading_screen.dart';
 import '../../../shared/widgets/spring_button.dart';
@@ -287,39 +288,46 @@ class _HomeScreenState extends State<HomeScreen> {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 32),
-
-                // Main heading
-                const Text(
-                  'Let curiosity\nguide you.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w300,
-                    color: Colors.white,
-                    height: 1.1,
-                    letterSpacing: -0.5,
+          child: AnimationLimiter(
+            child: SingleChildScrollView(
+              child: Column(
+                children: AnimationConfiguration.toStaggeredList(
+                  duration: const Duration(milliseconds: 375),
+                  childAnimationBuilder: (widget) => SlideAnimation(
+                    verticalOffset: 50.0,
+                    child: FadeInAnimation(child: widget),
                   ),
-                ),
+                  children: [
+                    const SizedBox(height: 32),
 
-                const SizedBox(height: 32),
+                    // Main heading
+                    const Text(
+                      'Let curiosity\nguide you.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                        height: 1.1,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
 
-                // Subtitle
-                const Text(
-                  'Your first sip begins with a word.\nJust type what you crave—a flavor, a\nfeeling, a moment—and we\'ll handle the\nrest.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF8E8E93),
-                    height: 1.5,
-                  ),
-                ),
+                    const SizedBox(height: 32),
 
-                const SizedBox(height: 48),
+                    // Subtitle
+                    const Text(
+                      'Your first sip begins with a word.\nJust type what you crave—a flavor, a\nfeeling, a moment—and we\'ll handle the\nrest.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF8E8E93),
+                        height: 1.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 48),
 
                 // Search input
                 Container(
@@ -413,17 +421,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 48),
 
                 // Suggestion chips
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    _buildSuggestionChip('Margarita'),
-                    _buildSuggestionChip('something fruity'),
-                    _buildSuggestionChip('Mojito'),
-                    _buildSuggestionChip('warm and spicy'),
-                  ],
-                ),
+                    AnimationLimiter(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: AnimationConfiguration.toStaggeredList(
+                          duration: const Duration(milliseconds: 375),
+                          delay: const Duration(milliseconds: 100),
+                          childAnimationBuilder: (widget) => SlideAnimation(
+                            horizontalOffset: 30.0,
+                            child: FadeInAnimation(child: widget),
+                          ),
+                          children: [
+                            _buildSuggestionChip('Margarita'),
+                            _buildSuggestionChip('something fruity'),
+                            _buildSuggestionChip('Mojito'),
+                            _buildSuggestionChip('warm and spicy'),
+                          ],
+                        ),
+                      ),
+                    ),
 
                 const SizedBox(height: 32),
 
@@ -439,8 +457,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 40),
-              ],
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
