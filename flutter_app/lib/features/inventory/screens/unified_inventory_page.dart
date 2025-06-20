@@ -9,6 +9,7 @@ import '../widgets/add_item_dialog.dart';
 import '../widgets/inventory_shelf.dart';
 import '../../../theme/ios_theme.dart';
 import '../../../shared/widgets/ios_card.dart';
+import '../../../shared/widgets/shimmer_components.dart';
 
 class UnifiedInventoryPage extends StatefulWidget {
   const UnifiedInventoryPage({super.key});
@@ -399,15 +400,26 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
           ),
 
           if (_isAnalyzing)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 16),
-                  Text('Analyzing image with AI...'),
-                ],
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: iOSTheme.adaptiveColor(
+                    context,
+                    CupertinoColors.systemGrey6,
+                    iOSTheme.darkSecondaryBackground,
+                  ),
+                  borderRadius: BorderRadius.circular(iOSTheme.smallRadius),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    CupertinoActivityIndicator(),
+                    SizedBox(width: 16),
+                    Text('Analyzing image with AI...'),
+                  ],
+                ),
               ),
             ),
 
@@ -416,7 +428,7 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
           // Items Display
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? _buildLoadingShimmer()
                 : _error != null
                     ? Center(
                         child: Column(
@@ -443,6 +455,15 @@ class _UnifiedInventoryPageState extends State<UnifiedInventoryPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLoadingShimmer() {
+    return ListView.builder(
+      itemCount: 8,
+      itemBuilder: (context, index) {
+        return const InventoryItemShimmer();
+      },
     );
   }
 
