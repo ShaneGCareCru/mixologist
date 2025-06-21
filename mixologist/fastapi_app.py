@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Form, HTTPException, File, UploadFile
+from fastapi import FastAPI, Form, HTTPException, File, UploadFile, Depends
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import logging
 import base64
+from .utils.logging_config import setup_logging, get_logger, log_user_action, log_inventory_operation, log_auth_event
 from typing import Optional, List, Dict
 from .services.openai_service import (
     get_completion_from_messages,
@@ -18,6 +19,8 @@ from .services.openai_service import (
     MongoDBImageService,
 )
 from .services.inventory_service import InventoryService
+from .services.multiuser_inventory_service import MultiUserInventoryService
+from .auth.firebase_auth import get_current_user, get_optional_user_id_for_request, FirebaseUser
 from .models.inventory_models import (
     InventoryAddRequest, InventoryUpdateRequest, ImageRecognitionRequest,
     InventoryFilterRequest, QuantityDescription, IngredientCategory
@@ -26,6 +29,9 @@ from .models.inventory_models import (
 from .database.config import get_db_session
 from .database.service import DatabaseService
 from .database.init_db import initialize_app_database
+
+# Setup logging before creating the app
+setup_logging(level="INFO", include_uvicorn=True)
 
 app = FastAPI(title="Mixologist API")
 
@@ -37,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Create logger for this module
+api_logger = get_logger('api')
 
 @app.on_event("startup")
 async def startup_event():
@@ -174,6 +183,7 @@ async def create_drink(drink_query: str = Form(...)):
         if limit_to_inventory:
             try:
                 from .services.inventory_service import InventoryService
+                # Use default user for backward compatibility during migration
                 available_items = await InventoryService.get_all_items()
                 if available_items:
                     available_ingredients = [item.name for item in available_items if item.quantity not in ['empty', 'almost_empty']]
@@ -881,13 +891,16 @@ async def get_recipe_names():
 # ==================== INVENTORY ENDPOINTS ====================
 
 @app.get("/inventory")
-async def get_inventory():
-    """Get all inventory items."""
+async def get_inventory(user_id: str = Depends(get_optional_user_id_for_request)):
+    """Get all inventory items for authenticated user."""
     try:
-        items = await InventoryService.get_all_items()
+        log_user_action(api_logger, user_id, "get_inventory")
+        items = await MultiUserInventoryService.get_all_items(user_id)
+        log_inventory_operation(api_logger, user_id, "retrieved", item_count=len(items))
+        api_logger.info(f"📋 Retrieved {len(items)} inventory items for user {user_id}")
         return {"items": [item.model_dump() for item in items]}
     except Exception as e:
-        logging.error(f"Error getting inventory: {e}")
+        api_logger.error(f"❌ Error getting inventory for user {user_id}: {e}", extra={'user_id': user_id, 'operation': 'get_inventory'})
         raise HTTPException(status_code=500, detail=f"Error getting inventory: {str(e)}")
 
 @app.post("/inventory")
@@ -898,10 +911,13 @@ async def add_inventory_item(
     fullness: float = Form(None),
     image_path: str = Form(None),
     brand: str = Form(None),
-    notes: str = Form(None)
+    notes: str = Form(None),
+    user_id: str = Depends(get_optional_user_id_for_request)
 ):
-    """Add a new item to inventory."""
+    """Add a new item to user's inventory."""
     try:
+        log_user_action(api_logger, user_id, "add_inventory_item", {'item_name': name, 'category': category})
+        
         # Convert string parameters to enums
         category_enum = IngredientCategory(category.lower())
         quantity_enum = QuantityDescription(quantity.lower().replace(" ", "_"))
@@ -914,7 +930,7 @@ async def add_inventory_item(
             notes=notes
         )
         
-        item = await InventoryService.add_item(request)
+        item = await MultiUserInventoryService.add_item(user_id, request)
         
         # Override fullness if provided
         if fullness is not None:
@@ -923,36 +939,45 @@ async def add_inventory_item(
         # Set image path if provided
         if image_path is not None:
             item.image_path = image_path
-            
+        
+        log_inventory_operation(api_logger, user_id, "added", item.id, item.name)
+        api_logger.info(f"✅ Added inventory item '{item.name}' for user {user_id}")
+        
         return {"message": "Item added successfully", "item": item.model_dump()}
     except ValueError as e:
+        api_logger.error(f"❌ Invalid inventory data for user {user_id}: {e}", extra={'user_id': user_id, 'operation': 'add_inventory_item'})
         raise HTTPException(status_code=400, detail=f"Invalid category or quantity: {str(e)}")
     except Exception as e:
-        logging.error(f"Error adding inventory item: {e}")
+        api_logger.error(f"❌ Error adding inventory item for user {user_id}: {e}", extra={'user_id': user_id, 'operation': 'add_inventory_item'})
         raise HTTPException(status_code=500, detail=f"Error adding item: {str(e)}")
 
 @app.get("/inventory/stats")
-async def get_inventory_stats():
-    """Get inventory statistics."""
+async def get_inventory_stats(user_id: str = Depends(get_optional_user_id_for_request)):
+    """Get inventory statistics for authenticated user."""
     try:
-        stats = await InventoryService.get_stats()
+        log_user_action(api_logger, user_id, "get_inventory_stats")
+        stats = await MultiUserInventoryService.get_stats(user_id)
+        api_logger.info(f"📊 Retrieved inventory stats for user {user_id}: {stats.total_items} items")
         return {"stats": stats.model_dump()}
     except Exception as e:
-        logging.error(f"Error getting inventory stats: {e}")
+        api_logger.error(f"❌ Error getting inventory stats for user {user_id}: {e}", extra={'user_id': user_id, 'operation': 'get_inventory_stats'})
         raise HTTPException(status_code=500, detail=f"Error getting stats: {str(e)}")
 
 @app.get("/inventory/{item_id}")
-async def get_inventory_item(item_id: str):
-    """Get specific inventory item by ID."""
+async def get_inventory_item(item_id: str, user_id: str = Depends(get_optional_user_id_for_request)):
+    """Get specific inventory item by ID for authenticated user."""
     try:
-        item = await InventoryService.get_item_by_id(item_id)
+        log_user_action(api_logger, user_id, "get_inventory_item", {'item_id': item_id})
+        item = await MultiUserInventoryService.get_item_by_id(user_id, item_id)
         if not item:
+            api_logger.warning(f"⚠️ Item {item_id} not found for user {user_id}", extra={'user_id': user_id, 'item_id': item_id})
             raise HTTPException(status_code=404, detail="Item not found")
+        api_logger.info(f"📦 Retrieved item '{item.name}' for user {user_id}")
         return {"item": item.model_dump()}
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error getting inventory item: {e}")
+        api_logger.error(f"❌ Error getting inventory item for user {user_id}: {e}", extra={'user_id': user_id, 'item_id': item_id})
         raise HTTPException(status_code=500, detail=f"Error getting item: {str(e)}")
 
 @app.put("/inventory/{item_id}")
@@ -963,10 +988,13 @@ async def update_inventory_item(
     image_path: str = Form(None),
     brand: str = Form(None),
     notes: str = Form(None),
-    expires_soon: bool = Form(None)
+    expires_soon: bool = Form(None),
+    user_id: str = Depends(get_optional_user_id_for_request)
 ):
-    """Update an inventory item."""
+    """Update an inventory item for authenticated user."""
     try:
+        log_user_action(api_logger, user_id, "update_inventory_item", {'item_id': item_id})
+        
         # Convert quantity if provided
         quantity_enum = None
         if quantity:
@@ -979,8 +1007,9 @@ async def update_inventory_item(
             expires_soon=expires_soon
         )
         
-        item = await InventoryService.update_item(item_id, request)
+        item = await MultiUserInventoryService.update_item(user_id, item_id, request)
         if not item:
+            api_logger.warning(f"⚠️ Item {item_id} not found for user {user_id}", extra={'user_id': user_id, 'item_id': item_id})
             raise HTTPException(status_code=404, detail="Item not found")
         
         # Update fullness if provided (overriding quantity-based calculation)
@@ -991,90 +1020,110 @@ async def update_inventory_item(
         if image_path is not None:
             item.image_path = image_path
         
+        log_inventory_operation(api_logger, user_id, "updated", item.id, item.name)
+        api_logger.info(f"✅ Updated inventory item '{item.name}' for user {user_id}")
+        
         return {"message": "Item updated successfully", "item": item.model_dump()}
     except ValueError as e:
+        api_logger.error(f"❌ Invalid quantity data for user {user_id}: {e}", extra={'user_id': user_id, 'item_id': item_id})
         raise HTTPException(status_code=400, detail=f"Invalid quantity: {str(e)}")
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error updating inventory item: {e}")
+        api_logger.error(f"❌ Error updating inventory item for user {user_id}: {e}", extra={'user_id': user_id, 'item_id': item_id})
         raise HTTPException(status_code=500, detail=f"Error updating item: {str(e)}")
 
 @app.delete("/inventory/{item_id}")
-async def delete_inventory_item(item_id: str):
-    """Delete an inventory item."""
+async def delete_inventory_item(item_id: str, user_id: str = Depends(get_optional_user_id_for_request)):
+    """Delete an inventory item for authenticated user."""
     try:
-        success = await InventoryService.delete_item(item_id)
+        log_user_action(api_logger, user_id, "delete_inventory_item", {'item_id': item_id})
+        success = await MultiUserInventoryService.delete_item(user_id, item_id)
         if not success:
+            api_logger.warning(f"⚠️ Item {item_id} not found for user {user_id}", extra={'user_id': user_id, 'item_id': item_id})
             raise HTTPException(status_code=404, detail="Item not found")
+        
+        log_inventory_operation(api_logger, user_id, "deleted", item_id)
+        api_logger.info(f"🗑️ Deleted inventory item {item_id} for user {user_id}")
         
         return {"message": "Item deleted successfully"}
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error deleting inventory item: {e}")
+        api_logger.error(f"❌ Error deleting inventory item for user {user_id}: {e}", extra={'user_id': user_id, 'item_id': item_id})
         raise HTTPException(status_code=500, detail=f"Error deleting item: {str(e)}")
 
 @app.post("/inventory/analyze_image")
-async def analyze_inventory_image(file: UploadFile = File(...)):
+async def analyze_inventory_image(file: UploadFile = File(...), user_id: str = Depends(get_optional_user_id_for_request)):
     """Analyze image to recognize cocktail ingredients using OpenAI 4o vision."""
     try:
+        log_user_action(api_logger, user_id, "analyze_inventory_image")
+        
         # Read and encode image
         image_data = await file.read()
         image_base64 = base64.b64encode(image_data).decode('utf-8')
         
-        # Get existing inventory for context
-        existing_items = await InventoryService.get_all_items()
-        existing_names = [item.name for item in existing_items]
-        
         # Create recognition request
         request = ImageRecognitionRequest(
             image_base64=image_base64,
-            existing_inventory=existing_names
+            existing_inventory=[]  # Will be populated by the service
         )
         
-        # Analyze image
-        response = await InventoryService.analyze_image_for_ingredients(request)
+        # Analyze image with user context
+        response = await MultiUserInventoryService.analyze_image_for_ingredients(user_id, request)
+        
+        api_logger.info(f"🔍 Analyzed image for user {user_id}: found {len(response.recognized_ingredients)} ingredients")
         
         return {"recognition_results": response.model_dump()}
     except Exception as e:
-        logging.error(f"Error analyzing inventory image: {e}")
+        api_logger.error(f"❌ Error analyzing inventory image for user {user_id}: {e}", extra={'user_id': user_id, 'operation': 'analyze_image'})
         raise HTTPException(status_code=500, detail=f"Error analyzing image: {str(e)}")
 
 @app.post("/inventory/check_recipe")
-async def check_recipe_availability(ingredients: str = Form(...)):
-    """Check if recipe ingredients are available in inventory."""
+async def check_recipe_availability(ingredients: str = Form(...), user_id: str = Depends(get_optional_user_id_for_request)):
+    """Check if recipe ingredients are available in user's inventory."""
     try:
+        log_user_action(api_logger, user_id, "check_recipe_availability")
+        
         # Parse ingredients JSON
         try:
             recipe_ingredients = json.loads(ingredients)
         except json.JSONDecodeError:
+            api_logger.error(f"❌ Invalid ingredients JSON for user {user_id}", extra={'user_id': user_id, 'operation': 'check_recipe'})
             raise HTTPException(status_code=400, detail="Invalid ingredients JSON format")
         
-        availability = await InventoryService.check_recipe_availability(recipe_ingredients)
+        availability = await MultiUserInventoryService.check_recipe_availability(user_id, recipe_ingredients)
+        
+        api_logger.info(f"🍸 Recipe availability checked for user {user_id}: {availability['availability_score']:.0%} available")
         
         return {"availability": availability}
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error checking recipe availability: {e}")
+        api_logger.error(f"❌ Error checking recipe availability for user {user_id}: {e}", extra={'user_id': user_id, 'operation': 'check_recipe'})
         raise HTTPException(status_code=500, detail=f"Error checking availability: {str(e)}")
 
 @app.get("/inventory/compatible_recipes")
 async def get_compatible_recipes(
     available_only: bool = True,
-    include_substitutions: bool = True
+    include_substitutions: bool = True,
+    user_id: str = Depends(get_optional_user_id_for_request)
 ):
-    """Get recipe suggestions based on current inventory."""
+    """Get recipe suggestions based on user's current inventory."""
     try:
-        recipes = await InventoryService.get_compatible_recipes(
+        log_user_action(api_logger, user_id, "get_compatible_recipes")
+        
+        recipes = await MultiUserInventoryService.get_compatible_recipes(
+            user_id,
             available_only=available_only,
             include_substitutions=include_substitutions
         )
         
+        api_logger.info(f"🍸 Found {len(recipes)} compatible recipes for user {user_id}")
+        
         return {"compatible_recipes": recipes}
     except Exception as e:
-        logging.error(f"Error getting compatible recipes: {e}")
+        api_logger.error(f"❌ Error getting compatible recipes for user {user_id}: {e}", extra={'user_id': user_id, 'operation': 'get_compatible_recipes'})
         raise HTTPException(status_code=500, detail=f"Error getting recipes: {str(e)}")
 
 @app.get("/inventory/categories")
@@ -1116,6 +1165,7 @@ async def create_drink_with_inventory_filter(
         
         if limit_to_inventory:
             try:
+                # Use default user for backward compatibility during migration
                 available_items = await InventoryService.get_all_items()
                 if available_items:
                     # Get available ingredients (not empty or almost empty)
@@ -1190,6 +1240,7 @@ async def create_drink_with_inventory_filter(
         # Check availability of this recipe if inventory filtering was used
         if limit_to_inventory:
             try:
+                # Use default user for backward compatibility during migration
                 availability = await InventoryService.check_recipe_availability(recipe.ingredients)
                 recipe_data["inventory_availability"] = availability
             except Exception as e:

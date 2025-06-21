@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:image_picker/image_picker.dart';
+import '../../../services/http_service.dart';
+import '../../../services/auth_service.dart';
 import '../models/inventory_models.dart';
 
 class InventoryService {
@@ -13,7 +15,7 @@ class InventoryService {
   // Get all inventory items
   static Future<List<InventoryItem>> getInventory() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/inventory'));
+      final response = await HttpService.get('/inventory');
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

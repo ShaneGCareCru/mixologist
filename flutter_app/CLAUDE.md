@@ -50,6 +50,31 @@ flutter test --coverage
 ### Backend Integration
 The app communicates with a FastAPI backend server that must be running on localhost:8081 for full functionality.
 
+#### Backend Server Management
+Use the provided scripts in the `scripts/` directory to manage the backend server:
+
+```bash
+# Start server in background (production mode)
+./scripts/start_server.sh
+
+# Start server in debug mode (shows real-time logs)
+./scripts/debug_server.sh  
+
+# Stop the server
+./scripts/stop_server.sh
+
+# Restart the server
+./scripts/restart_server.sh
+
+# Check server status
+./scripts/status_server.sh
+
+# View server logs (when running in background)
+tail -f server.log
+```
+
+**IMPORTANT**: Always use these scripts instead of manually starting the server with uvicorn or hypercorn commands.
+
 ## Architecture
 
 ### App Structure

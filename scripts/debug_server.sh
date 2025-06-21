@@ -43,5 +43,11 @@ echo "📝 Print statements from image analysis will be visible"
 echo "Press Ctrl+C to stop"
 echo "============================================================"
 
+# Set BYPASS_AUTH for development testing if not already set
+if [ -z "$BYPASS_AUTH" ]; then
+    export BYPASS_AUTH=true
+    echo "Setting BYPASS_AUTH=true for development testing"
+fi
+
 # Start server in foreground with debug output (unbuffered for immediate print output)
-OPENAI_API_KEY=$(cat ~/.apikeys/openai) DATABASE_URL="$DATABASE_URL" PYTHONUNBUFFERED=1 python -m hypercorn mixologist.fastapi_app:app --bind 0.0.0.0:8081 --log-level debug
+OPENAI_API_KEY=$(cat ~/.apikeys/openai) DATABASE_URL="$DATABASE_URL" BYPASS_AUTH="$BYPASS_AUTH" PYTHONUNBUFFERED=1 python -m hypercorn mixologist.fastapi_app:app --bind 0.0.0.0:8081 --log-level debug

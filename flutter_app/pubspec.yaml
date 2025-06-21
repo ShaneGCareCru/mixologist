@@ -10,6 +10,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   firebase_auth: ^4.15.0
   cloud_firestore: ^4.13.0
+  google_sign_in: ^6.1.5
   http: ^1.2.0
   firebase_core: ^2.24.0
     # flutter_client_sse removed

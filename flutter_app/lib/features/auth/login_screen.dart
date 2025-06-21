@@ -1,9 +1,25 @@
 import 'package:flutter/cupertino.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mixologist_flutter/theme/ios_theme.dart';
+import '../../services/auth_service.dart';
+import '../../utils/logger.dart';
 import '../home/screens/home_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    MixologistLogger.logNavigation('app_start', 'login_screen');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,28 +102,45 @@ class LoginScreen extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                // iOS-style sign-in button
+                // Google Sign-In button
                 Container(
                   width: double.infinity,
                   constraints: const BoxConstraints(maxWidth: 300),
                   child: CupertinoButton.filled(
-                    onPressed: () async {
-                      // Navigate to home screen
-                      Navigator.of(context).pushReplacement(
-                        CupertinoPageRoute(
-                          builder: (context) => const HomeScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: _isLoading ? null : _signInWithGoogle,
                     borderRadius: BorderRadius.circular(iOSTheme.largeRadius),
+                    child: _isLoading
+                        ? const CupertinoActivityIndicator(color: CupertinoColors.white)
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(CupertinoIcons.person_circle, size: 18),
+                              const SizedBox(width: 8),
+                              Text('Sign in with Google',
+                                  style: iOSTheme.headline
+                                      .copyWith(color: CupertinoColors.white)),
+                            ],
+                          ),
+                  ),
+                ),
+
+                const SizedBox(height: iOSTheme.mediumPadding),
+
+                // Anonymous sign-in button for development
+                Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: CupertinoButton(
+                    onPressed: _isLoading ? null : _signInAnonymously,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(CupertinoIcons.play_fill, size: 18),
                         const SizedBox(width: 8),
-                        Text('Start Mixing',
-                            style: iOSTheme.headline
-                                .copyWith(color: CupertinoColors.white)),
+                        Text('Start Mixing (Guest)',
+                            style: iOSTheme.body
+                                .copyWith(color: iOSTheme.adaptiveColor(
+                                    context, iOSTheme.whiskey, CupertinoColors.white))),
                       ],
                     ),
                   ),
@@ -144,6 +177,90 @@ class LoginScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    MixologistLogger.logUserAction('anonymous', 'attempt_google_signin');
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userCredential = await AuthService.signInWithGoogle();
+      if (userCredential != null && mounted) {
+        MixologistLogger.logNavigation('login_screen', 'home_screen', 
+          userId: userCredential.user?.uid);
+        
+        // Navigate to home screen
+        Navigator.of(context).pushReplacement(
+          CupertinoPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      MixologistLogger.error('Google sign-in navigation failed', error: e);
+      if (mounted) {
+        _showErrorDialog('Sign-in failed: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _signInAnonymously() async {
+    MixologistLogger.logUserAction('anonymous', 'attempt_anonymous_signin');
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userCredential = await AuthService.signInAnonymously();
+      if (userCredential != null && mounted) {
+        MixologistLogger.logNavigation('login_screen', 'home_screen', 
+          userId: userCredential.user?.uid);
+        
+        // Navigate to home screen
+        Navigator.of(context).pushReplacement(
+          CupertinoPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      MixologistLogger.error('Anonymous sign-in navigation failed', error: e);
+      if (mounted) {
+        _showErrorDialog('Anonymous sign-in failed: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Sign-in Error'),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }

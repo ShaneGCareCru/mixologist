@@ -1,6 +1,6 @@
 """SQLAlchemy database models for Mixologist application."""
 import os
-from sqlalchemy import Column, Integer, String, Text, DECIMAL, TIMESTAMP, ForeignKey, Index, Boolean
+from sqlalchemy import Column, Integer, String, Text, DECIMAL, TIMESTAMP, ForeignKey, Index, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -19,6 +19,20 @@ else:
     TSVECTORType = TSVECTOR
 
 Base = declarative_base()
+
+# Database migration utility
+class DatabaseMigrator:
+    """Utility class for managing database migrations."""
+    
+    @staticmethod
+    def create_tables(engine):
+        """Create all tables in the database."""
+        Base.metadata.create_all(bind=engine)
+    
+    @staticmethod
+    def drop_tables(engine):
+        """Drop all tables in the database."""
+        Base.metadata.drop_all(bind=engine)
 
 class Recipe(Base):
     """Recipe model storing cocktail recipes and metadata."""
@@ -68,6 +82,48 @@ class Image(Base):
     
     # Relationships
     recipes = relationship("RecipeImage", back_populates="image", cascade="all, delete-orphan")
+
+class User(Base):
+    """User model storing user information and Firebase UID."""
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True)
+    firebase_uid = Column(String(128), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=True)
+    display_name = Column(String(255), nullable=True)
+    photo_url = Column(String(500), nullable=True)
+    created_at = Column(TIMESTAMP, default=func.now())
+    last_login = Column(TIMESTAMP, default=func.now())
+    
+    # Relationships
+    inventory_items = relationship("InventoryItem", back_populates="user", cascade="all, delete-orphan")
+
+class InventoryItem(Base):
+    """Inventory item model storing user-specific inventory items."""
+    __tablename__ = "inventory_items"
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    item_id = Column(String(36), nullable=False, index=True)  # UUID from frontend
+    name = Column(String(255), nullable=False, index=True)
+    category = Column(String(50), nullable=False, index=True)
+    quantity = Column(String(50), nullable=False)
+    fullness = Column(DECIMAL(3,2), default=1.0)
+    brand = Column(String(255), nullable=True)
+    notes = Column(Text, nullable=True)
+    image_path = Column(String(500), nullable=True)
+    expires_soon = Column(Boolean, default=False)
+    added_date = Column(DateTime, default=func.now())
+    last_updated = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="inventory_items")
+    
+    # Indexes for efficient queries
+    __table_args__ = (
+        Index('idx_inventory_user_category', 'user_id', 'category'),
+        Index('idx_inventory_user_name', 'user_id', 'name'),
+    )
 
 class RecipeImage(Base):
     """Junction table linking recipes and images."""

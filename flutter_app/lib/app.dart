@@ -1,9 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'theme/ios_theme.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_text_styles.dart';
+import 'services/auth_service.dart';
+import 'utils/logger.dart';
 import 'features/auth/login_screen.dart';
+import 'features/home/screens/home_screen.dart';
 
 class MixologistApp extends StatelessWidget {
   const MixologistApp({super.key});
@@ -15,7 +19,34 @@ class MixologistApp extends StatelessWidget {
       child: CupertinoApp(
         title: 'Mixologist',
         theme: _buildCupertinoTheme(),
-        home: const LoginScreen(),
+        home: StreamBuilder<User?>(
+          stream: AuthService.authStateChanges,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              MixologistLogger.logAppEvent('auth_state_loading');
+              return const CupertinoPageScaffold(
+                child: Center(
+                  child: CupertinoActivityIndicator(),
+                ),
+              );
+            }
+            
+            if (snapshot.hasData) {
+              // User is signed in
+              final user = snapshot.data!;
+              MixologistLogger.logAppEvent('user_authenticated', extra: {
+                'user_id': user.uid,
+                'user_email': user.email,
+                'is_anonymous': user.isAnonymous
+              });
+              return const HomeScreen();
+            } else {
+              // User is not signed in
+              MixologistLogger.logAppEvent('user_not_authenticated');
+              return const LoginScreen();
+            }
+          },
+        ),
         localizationsDelegates: const [
           DefaultMaterialLocalizations.delegate,
           DefaultCupertinoLocalizations.delegate,

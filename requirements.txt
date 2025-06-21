@@ -15,3 +15,6 @@ asyncpg==0.29.*
 alembic==1.13.*
 
 motor==3.3.1
+
+# Firebase dependencies
+firebase_admin==6.2.0
